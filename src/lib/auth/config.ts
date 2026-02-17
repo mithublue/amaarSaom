@@ -31,7 +31,7 @@ export const authConfig: NextAuthConfig = {
                             email: user.email,
                             name: user.name || '',
                             image: user.image,
-                            language: 'en',
+                            preferredLanguage: 'en',
                         },
                     });
                 }
@@ -39,6 +39,11 @@ export const authConfig: NextAuthConfig = {
                 return true;
             } catch (error) {
                 console.error('Error in signIn callback:', error);
+                // Log the actual error object to see details
+                if (error instanceof Error) {
+                    console.error('Error message:', error.message);
+                    console.error('Error stack:', error.stack);
+                }
                 return false;
             }
         },

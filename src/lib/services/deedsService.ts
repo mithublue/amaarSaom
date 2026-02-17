@@ -206,7 +206,7 @@ export async function getUserDeedsHistory(
         where: {
             userId,
             ...(startDate && {
-                date: {
+                completedAt: {
                     gte: startDate,
                 },
             }),

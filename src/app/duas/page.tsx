@@ -8,7 +8,7 @@ export default async function DuasPage() {
             <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
                 <div className="container mx-auto px-4 py-4 flex items-center gap-4">
                     <Link
-                        href="/dashboard"
+                        href="/"
                         className="text-white hover:text-accent transition"
                     >
                         ← Back

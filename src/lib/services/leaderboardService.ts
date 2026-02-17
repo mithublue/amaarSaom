@@ -4,10 +4,7 @@
  */
 
 import { prisma } from '../db/prisma';
-import { getCached, setCache } from '../db/redis';
-import { startOfDay } from 'date-fns';
-
-const LEADERBOARD_CACHE_TTL = 900; // 15 minutes
+import { startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 
 export interface LeaderboardEntry {
     rank: number;
@@ -25,7 +22,7 @@ export interface LeaderboardResponse {
 }
 
 /**
- * Get leaderboard with filters
+ * Get leaderboard with filters using raw SQL for performance and flexibility
  */
 export async function getLeaderboard(params: {
     period: 'daily' | 'weekly' | 'overall';
@@ -44,143 +41,158 @@ export async function getLeaderboard(params: {
         currentUserId,
     } = params;
 
-    const date = startOfDay(new Date());
-    const cacheKey = `leaderboard:${period}:${scopeType}:${scopeId || 'null'}:${page}:${limit}`;
+    const offset = (page - 1) * limit;
+    const now = new Date();
 
-    // Try cache first
-    const cached = await getCached<LeaderboardResponse>(cacheKey);
-    if (cached) {
-        console.log('✅ Leaderboard retrieved from cache');
-        return cached;
+    // Determine date filter
+    let dateFilter = '';
+    const queryParams: any[] = [];
+
+    if (period === 'daily') {
+        dateFilter = 'AND cd.date = ?';
+        queryParams.push(startOfDay(now));
+    } else if (period === 'weekly') {
+        dateFilter = 'AND cd.date >= ?';
+        queryParams.push(startOfWeek(now));
+    }
+    // 'overall' needs no date filter
+
+    // Determine scope filter
+    let scopeFilter = '';
+    if (scopeType !== 'global' && scopeId) {
+        if (scopeType === 'country') {
+            scopeFilter = 'AND u.country_id = ?';
+        } else if (scopeType === 'division') {
+            scopeFilter = 'AND u.division_id = ?';
+        } else if (scopeType === 'district') {
+            scopeFilter = 'AND u.district_id = ?';
+        }
+        queryParams.push(scopeId);
     }
 
-    // Query leaderboard from database
-    const offset = (page - 1) * limit;
+    // Common query parts
+    const sqlSelect = `
+        SELECT 
+            u.id as userId, 
+            u.name as userName, 
+            u.image as userImage, 
+            CAST(SUM(cd.total_points) AS UNSIGNED) as totalPoints,
+            COALESCE(dist.name_en, div.name_en, 'Unknown') as location
+    `;
 
-    const leaderboardData = await prisma.leaderboardCache.findMany({
-        where: {
-            period,
-            scopeType,
-            ...(scopeId && { scopeId }),
-            date,
-        },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    image: true,
-                    district: {
-                        select: {
-                            nameEn: true,
-                            nameBn: true,
-                        },
-                    },
-                    division: {
-                        select: {
-                            nameEn: true,
-                            nameBn: true,
-                        },
-                    },
-                },
-            },
-        },
-        orderBy: {
-            totalPoints: 'desc',
-        },
-        take: limit,
-        skip: offset,
-    });
+    const sqlFrom = `
+        FROM completed_deeds cd
+        JOIN users u ON cd.user_id = u.id
+        LEFT JOIN districts dist ON u.district_id = dist.id
+        LEFT JOIN divisions div ON u.division_id = div.id
+    `;
 
-    // Calculate ranks
-    const entries: LeaderboardEntry[] = leaderboardData.map((entry, index) => ({
-        rank: offset + index + 1,
-        userId: entry.user.id,
-        userName: entry.user.name,
-        userImage: entry.user.image || undefined,
-        totalPoints: entry.totalPoints,
-        location: entry.user.district?.nameEn || entry.user.division?.nameEn,
-    }));
+    const sqlWhere = `WHERE 1=1 ${dateFilter} ${scopeFilter}`;
+    const sqlGroup = `GROUP BY u.id`;
+    const sqlOrder = `ORDER BY totalPoints DESC`;
 
-    // Get current user's rank if provided
+    // Fetch paginated entries
+    const entriesQuery = `
+        ${sqlSelect}
+        ${sqlFrom}
+        ${sqlWhere}
+        ${sqlGroup}
+        ${sqlOrder}
+        LIMIT ? OFFSET ?
+    `;
+
+    // Execute raw query
+    const entriesParams = [...queryParams, limit, offset];
+    let entries: LeaderboardEntry[] = [];
+    let totalUsers = 0;
+
+    try {
+        const rawEntries = await prisma.$queryRawUnsafe<any[]>(entriesQuery, ...entriesParams);
+
+        // Map to interface
+        entries = rawEntries.map((entry: any, index: number) => ({
+            rank: offset + index + 1,
+            userId: Number(entry.userId),
+            userName: entry.userName,
+            userImage: entry.userImage,
+            totalPoints: Number(entry.totalPoints || 0), // Handle potential nulls/BigInt
+            location: entry.location,
+        }));
+
+        // Count total users
+        const countQuery = `
+            SELECT COUNT(DISTINCT cd.user_id) as count
+            ${sqlFrom}
+            ${sqlWhere}
+        `;
+        const totalCountResult = await prisma.$queryRawUnsafe<any[]>(countQuery, ...queryParams);
+        totalUsers = Number(totalCountResult[0]?.count || 0);
+
+    } catch (error) {
+        console.error('Error executing leaderboard query:', error);
+        // Continue execution to at least return empty structure or partial data
+    }
+
+    // Get current user's rank
     let userRank: LeaderboardEntry | undefined;
     if (currentUserId) {
-        const userEntry = await prisma.leaderboardCache.findUnique({
-            where: {
-                userId_period_scopeType_scopeId_date: {
+        try {
+            const userPointsQuery = `
+                SELECT SUM(cd.total_points) as totalPoints
+                FROM completed_deeds cd
+                JOIN users u ON cd.user_id = u.id
+                WHERE u.id = ? ${dateFilter}
+            `;
+
+            const dateParams = period === 'daily' || period === 'weekly' ? [queryParams[0]] : [];
+            const userPointsResult = await prisma.$queryRawUnsafe<any[]>(userPointsQuery, currentUserId, ...dateParams);
+
+            const userPoints = userPointsResult[0]?.totalPoints ? Number(userPointsResult[0].totalPoints) : 0;
+
+            if (userPoints > 0) {
+                const rankQuery = `
+                    SELECT COUNT(*) as rank
+                    FROM (
+                        SELECT SUM(cd.total_points) as totalPoints
+                        ${sqlFrom}
+                        ${sqlWhere}
+                        GROUP BY u.id
+                    ) as scores
+                    WHERE scores.totalPoints > ?
+                `;
+                const rankResult = await prisma.$queryRawUnsafe<any[]>(rankQuery, ...queryParams, userPoints);
+                // Rank is count of people with MORE points + 1
+                const rank = Number(rankResult[0]?.rank || 0) + 1;
+
+                // Fetch user details for the response
+                const userDetails = await prisma.user.findUnique({
+                    where: { id: currentUserId },
+                    include: { district: true, division: true }
+                });
+
+                userRank = {
+                    rank,
                     userId: currentUserId,
-                    period,
-                    scopeType,
-                    scopeId: scopeId || 0,
-                    date,
-                },
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        image: true,
-                        district: {
-                            select: {
-                                nameEn: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-
-        if (userEntry) {
-            // Calculate user's actual rank
-            const rankCount = await prisma.leaderboardCache.count({
-                where: {
-                    period,
-                    scopeType,
-                    ...(scopeId && { scopeId }),
-                    date,
-                    totalPoints: {
-                        gt: userEntry.totalPoints,
-                    },
-                },
-            });
-
-            userRank = {
-                rank: rankCount + 1,
-                userId: userEntry.user.id,
-                userName: userEntry.user.name,
-                userImage: userEntry.user.image || undefined,
-                totalPoints: userEntry.totalPoints,
-                location: userEntry.user.district?.nameEn,
-            };
+                    userName: userDetails?.name || 'You',
+                    userImage: userDetails?.image || undefined,
+                    totalPoints: userPoints,
+                    location: userDetails?.district?.nameEn || userDetails?.division?.nameEn,
+                };
+            }
+        } catch (error) {
+            console.error('Error calculating user rank:', error);
         }
     }
 
-    // Count total users
-    const totalUsers = await prisma.leaderboardCache.count({
-        where: {
-            period,
-            scopeType,
-            ...(scopeId && { scopeId }),
-            date,
-        },
-    });
-
-    const response: LeaderboardResponse = {
+    return {
         entries,
         userRank,
         totalUsers,
     };
-
-    // Cache the result
-    await setCache(cacheKey, response, LEADERBOARD_CACHE_TTL);
-    console.log('✅ Leaderboard fetched from DB and cached');
-
-    return response;
 }
 
 /**
- * Get top N users globally
+ * Get top N users globally (helper)
  */
 export async function getTopUsers(limit: number = 5): Promise<LeaderboardEntry[]> {
     const leaderboard = await getLeaderboard({
@@ -188,41 +200,5 @@ export async function getTopUsers(limit: number = 5): Promise<LeaderboardEntry[]
         scopeType: 'global',
         limit,
     });
-
     return leaderboard.entries;
-}
-
-/**
- * Get community leaderboard (division/district-based)
- */
-export async function getCommunityLeaderboard(params: {
-    divisionId?: number;
-    districtId?: number;
-    period?: 'daily' | 'weekly' | 'overall';
-    limit?: number;
-}): Promise<LeaderboardResponse> {
-    const { divisionId, districtId, period = 'overall', limit = 50 } = params;
-
-    if (districtId) {
-        return await getLeaderboard({
-            period,
-            scopeType: 'district',
-            scopeId: districtId,
-            limit,
-        });
-    } else if (divisionId) {
-        return await getLeaderboard({
-            period,
-            scopeType: 'division',
-            scopeId: divisionId,
-            limit,
-        });
-    }
-
-    // Fallback to global
-    return await getLeaderboard({
-        period,
-        scopeType: 'global',
-        limit,
-    });
 }
