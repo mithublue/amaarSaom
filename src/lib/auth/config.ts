@@ -1,21 +1,19 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@/lib/db/prisma';
-import type { NextAuthConfig } from 'next-auth';
+import { authConfig } from './auth.config';
 
-export const authConfig: NextAuthConfig = {
+export const config = {
+    ...authConfig,
     providers: [
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         }),
     ],
-    pages: {
-        signIn: '/auth/signin',
-        error: '/auth/error',
-    },
     callbacks: {
-        async signIn({ user, account, profile }) {
+        ...authConfig.callbacks,
+        async signIn({ user, account, profile }: { user: any, account: any, profile: any }) {
             if (!user.email) return false;
 
             try {
@@ -39,15 +37,10 @@ export const authConfig: NextAuthConfig = {
                 return true;
             } catch (error) {
                 console.error('Error in signIn callback:', error);
-                // Log the actual error object to see details
-                if (error instanceof Error) {
-                    console.error('Error message:', error.message);
-                    console.error('Error stack:', error.stack);
-                }
                 return false;
             }
         },
-        async jwt({ token, user, account }) {
+        async jwt({ token, user, account }: { token: any, user: any, account: any }) {
             // Initial sign in
             if (user) {
                 // Fetch user from database to get location data
@@ -70,7 +63,7 @@ export const authConfig: NextAuthConfig = {
             }
             return token;
         },
-        async session({ session, token }) {
+        async session({ session, token }: { session: any, token: any }) {
             if (session.user) {
                 session.user.id = token.id as string;
                 session.user.districtId = token.districtId as number | null;
@@ -81,10 +74,6 @@ export const authConfig: NextAuthConfig = {
             return session;
         },
     },
-    session: {
-        strategy: 'jwt',
-        maxAge: 30 * 24 * 60 * 60, // 30 days
-    },
 };
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+export const { handlers, auth, signIn, signOut } = NextAuth(config);
