@@ -65,7 +65,7 @@ export const authConfig: NextAuthConfig = {
                     token.districtId = dbUser.districtId;
                     token.divisionId = dbUser.divisionId;
                     token.countryId = dbUser.countryId;
-                    token.language = dbUser.language;
+                    token.language = dbUser.preferredLanguage;
                 }
             }
             return token;
