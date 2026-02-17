@@ -39,7 +39,10 @@ redis.on('connect', () => {
 });
 
 // Helper functions for cache management
+const isBuildPhase = process.env.NODE_ENV === 'production' && redisUrl === 'localhost';
+
 export async function getCached<T>(key: string): Promise<T | null> {
+    if (isBuildPhase) return null;
     try {
         const cached = await redis.get(key);
         return cached ? JSON.parse(cached) : null;
@@ -50,6 +53,7 @@ export async function getCached<T>(key: string): Promise<T | null> {
 }
 
 export async function setCache(key: string, value: any, ttlSeconds: number = 3600): Promise<void> {
+    if (isBuildPhase) return;
     try {
         await redis.setex(key, ttlSeconds, JSON.stringify(value));
     } catch (error) {
@@ -58,6 +62,7 @@ export async function setCache(key: string, value: any, ttlSeconds: number = 360
 }
 
 export async function deleteCache(key: string): Promise<void> {
+    if (isBuildPhase) return;
     try {
         await redis.del(key);
     } catch (error) {
