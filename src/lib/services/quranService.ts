@@ -78,7 +78,7 @@ export async function getChapterVerses(id: number, offset = 0, limit = 10): Prom
     if (cached) return cached;
 
     try {
-        // Correct pagination logic: page starts at 1
+        // Correct pagination logic: page starts at 1 
         const page = Math.floor(offset / limit) + 1;
 
         // Construct URL
