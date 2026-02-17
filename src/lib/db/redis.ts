@@ -10,16 +10,23 @@ const globalForRedis = globalThis as unknown as {
 
 export const redis =
     globalForRedis.redis ??
-    new Redis({
-        host: redisUrl,
-        port: redisPort,
-        password: redisPassword || undefined,
-        retryStrategy: (times) => {
-            const delay = Math.min(times * 50, 2000);
-            return delay;
-        },
-        maxRetriesPerRequest: 3,
-    });
+    (redisUrl === 'localhost' && process.env.NODE_ENV === 'production'
+        ? new Redis({ lazyConnect: true }) // Mock/Lazy for build
+        : new Redis({
+            host: redisUrl,
+            port: redisPort,
+            password: redisPassword || undefined,
+            retryStrategy: (times) => {
+                // Stop retrying after 3 attempts
+                if (times > 3) {
+                    return null;
+                }
+                const delay = Math.min(times * 50, 2000);
+                return delay;
+            },
+            maxRetriesPerRequest: 3,
+            lazyConnect: true, // Don't connect immediately
+        }));
 
 if (process.env.NODE_ENV !== 'production') globalForRedis.redis = redis;
 
