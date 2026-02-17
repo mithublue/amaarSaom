@@ -109,15 +109,21 @@ export async function getLeaderboard(params: {
     try {
         const rawEntries = await prisma.$queryRawUnsafe<any[]>(entriesQuery, ...entriesParams);
 
-        // Map to interface
-        entries = rawEntries.map((entry: any, index: number) => ({
-            rank: offset + index + 1,
-            userId: Number(entry.userId),
-            userName: entry.userName,
-            userImage: entry.userImage,
-            totalPoints: Number(entry.totalPoints || 0), // Handle potential nulls/BigInt
-            location: entry.location,
-        }));
+        // Map to interface with masked names for privacy
+        entries = rawEntries.map((entry: any, index: number) => {
+            // Simple masking strategy: "Servant of Allah {ID}" or similar anonymous name
+            const isCurrentUser = currentUserId && Number(entry.userId) === currentUserId;
+            const anonymousName = `Servant of Allah ${Number(entry.userId).toString().slice(-4)}`; // unique-ish suffix
+
+            return {
+                rank: offset + index + 1,
+                userId: Number(entry.userId),
+                userName: isCurrentUser ? entry.userName : anonymousName, // Show real name only to self
+                userImage: isCurrentUser ? entry.userImage : undefined, // Hide images too
+                totalPoints: Number(entry.totalPoints || 0),
+                location: entry.location,
+            };
+        });
 
         // Count total users
         const countQuery = `

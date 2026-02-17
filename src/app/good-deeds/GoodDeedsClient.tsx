@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 
+import Link from 'next/link';
+
 interface PredefinedDeed {
     id: number;
     name: string;
@@ -42,6 +44,7 @@ export default function GoodDeedsClient() {
     const [customDeedName, setCustomDeedName] = useState('');
     const [showCustomForm, setShowCustomForm] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetchPredefinedDeeds();
@@ -120,9 +123,12 @@ export default function GoodDeedsClient() {
         }
     };
 
-    const filteredDeeds = selectedTier === 'all'
-        ? predefinedDeeds
-        : predefinedDeeds.filter(d => d.tier === selectedTier);
+    const filteredDeeds = predefinedDeeds.filter(d => {
+        const matchesTier = selectedTier === 'all' || d.tier === selectedTier;
+        const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (d.description && d.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesTier && matchesSearch;
+    });
 
     const getTierColor = (tier: string) => {
         switch (tier) {
@@ -150,6 +156,17 @@ export default function GoodDeedsClient() {
                     <p className="text-green-200 text-lg font-semibold">{successMessage}</p>
                 </div>
             )}
+
+            {/* Top Stats & Actions Bar */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Good Deeds Manager</h1>
+                    <p className="text-primary-200">Track and earn rewards for your good deeds</p>
+                </div>
+                <Link href="/leaderboard" className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-orange-500/20 transition flex items-center gap-2">
+                    🏆 View Leaderboard
+                </Link>
+            </div>
 
             {/* Stats Cards */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -199,6 +216,18 @@ export default function GoodDeedsClient() {
                         >
                             {showCustomForm ? '❌ Cancel' : '➕ Custom'}
                         </button>
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="relative mb-4">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-300">🔍</span>
+                        <input
+                            type="text"
+                            placeholder="Search deeds..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-primary-400 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition"
+                        />
                     </div>
 
                     {/* Custom Deed Form */}
