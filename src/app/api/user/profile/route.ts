@@ -35,7 +35,10 @@ export async function GET() {
 
         return NextResponse.json({
             success: true,
-            data: user,
+            data: {
+                ...user,
+                anonymousName: `Servant of Allah ${user.id.toString().padStart(4, '0')}`
+            },
         });
     } catch (error) {
         console.error('Error fetching user profile:', error);

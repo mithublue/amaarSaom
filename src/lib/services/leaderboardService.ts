@@ -197,6 +197,8 @@ export async function getLeaderboard(params: {
     };
 }
 
+// ... existing code ...
+
 /**
  * Get top N users globally (helper)
  */
@@ -207,4 +209,39 @@ export async function getTopUsers(limit: number = 5): Promise<LeaderboardEntry[]
         limit,
     });
     return leaderboard.entries;
+}
+
+/**
+ * Get District Leaderboard (Aggregated Scores)
+ */
+export async function getDistrictLeaderboard(limit: number = 20): Promise<any[]> {
+    try {
+        const query = `
+            SELECT 
+                d.id,
+                d.name_en as name,
+                CAST(SUM(cd.total_points) AS UNSIGNED) as totalPoints
+            FROM completed_deeds cd
+            JOIN users u ON cd.user_id = u.id
+            JOIN districts d ON u.district_id = d.id
+            GROUP BY d.id
+            ORDER BY totalPoints DESC
+        `;
+
+        // Note: For full district ranking we fetch all and slice, or use window functions. 
+        // For simplicity and since there are only 64 districts, fetching all is fine for now.
+        const results = await prisma.$queryRawUnsafe<any[]>(query);
+
+        const leaderboard = results.map((r: any, index: number) => ({
+            rank: index + 1,
+            userId: r.id, // Use District ID as userId for unique key
+            userName: r.name,
+            totalPoints: Number(r.totalPoints || 0)
+        }));
+
+        return leaderboard;
+    } catch (error) {
+        console.error('Error fetching district leaderboard:', error);
+        return [];
+    }
 }

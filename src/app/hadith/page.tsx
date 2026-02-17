@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HadithClient from './HadithClient';
 import { auth } from '@/lib/auth/config';
 
 export default async function HadithPage() {
@@ -21,29 +22,8 @@ export default async function HadithPage() {
             {/* Main Content */}
             <main className="container mx-auto px-4 py-8">
                 <div className="max-w-3xl mx-auto">
-                    {/* Hadith of the Day */}
-                    <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 mb-6">
-                        <div className="text-center mb-6">
-                            <span className="text-5xl block mb-4">📖</span>
-                            <h2 className="text-2xl font-bold text-white mb-2">Hadith of the Day</h2>
-                            <p className="text-primary-200 text-sm">Day {new Date().getDate()} of Ramadan</p>
-                        </div>
-
-                        <div className="bg-white/5 rounded-2xl p-6 mb-4">
-                            <p className="text-white text-lg italic leading-relaxed text-center mb-4">
-                                "The best of you are those who learn the Quran and teach it."
-                            </p>
-                            <p className="text-primary-200 text-sm text-center">
-                                — Prophet Muhammad ﷺ (Sahih Bukhari)
-                            </p>
-                        </div>
-
-                        <div className="text-center">
-                            <button className="px-6 py-2 bg-accent text-white rounded-xl hover:bg-accent/80 transition">
-                                Share Hadith
-                            </button>
-                        </div>
-                    </div>
+                    {/* Hadith Component */}
+                    <HadithClient />
 
                     {/* Browse More */}
                     <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6">

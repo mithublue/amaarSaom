@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Footer from '@/components/layout/Footer';
 import { auth } from '@/lib/auth/config';
 
 export default async function DashboardPage() {
@@ -79,9 +80,7 @@ export default async function DashboardPage() {
             </main>
 
             {/* Footer */}
-            <footer className="mt-16 py-6 text-center text-primary-300">
-                <p>Ramadan Mubarak! 🌙 May your fasts be accepted</p>
-            </footer>
+            <Footer language={session?.user?.language || 'en'} />
         </div>
     );
 }

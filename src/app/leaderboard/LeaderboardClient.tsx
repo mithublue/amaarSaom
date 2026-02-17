@@ -21,7 +21,7 @@ export default function LeaderboardClient() {
     const [data, setData] = useState<LeaderboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState<'daily' | 'weekly' | 'overall'>('weekly');
-    const [scope, setScope] = useState<'global' | 'district' | 'division'>('global');
+    const [scope, setScope] = useState<'global' | 'district' | 'division' | 'district_ranking'>('global');
 
     useEffect(() => {
         fetchLeaderboard();
@@ -110,8 +110,8 @@ export default function LeaderboardClient() {
                             key={p}
                             onClick={() => setPeriod(p)}
                             className={`flex-1 px-6 py-2 rounded-lg font-semibold transition-all ${period === p
-                                    ? 'bg-accent text-white shadow-lg'
-                                    : 'text-primary-200 hover:text-white'
+                                ? 'bg-accent text-white shadow-lg'
+                                : 'text-primary-200 hover:text-white'
                                 }`}
                         >
                             {p === 'daily' ? 'Today' : p === 'weekly' ? 'This Week' : 'All Time'}
@@ -120,16 +120,16 @@ export default function LeaderboardClient() {
                 </div>
 
                 <div className="flex bg-black/20 rounded-xl p-1">
-                    {(['global', 'division', 'district'] as const).map((s) => (
+                    {(['global', 'division', 'district', 'district_ranking'] as const).map((s) => (
                         <button
                             key={s}
                             onClick={() => setScope(s)}
                             className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all ${scope === s
-                                    ? 'bg-secondary text-white shadow-lg'
-                                    : 'text-primary-200 hover:text-white'
+                                ? 'bg-secondary text-white shadow-lg'
+                                : 'text-primary-200 hover:text-white'
                                 }`}
                         >
-                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                            {s === 'district_ranking' ? '🏙️ Top Districts' : s.charAt(0).toUpperCase() + s.slice(1)}
                         </button>
                     ))}
                 </div>
@@ -150,11 +150,15 @@ export default function LeaderboardClient() {
                             <div className="flex items-center gap-4">
                                 <div className="text-2xl font-bold text-white w-8">#{data.userRank.rank}</div>
                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xl overflow-hidden">
-                                    {data.userRank.userImage ? <img src={data.userRank.userImage} /> : data.userRank.userName[0]}
+                                    {data.userRank.userImage ? <img src={data.userRank.userImage} /> : (scope === 'district_ranking' ? '🏙️' : data.userRank.userName[0])}
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-white font-bold text-lg">You</div>
-                                    <div className="text-white/80 text-sm">{data.userRank.location || 'Global'}</div>
+                                    <div className="text-white font-bold text-lg">
+                                        {scope === 'district_ranking' ? 'Your District' : 'You'}
+                                    </div>
+                                    <div className="text-white/80 text-sm">
+                                        {scope === 'district_ranking' ? data.userRank.userName : (data.userRank.location || 'Global')}
+                                    </div>
                                 </div>
                                 <div className="text-white font-bold text-2xl">{data.userRank.totalPoints} pts</div>
                             </div>
@@ -175,7 +179,9 @@ export default function LeaderboardClient() {
                                 </div>
 
                                 <div className="flex-1">
-                                    <div className="text-white font-semibold">{entry.userName}</div>
+                                    <div className="text-white font-semibold">
+                                        {entry.userName}
+                                    </div>
                                     {entry.location && <div className="text-primary-400 text-xs">{entry.location}</div>}
                                 </div>
 

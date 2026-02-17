@@ -34,7 +34,13 @@ export default function PrayerTimesClient() {
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [location, setLocation] = useState({ city: 'Dhaka', country: 'Bangladesh' });
+    const [location, setLocation] = useState<{
+        city: string;
+        country: string;
+        lat?: number;
+        lng?: number;
+        useCoords?: boolean;
+    }>({ city: 'Dhaka', country: 'Bangladesh', useCoords: false });
     const [hijriDate, setHijriDate] = useState('');
 
     useEffect(() => {
@@ -46,10 +52,14 @@ export default function PrayerTimesClient() {
             setLoading(true);
             setError(null);
 
-            // Using Aladhan API with city and country
-            const response = await fetch(
-                `https://api.aladhan.com/v1/timingsByCity?city=${location.city}&country=${location.country}&method=2`
-            );
+            let url = '';
+            if (location.useCoords && location.lat && location.lng) {
+                url = `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${location.lat}&longitude=${location.lng}&method=2`;
+            } else {
+                url = `https://api.aladhan.com/v1/timingsByCity?city=${location.city}&country=${location.country}&method=2`;
+            }
+
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch prayer times');
@@ -77,17 +87,46 @@ export default function PrayerTimesClient() {
                 <label className="block text-white font-semibold mb-3">
                     📍 Select Your City:
                 </label>
-                <select
-                    value={location.city}
-                    onChange={(e) => setLocation({ ...location, city: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent"
-                >
-                    {bangladeshCities.map((city) => (
-                        <option key={city} value={city} className="bg-primary-800">
-                            {city}
-                        </option>
-                    ))}
-                </select>
+                <div className="flex gap-4">
+                    <select
+                        value={location.city}
+                        onChange={(e) => setLocation({ ...location, city: e.target.value, useCoords: false })}
+                        className="flex-1 px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
+                        {bangladeshCities.map((city) => (
+                            <option key={city} value={city} className="bg-primary-800">
+                                {city}
+                            </option>
+                        ))}
+                    </select>
+                    <button
+                        onClick={() => {
+                            if (navigator.geolocation) {
+                                setLoading(true);
+                                navigator.geolocation.getCurrentPosition(
+                                    (position) => {
+                                        setLocation({
+                                            ...location,
+                                            lat: position.coords.latitude,
+                                            lng: position.coords.longitude,
+                                            useCoords: true
+                                        });
+                                    },
+                                    (error) => {
+                                        alert('Error getting location: ' + error.message);
+                                        setLoading(false);
+                                    }
+                                );
+                            } else {
+                                alert('Geolocation is not supported by this browser.');
+                            }
+                        }}
+                        className="px-4 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition flex items-center gap-2"
+                        title="Use My Exact Location"
+                    >
+                        📍
+                    </button>
+                </div>
             </div>
 
             {/* Prayer Times Card */}
@@ -97,7 +136,7 @@ export default function PrayerTimesClient() {
                         Today's Prayer Times
                     </h2>
                     <p className="text-primary-200">
-                        {location.city}, {location.country}
+                        {location.useCoords ? '📍 Your Exact Location' : `${location.city}, ${location.country}`}
                     </p>
                     {hijriDate && (
                         <p className="text-accent text-sm mt-1">

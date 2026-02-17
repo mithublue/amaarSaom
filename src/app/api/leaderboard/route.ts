@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeaderboard, getCommunityLeaderboard } from '@/lib/services/leaderboardService';
+import { getLeaderboard, getDistrictLeaderboard } from '@/lib/services/leaderboardService';
 import { auth } from '@/lib/auth/config';
+import { prisma } from '@/lib/db/prisma';
 
 /**
  * GET /api/leaderboard
@@ -10,10 +11,40 @@ import { auth } from '@/lib/auth/config';
 export async function GET(request: NextRequest) {
     try {
         const session = await auth();
-        const searchParams = request.nextUrl.searchParams;
+        const { searchParams } = new URL(request.url);
 
-        const period = (searchParams.get('period') as 'daily' | 'weekly' | 'overall') || 'overall';
-        const scope = (searchParams.get('scope') as 'global' | 'country' | 'division' | 'district') || 'global';
+        const period = (searchParams.get('period') as any) || 'weekly';
+        const scope = (searchParams.get('scope') as any) || 'global';
+
+        // Special case for District Rankings
+        if (scope === 'district_ranking') {
+            const allDistricts = await getDistrictLeaderboard();
+            let myDistrictRank = null;
+
+            if (session?.user?.id) {
+                // Get user's district
+                const user = await prisma.user.findUnique({
+                    where: { id: parseInt(session.user.id) },
+                    select: { districtId: true }
+                });
+
+                if (user?.districtId) {
+                    myDistrictRank = allDistricts.find(d => d.userId === user.districtId) || null;
+                }
+            }
+
+            // Return top limit (e.g. 50) and the user's district rank
+            return NextResponse.json({
+                success: true,
+                data: {
+                    entries: allDistricts.slice(0, 50),
+                    userRank: myDistrictRank,
+                    totalUsers: allDistricts.length
+                }
+            });
+        }
+
+        // ... rest of user leaderboard logic ...
         const scopeId = searchParams.get('scopeId') ? parseInt(searchParams.get('scopeId')!) : undefined;
         const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
         const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 50;
