@@ -13,7 +13,7 @@ export const config = {
     ],
     callbacks: {
         ...authConfig.callbacks,
-        async signIn({ user, account, profile }: { user: any, account: any, profile: any }) {
+        async signIn({ user, account, profile }: { user: any, account?: any, profile?: any }) {
             if (!user.email) return false;
 
             try {
@@ -40,7 +40,7 @@ export const config = {
                 return false;
             }
         },
-        async jwt({ token, user, account }: { token: any, user: any, account: any }) {
+        async jwt({ token, user, account }: { token: any, user?: any, account?: any }) {
             // Initial sign in
             if (user) {
                 // Fetch user from database to get location data
