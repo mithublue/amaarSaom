@@ -1,0 +1,206 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Location Models (Bangladesh-focused)
+// ============================================
+
+model Country {
+  id        Int        @id @default(autoincrement())
+  nameEn    String     @map("name_en") @db.VarChar(100)
+  nameBn    String?    @map("name_bn") @db.VarChar(100)
+  nameAr    String?    @map("name_ar") @db.VarChar(100)
+  code      String     @unique @db.VarChar(3)
+  divisions Division[]
+  users     User[]
+
+  @@map("countries")
+}
+
+model Division {
+  id        Int        @id @default(autoincrement())
+  countryId Int        @map("country_id")
+  nameEn    String     @map("name_en") @db.VarChar(100)
+  nameBn    String?    @map("name_bn") @db.VarChar(100)
+  nameAr    String?    @map("name_ar") @db.VarChar(100)
+  country   Country    @relation(fields: [countryId], references: [id])
+  districts District[]
+  users     User[]
+
+  @@index([countryId])
+  @@map("divisions")
+}
+
+model District {
+  id         Int     @id @default(autoincrement())
+  divisionId Int     @map("division_id")
+  nameEn     String  @map("name_en") @db.VarChar(100)
+  nameBn     String? @map("name_bn") @db.VarChar(100)
+  nameAr     String? @map("name_ar") @db.VarChar(100)
+  latitude   Decimal? @db.Decimal(10, 8)
+  longitude  Decimal? @db.Decimal(11, 8)
+  division   Division @relation(fields: [divisionId], references: [id])
+  users      User[]
+
+  @@index([divisionId])
+  @@index([latitude, longitude])
+  @@map("districts")
+}
+
+// ============================================
+// User Models
+// ============================================
+
+model User {
+  id                Int              @id @default(autoincrement())
+  email             String           @unique @db.VarChar(255)
+  name              String           @db.VarChar(100)
+  phone             String?          @db.VarChar(20)
+  image             String?          @db.Text
+  countryId         Int?             @map("country_id")
+  divisionId        Int?             @map("division_id")
+  districtId        Int?             @map("district_id")
+  preferredLanguage String           @default("en") @map("preferred_language") @db.VarChar(5)
+  timezone          String           @default("Asia/Dhaka") @db.VarChar(50)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  country           Country?         @relation(fields: [countryId], references: [id])
+  division          Division?        @relation(fields: [divisionId], references: [id])
+  district          District?        @relation(fields: [districtId], references: [id])
+  goals             UserGoal[]
+  completedDeeds    CompletedDeed[]
+  leaderboards      LeaderboardCache[]
+  prayerSettings    PrayerSettings?
+  accounts          Account[]
+
+  @@index([email])
+  @@index([countryId, divisionId, districtId])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int     @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// ============================================
+// Good Deeds Models
+// ============================================
+
+model PredefinedGoodDeed {
+  id                  Int             @id @default(autoincrement())
+  nameEn              String          @map("name_en") @db.VarChar(100)
+  nameBn              String?         @map("name_bn") @db.VarChar(100)
+  nameAr              String?         @map("name_ar") @db.VarChar(100)
+  category            String          @default("other") @db.VarChar(20)
+  tier                String          @default("easy") @db.VarChar(20)
+  points              Int             @default(10)
+  timeEstimateMinutes Int?            @map("time_estimate_minutes")
+  icon                String?         @db.VarChar(50)
+  isActive            Boolean         @default(true) @map("is_active")
+  displayOrder        Int             @default(0) @map("display_order")
+  descriptionEn       String?         @map("description_en") @db.Text
+  descriptionBn       String?         @map("description_bn") @db.Text
+  descriptionAr       String?         @map("description_ar") @db.Text
+  goals               UserGoal[]
+  completedDeeds      CompletedDeed[]
+
+  @@map("predefined_good_deeds")
+}
+
+model UserGoal {
+  id             Int                 @id @default(autoincrement())
+  userId         Int                 @map("user_id")
+  goodDeedId     Int?                @map("good_deed_id")
+  customDeedName String?             @map("custom_deed_name") @db.VarChar(200)
+  goalType       String              @map("goal_type") @db.VarChar(20)
+  targetCount    Int                 @default(1) @map("target_count")
+  startDate      DateTime            @map("start_date") @db.Date
+  endDate        DateTime            @map("end_date") @db.Date
+  isCompleted    Boolean             @default(false) @map("is_completed")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goodDeed       PredefinedGoodDeed? @relation(fields: [goodDeedId], references: [id])
+
+  @@index([userId, goalType, startDate])
+  @@map("user_goals")
+}
+
+model CompletedDeed {
+  id             Int                 @id @default(autoincrement())
+  userId         Int                 @map("user_id")
+  goodDeedId     Int?                @map("good_deed_id")
+  customDeedName String?             @map("custom_deed_name") @db.VarChar(200)
+  basePoints     Int                 @default(10) @map("base_points")
+  bonusPoints    Int                 @default(0) @map("bonus_points")
+  multiplier     Decimal             @default(1.00) @db.Decimal(3, 2)
+  totalPoints    Int                 @map("total_points")
+  completedAt    DateTime            @default(now()) @map("completed_at")
+  date           DateTime            @db.Date
+  notes          String?             @db.Text
+  isStreakBonus  Boolean             @default(false) @map("is_streak_bonus")
+  isPowerDay     Boolean             @default(false) @map("is_power_day")
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goodDeed       PredefinedGoodDeed? @relation(fields: [goodDeedId], references: [id])
+
+  @@index([userId, date])
+  @@index([date])
+  @@map("completed_deeds")
+}
+
+// ============================================
+// Leaderboard Models
+// ============================================
+
+model LeaderboardCache {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  period      String   @db.VarChar(20)
+  scopeType   String   @map("scope_type") @db.VarChar(20)
+  scopeId     Int?     @map("scope_id")
+  totalPoints Int      @default(0) @map("total_points")
+  rank        Int?
+  date        DateTime @db.Date
+  lastUpdated DateTime @default(now()) @updatedAt @map("last_updated")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period, scopeType, scopeId, date])
+  @@index([period, scopeType, scopeId, rank])
+  @@map("leaderboard_cache")
+}
+
+// ============================================
+// Prayer Settings Models
+// ============================================
+
+model PrayerSettings {
+  id                   Int     @id @default(autoincrement())
+  userId               Int     @unique @map("user_id")
+  calculationMethod    String  @default("Karachi") @map("calculation_method") @db.VarChar(20)
+  juristicMethod       String  @default("Hanafi") @map("juristic_method") @db.VarChar(20)
+  enableNotifications  Boolean @default(true) @map("enable_notifications")
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("prayer_settings")
+}
