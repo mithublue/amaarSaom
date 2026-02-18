@@ -55,14 +55,8 @@ export default function GoodDeedsClient() {
             const response = await fetch('/api/deeds/predefined');
             const data = await response.json();
             if (data.success) {
-                console.log('Fetched deeds:', data.data.length);
-                // Map the DB fields to the interface
                 const mappedDeeds = data.data.map((deed: any) => ({
                     ...deed,
-                    // Ideally the API should handle localization or we handle it here if we had the locale.
-                    // For now, next-intl suggests fetching data already localized or handling it in render.
-                    // Since this is client side, we might need to pass locale to API or just use what we have.
-                    // The previous code had nameEn fallback. Let's keep it simple for now.
                     name: deed.name || deed.nameEn || '',
                     description: deed.description || deed.descriptionEn || '',
                 }));
@@ -99,7 +93,7 @@ export default function GoodDeedsClient() {
                 body: JSON.stringify({
                     goodDeedId,
                     customDeedName: customName,
-                    ramadanDayNumber: new Date().getDate(),
+                    ramadanDayNumber: new Date().getDate(), // Makeshift day number
                 }),
             });
 
@@ -110,8 +104,6 @@ export default function GoodDeedsClient() {
                 setCustomDeedName('');
                 setShowCustomForm(false);
                 fetchHistory();
-
-                // Clear success message after 3 seconds
                 setTimeout(() => setSuccessMessage(''), 3000);
             }
         } catch (error) {
@@ -131,10 +123,10 @@ export default function GoodDeedsClient() {
 
     const getTierColor = (tier: string) => {
         switch (tier) {
-            case 'easy': return 'text-green-600 bg-green-50 border-green-200';
-            case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-            case 'hard': return 'text-red-600 bg-red-50 border-red-200';
-            default: return 'text-primary-600';
+            case 'easy': return 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30';
+            case 'medium': return 'text-amber-300 bg-amber-500/20 border-amber-500/30';
+            case 'hard': return 'text-rose-300 bg-rose-500/20 border-rose-500/30';
+            default: return 'text-primary-300';
         }
     };
 
@@ -148,55 +140,59 @@ export default function GoodDeedsClient() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full">
             {/* Success Message */}
             {successMessage && (
-                <div className="mb-6 bg-green-500/20 border border-green-500/50 rounded-2xl p-4 text-center animate-slide-down">
-                    <p className="text-green-200 text-lg font-semibold">{successMessage}</p>
+                <div className="mb-8 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl p-4 text-center animate-fade-in backdrop-blur-sm">
+                    <p className="text-emerald-200 text-lg font-semibold flex items-center justify-center gap-2">
+                        ✅ {successMessage}
+                    </p>
                 </div>
             )}
 
-            {/* Top Stats & Actions Bar */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">{t('title')}</h1>
-                    <p className="text-primary-200">{t('subtitle')}</p>
-                </div>
-                <Link href="/leaderboard" className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-orange-500/20 transition flex items-center gap-2">
-                    {t('viewLeaderboard')}
+            {/* Top Actions Bar */}
+            <div className="flex justify-center mb-8">
+                <Link href="/leaderboard" className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-xl font-bold shadow-gold-glow hover:shadow-lg hover:scale-105 transition flex items-center gap-3">
+                    🏆 {t('viewLeaderboard')}
                 </Link>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 text-center hover:shadow-md transition-shadow">
-                    <span className="text-5xl mb-3 block">🌟</span>
-                    <h3 className="text-4xl font-bold text-accent mb-1">{totalPoints}</h3>
-                    <p className="text-text-secondary">{t('totalPoints')}</p>
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+                <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 text-center group hover:bg-primary-900/60 transition-all duration-300">
+                    <div className="w-16 h-16 mx-auto bg-accent-500/20 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                        🌟
+                    </div>
+                    <h3 className="text-4xl font-heading font-bold text-accent-400 mb-1 drop-shadow-sm">{totalPoints}</h3>
+                    <p className="text-primary-200 font-medium">{t('totalPoints')}</p>
                 </div>
-                <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 text-center hover:shadow-md transition-shadow">
-                    <span className="text-5xl mb-3 block">✅</span>
-                    <h3 className="text-4xl font-bold text-primary-900 mb-1">{completedDeeds.length}</h3>
-                    <p className="text-text-secondary">{t('deedsCompleted')}</p>
+                <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 text-center group hover:bg-primary-900/60 transition-all duration-300">
+                    <div className="w-16 h-16 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                        ✅
+                    </div>
+                    <h3 className="text-4xl font-heading font-bold text-white mb-1 drop-shadow-sm">{completedDeeds.length}</h3>
+                    <p className="text-primary-200 font-medium">{t('deedsCompleted')}</p>
                 </div>
-                <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 text-center hover:shadow-md transition-shadow">
-                    <span className="text-5xl mb-3 block">🔥</span>
-                    <h3 className="text-4xl font-bold text-secondary mb-1">
+                <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 text-center group hover:bg-primary-900/60 transition-all duration-300">
+                    <div className="w-16 h-16 mx-auto bg-indigo-500/20 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+                        🔥
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2 capitalize">
                         {period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')}
                     </h3>
-                    <p className="text-text-secondary">{t('period')}</p>
+                    <p className="text-primary-200 font-medium">{t('period')}</p>
                 </div>
             </div>
 
             {/* Period Selector */}
-            <div className="mb-6 flex gap-3 flex-wrap">
+            <div className="mb-8 flex justify-center gap-3 flex-wrap">
                 {(['today', 'week', 'month', 'all'] as const).map((p) => (
                     <button
                         key={p}
                         onClick={() => setPeriod(p)}
-                        className={`px-6 py-2 rounded-xl font-semibold transition-all ${period === p
-                            ? 'bg-accent text-white shadow-lg scale-105'
-                            : 'bg-white border border-gray-200 text-primary-600 hover:bg-slate-50'
+                        className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${period === p
+                            ? 'bg-accent-600 text-white shadow-gold-glow scale-105'
+                            : 'bg-primary-900/40 text-primary-300 border border-white/10 hover:bg-white/10 hover:text-white'
                             }`}
                     >
                         {p === 'today' ? t('today') : p === 'week' ? t('week') : p === 'month' ? t('month') : t('allTime')}
@@ -206,44 +202,46 @@ export default function GoodDeedsClient() {
 
             <div className="grid lg:grid-cols-2 gap-8">
                 {/* Available Deeds */}
-                <div>
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-primary-900">{t('availableDeeds')}</h2>
+                <div className="bg-primary-900/20 backdrop-blur-sm rounded-3xl p-6 border border-white/5">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                            ✨ {t('availableDeeds')}
+                        </h2>
                         <button
                             onClick={() => setShowCustomForm(!showCustomForm)}
-                            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/80 transition shadow-sm"
+                            className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition border border-white/10 text-sm font-medium"
                         >
-                            {showCustomForm ? t('cancel') : t('customDeed')}
+                            {showCustomForm ? t('cancel') : `+ ${t('customDeed')}`}
                         </button>
                     </div>
 
                     {/* Search Bar */}
-                    <div className="relative mb-4">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">🔍</span>
+                    <div className="relative mb-6">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400">🔍</span>
                         <input
                             type="text"
                             placeholder={t('searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-primary-900 placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition shadow-sm"
+                            className="w-full pl-11 pr-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white placeholder-primary-500 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition shadow-inner"
                         />
                     </div>
 
                     {/* Custom Deed Form */}
                     {showCustomForm && (
-                        <div className="mb-4 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                            <h3 className="text-primary-900 font-semibold mb-3">{t('logCustomDeed')}</h3>
+                        <div className="mb-6 bg-primary-800/50 rounded-2xl border border-accent-500/30 p-6 animate-fade-in">
+                            <h3 className="text-white font-bold mb-3">{t('logCustomDeed')}</h3>
                             <input
                                 type="text"
                                 value={customDeedName}
                                 onChange={(e) => setCustomDeedName(e.target.value)}
                                 placeholder={t('customDeedPlaceholder')}
-                                className="w-full px-4 py-3 rounded-xl bg-slate-50 text-primary-900 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-accent mb-3"
+                                className="w-full px-4 py-3 rounded-xl bg-primary-950 text-white border border-white/10 focus:outline-none focus:border-accent-500 mb-4"
                             />
                             <button
                                 onClick={() => completeDeed(undefined, customDeedName)}
                                 disabled={!customDeedName || submitting}
-                                className="w-full px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition disabled:opacity-50 font-semibold shadow-md"
+                                className="w-full px-6 py-3 bg-accent-600 text-white rounded-xl hover:bg-accent-500 transition disabled:opacity-50 font-bold shadow-lg"
                             >
                                 {submitting ? t('logging') : t('logButton')}
                             </button>
@@ -251,14 +249,14 @@ export default function GoodDeedsClient() {
                     )}
 
                     {/* Tier Filter */}
-                    <div className="flex gap-2 mb-4 flex-wrap">
+                    <div className="flex gap-2 mb-6 flex-wrap">
                         {(['all', 'easy', 'medium', 'hard'] as const).map((tier) => (
                             <button
                                 key={tier}
                                 onClick={() => setSelectedTier(tier)}
-                                className={`px-4 py-2 rounded-lg font-semibold transition ${selectedTier === tier
-                                    ? 'bg-accent text-white shadow-md'
-                                    : 'bg-white border border-gray-200 text-primary-600 hover:bg-slate-50'
+                                className={`px-4 py-2 rounded-lg font-medium transition text-sm ${selectedTier === tier
+                                    ? 'bg-white text-primary-900 shadow-md transform scale-105'
+                                    : 'bg-primary-900/40 text-primary-300 border border-white/5 hover:bg-white/10'
                                     }`}
                             >
                                 {getTierEmoji(tier)} {tier.charAt(0).toUpperCase() + tier.slice(1)}
@@ -267,34 +265,36 @@ export default function GoodDeedsClient() {
                     </div>
 
                     {/* Deeds List */}
-                    <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                         {loading ? (
-                            <div className="text-center py-8">
-                                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
+                            <div className="text-center py-12">
+                                <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-accent-500 border-t-transparent"></div>
                             </div>
                         ) : filteredDeeds.length === 0 ? (
-                            <p className="text-center text-text-muted py-8">{t('noDeeds')}</p>
+                            <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/5">
+                                <p className="text-primary-400">{t('noDeeds')}</p>
+                            </div>
                         ) : (
                             filteredDeeds.map((deed) => (
                                 <div
                                     key={deed.id}
-                                    className="bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-md transition group shadow-sm"
+                                    className="bg-primary-900/40 backdrop-blur-sm rounded-2xl border border-white/5 p-5 hover:border-accent-500/30 hover:bg-primary-800/40 transition-all duration-300 group shadow-sm"
                                 >
-                                    <div className="flex justify-between items-start mb-2">
+                                    <div className="flex justify-between items-start mb-3">
                                         <div className="flex-1">
-                                            <h3 className="text-primary-900 font-semibold text-lg">{deed.name}</h3>
+                                            <h3 className="text-white font-bold text-lg group-hover:text-accent-300 transition-colors">{deed.name}</h3>
                                             {deed.description && (
-                                                <p className="text-text-secondary text-sm mt-1">{deed.description}</p>
+                                                <p className="text-primary-300 text-sm mt-1">{deed.description}</p>
                                             )}
                                         </div>
-                                        <span className={`px-3 py-1 rounded-lg text-sm font-semibold border ${getTierColor(deed.tier)}`}>
+                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ml-3 whitespace-nowrap ${getTierColor(deed.tier)}`}>
                                             {getTierEmoji(deed.tier)} +{deed.points}
                                         </span>
                                     </div>
                                     <button
                                         onClick={() => completeDeed(deed.id)}
                                         disabled={submitting}
-                                        className="w-full mt-3 px-4 py-2 bg-accent/10 text-accent rounded-lg hover:bg-accent hover:text-white transition disabled:opacity-50 font-semibold border border-accent/20"
+                                        className="w-full mt-2 px-4 py-2.5 bg-white/5 text-accent-300 rounded-xl hover:bg-accent-600 hover:text-white transition-all disabled:opacity-50 font-semibold border border-white/5 hover:border-accent-500 group-hover:shadow-gold-glow"
                                     >
                                         {submitting ? t('logging') : t('completeButton')}
                                     </button>
@@ -305,40 +305,43 @@ export default function GoodDeedsClient() {
                 </div>
 
                 {/* Completed Deeds History */}
-                <div>
-                    <h2 className="text-2xl font-bold text-primary-900 mb-4">{t('history')} ({period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')})</h2>
-                    <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                <div className="bg-primary-900/20 backdrop-blur-sm rounded-3xl p-6 border border-white/5">
+                    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                        📜 {t('history')}
+                        <span className="text-sm font-normal text-primary-400 ml-auto bg-white/5 px-3 py-1 rounded-full">
+                            {period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')}
+                        </span>
+                    </h2>
+
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                         {completedDeeds.length === 0 ? (
-                            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                                <span className="text-6xl mb-4 block">📝</span>
-                                <p className="text-text-secondary">{t('noHistory')}</p>
-                                <p className="text-text-muted text-sm mt-2">{t('startCompleting')}</p>
+                            <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/5 border-dashed">
+                                <span className="text-6xl mb-4 block opacity-20">📝</span>
+                                <p className="text-primary-300 font-medium">{t('noHistory')}</p>
+                                <p className="text-primary-500 text-sm mt-2">{t('startCompleting')}</p>
                             </div>
                         ) : (
                             completedDeeds.map((deed) => (
                                 <div
                                     key={deed.id}
-                                    className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition"
+                                    className="bg-white/5 rounded-2xl border border-white/5 p-4 hover:bg-white/10 transition flex justify-between items-center group"
                                 >
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h4 className="text-primary-900 font-semibold">
-                                                {deed.predefinedGoodDeed?.name || deed.customDeedName}
-                                            </h4>
-                                            <p className="text-text-muted text-sm mt-1">
-                                                {new Date(deed.completedAt).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </p>
-                                            {deed.notes && (
-                                                <p className="text-text-secondary text-sm mt-2 italic">{deed.notes}</p>
-                                            )}
-                                        </div>
-                                        <span className="text-accent font-bold text-lg">+{deed.totalPoints}</span>
+                                    <div>
+                                        <h4 className="text-white font-semibold flex items-center gap-2">
+                                            {deed.predefinedGoodDeed?.name || deed.customDeedName}
+                                        </h4>
+                                        <p className="text-primary-400 text-xs mt-1">
+                                            {new Date(deed.completedAt).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
+                                        </p>
                                     </div>
+                                    <span className="text-accent-400 font-bold text-lg bg-black/20 px-3 py-1 rounded-lg border border-white/5 group-hover:border-accent-500/30 transition-colors">
+                                        +{deed.totalPoints}
+                                    </span>
                                 </div>
                             ))
                         )}
@@ -348,4 +351,3 @@ export default function GoodDeedsClient() {
         </div>
     );
 }
-

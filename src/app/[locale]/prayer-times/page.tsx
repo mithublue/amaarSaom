@@ -1,32 +1,39 @@
 import { Link } from '@/i18n/routing';
 import PrayerTimesClient from './PrayerTimesClient';
 import { getTranslations } from 'next-intl/server';
-import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
+import Navbar from '@/components/layout/Navbar';
+import { auth } from '@/lib/auth/config';
+import Footer from '@/components/layout/Footer';
 
-export default async function PrayerTimesPage() {
+export default async function PrayerTimesPage({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
     const t = await getTranslations('PrayerTimes');
-    const tCommon = await getTranslations('Leaderboard'); // Reuse 'back'
+    const session = await auth();
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background-default via-primary-50 to-primary-100">
-            {/* Header */}
-            <header className="bg-white/50 backdrop-blur-md border-b border-gray-200/50">
-                <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-                    <Link
-                        href="/"
-                        className="text-primary-700 hover:text-accent transition"
-                    >
-                        ← {tCommon('back')}
-                    </Link>
-                    <h1 className="text-2xl font-bold text-primary-900 flex-1">{t('title')}</h1>
-                    <LanguageSwitcher />
-                </div>
-            </header>
+        <div className="min-h-screen flex flex-col font-sans">
+            <Navbar session={session} locale={locale} />
 
-            {/* Main Content */}
-            <main className="container mx-auto px-4 py-8">
-                <PrayerTimesClient />
+            <main className="flex-grow container mx-auto px-4 py-8 mt-24">
+                <div className="max-w-4xl mx-auto">
+                    {/* Header Section */}
+                    <div className="text-center mb-12 animate-fade-in">
+                        <div className="inline-block p-4 rounded-full bg-linear-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 mb-6 shadow-gold-glow">
+                            <span className="text-4xl">🕌</span>
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4 drop-shadow-md">
+                            {t('title')}
+                        </h1>
+                        <p className="text-xl text-primary-200 max-w-2xl mx-auto">
+                            Accurate prayer times for your location
+                        </p>
+                    </div>
+
+                    <PrayerTimesClient />
+                </div>
             </main>
+
+            <Footer language={locale as any} />
         </div>
     );
 }

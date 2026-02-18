@@ -1,28 +1,39 @@
 import { Link } from '@/i18n/routing';
 import GoodDeedsClient from './GoodDeedsClient';
-import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
+import { getTranslations } from 'next-intl/server';
+import Navbar from '@/components/layout/Navbar';
+import { auth } from '@/lib/auth/config';
+import Footer from '@/components/layout/Footer';
 
-export default function GoodDeedsPage() {
+export default async function GoodDeedsPage({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
+    const t = await getTranslations('GoodDeeds');
+    const session = await auth();
+
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background-default via-primary-50 to-primary-100">
-            {/* Header */}
-            <header className="bg-white/50 backdrop-blur-md border-b border-gray-200/50">
-                <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-                    <Link
-                        href="/"
-                        className="text-primary-700 hover:text-accent transition"
-                    >
-                        ← Back
-                    </Link>
-                    <h1 className="text-2xl font-bold text-primary-900 flex-1">Good Deeds Manager ✨</h1>
-                    <LanguageSwitcher />
-                </div>
-            </header>
+        <div className="min-h-screen flex flex-col font-sans">
+            <Navbar session={session} locale={locale} />
 
-            {/* Main Content */}
-            <main className="container mx-auto px-4 py-8">
-                <GoodDeedsClient />
+            <main className="flex-grow container mx-auto px-4 py-8 mt-24">
+                <div className="max-w-6xl mx-auto">
+                    {/* Header Section */}
+                    <div className="text-center mb-12 animate-fade-in">
+                        <div className="inline-block p-4 rounded-full bg-linear-to-br from-teal-500/20 to-emerald-500/20 border border-teal-500/30 mb-6 shadow-gold-glow">
+                            <span className="text-4xl">✨</span>
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4 drop-shadow-md">
+                            {t('title')}
+                        </h1>
+                        <p className="text-xl text-primary-200 max-w-2xl mx-auto">
+                            {t('subtitle')}
+                        </p>
+                    </div>
+
+                    <GoodDeedsClient />
+                </div>
             </main>
+
+            <Footer language={locale as any} />
         </div>
     );
 }
