@@ -4,12 +4,43 @@ import { auth } from '@/lib/auth/config';
 import { getTranslations } from 'next-intl/server';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { getHadithOfTheDay } from '@/lib/hadithService';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+    const { locale } = await params;
+    const t = await getTranslations({ locale, namespace: 'Hadith' });
+    const hadith = getHadithOfTheDay();
+
+    return {
+        title: `${t('title')} | Ramadan Companion`,
+        description: t('desc'),
+        openGraph: {
+            title: t('title'),
+            description: locale === 'bn' ? hadith.textBn : locale === 'ar' ? hadith.textAr : hadith.textEn,
+            images: [
+                {
+                    url: `/api/og/hadith?id=${hadith.id}&lang=${locale}`,
+                    width: 1200,
+                    height: 630,
+                    alt: 'Daily Hadith',
+                },
+            ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: t('title'),
+            description: locale === 'bn' ? hadith.textBn : locale === 'ar' ? hadith.textAr : hadith.textEn,
+            images: [`/api/og/hadith?id=${hadith.id}&lang=${locale}`],
+        },
+    };
+}
 
 export default async function HadithPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const t = await getTranslations('Hadith');
-    const tCommon = await getTranslations('Leaderboard'); // Reuse 'Back'
     const session = await auth();
+    const hadith = getHadithOfTheDay();
 
     return (
         <div className="min-h-screen flex flex-col font-sans">
@@ -30,7 +61,7 @@ export default async function HadithPage({ params }: { params: Promise<{ locale:
                         </p>
                     </div>
 
-                    <HadithClient />
+                    <HadithClient initialHadithData={hadith} />
                 </div>
             </main>
 

@@ -5,30 +5,19 @@ import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import { useLocale, useTranslations } from 'next-intl';
 import allHadiths from '@/app/api/json/hadiths.json';
+import { Hadith } from '@/lib/hadithService';
 
 interface HadithClientProps {
-    initialHadith?: {
-        text: string;
-        source: string;
-    }
+    initialHadithData: Hadith;
 }
 
-interface Hadith {
-    id: number;
-    source: string;
-    category: string;
-    textEn: string;
-    textBn: string;
-    textAr: string;
-}
-
-export default function HadithClient({ initialHadith }: HadithClientProps) {
+export default function HadithClient({ initialHadithData }: HadithClientProps) {
     const locale = useLocale();
     const t = useTranslations('Hadith');
     const [sharedPlatforms, setSharedPlatforms] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
-    const [hadithOfTheDay, setHadithOfTheDay] = useState<Hadith | null>(null);
+    const [hadithOfTheDay, setHadithOfTheDay] = useState<Hadith | null>(initialHadithData);
 
     // Browsing State
     const [searchQuery, setSearchQuery] = useState('');
@@ -44,21 +33,14 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const isRamadan = diffDays > 0 && diffDays <= 30;
 
-    useEffect(() => {
-        // Deterministic 'Random' Hadith based on Date
-        const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-        const index = dayOfYear % allHadiths.length;
-        setHadithOfTheDay(allHadiths[index] as Hadith);
-    }, []);
-
     const getLocalizedText = (h: Hadith) => {
         if (locale === 'bn') return h.textBn;
         if (locale === 'ar') return h.textAr;
         return h.textEn;
     };
 
-    const currentHadithText = hadithOfTheDay ? getLocalizedText(hadithOfTheDay) : (initialHadith?.text || '');
-    const currentHadithSource = hadithOfTheDay?.source || initialHadith?.source || '';
+    const currentHadithText = hadithOfTheDay ? getLocalizedText(hadithOfTheDay) : '';
+    const currentHadithSource = hadithOfTheDay?.source || '';
 
     // Filter Logic
     const filteredHadiths = useMemo(() => {

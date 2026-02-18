@@ -37,6 +37,10 @@
             "leaderboard": {
                 "title": "Leaderboard",
                 "desc": "Compete with your community"
+            },
+            "zakat": {
+                "title": "Zakat Calculator",
+                "desc": "Calculate your Zakat easily"
             }
         }
     },
@@ -144,5 +148,10 @@
     },
     "Duas": {
         "title": "Duas & Amal 🤲"
+    },
+    "ZakatPage": {
+        "title": "Zakat Calculator 💰",
+        "comingSoon": "Coming Soon!",
+        "description": "We are working hard to bring you a comprehensive Zakat calculator to help you fulfill this important pillar of Islam. Stay tuned!"
     }
 }

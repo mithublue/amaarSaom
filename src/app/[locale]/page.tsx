@@ -58,6 +58,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       gradient: 'from-accent-300/20 to-accent-500/20',
       delay: 'delay-300',
     },
+    {
+      icon: '💰',
+      title: t('features.zakat.title'),
+      description: t('features.zakat.desc'),
+      href: '/zakat',
+      gradient: 'from-yellow-400/20 to-yellow-600/20',
+      delay: 'delay-500',
+    },
   ];
 
   return (
