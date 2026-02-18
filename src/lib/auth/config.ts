@@ -14,7 +14,11 @@ export const config = {
     callbacks: {
         ...authConfig.callbacks,
         async signIn({ user, account, profile }: { user: any, account?: any, profile?: any }) {
-            if (!user.email) return false;
+            console.log('SignIn attempt:', { email: user?.email, provider: account?.provider });
+            if (!user.email) {
+                console.error('SignIn failed: No email provided');
+                return false;
+            }
 
             try {
                 // Check if user exists, if not create them
@@ -23,6 +27,7 @@ export const config = {
                 });
 
                 if (!existingUser) {
+                    console.log('Creating new user:', user.email);
                     // Create new user
                     await prisma.user.create({
                         data: {
@@ -32,33 +37,39 @@ export const config = {
                             preferredLanguage: 'en',
                         },
                     });
+                } else {
+                    console.log('Existing user signed in:', user.email);
                 }
 
                 return true;
             } catch (error) {
-                console.error('Error in signIn callback:', error);
+                console.error('DATABASE ERROR in signIn callback:', error);
                 return false;
             }
         },
         async jwt({ token, user, account }: { token: any, user?: any, account?: any }) {
             // Initial sign in
             if (user) {
-                // Fetch user from database to get location data
-                const dbUser = await prisma.user.findUnique({
-                    where: { email: user.email! },
-                    include: {
-                        district: true,
-                        division: true,
-                        country: true,
-                    },
-                });
+                try {
+                    // Fetch user from database to get location data
+                    const dbUser = await prisma.user.findUnique({
+                        where: { email: user.email! },
+                        include: {
+                            district: true,
+                            division: true,
+                            country: true,
+                        },
+                    });
 
-                if (dbUser) {
-                    token.id = dbUser.id.toString();
-                    token.districtId = dbUser.districtId;
-                    token.divisionId = dbUser.divisionId;
-                    token.countryId = dbUser.countryId;
-                    token.language = dbUser.preferredLanguage;
+                    if (dbUser) {
+                        token.id = dbUser.id.toString();
+                        token.districtId = dbUser.districtId;
+                        token.divisionId = dbUser.divisionId;
+                        token.countryId = dbUser.countryId;
+                        token.language = dbUser.preferredLanguage;
+                    }
+                } catch (error) {
+                    console.error('DATABASE ERROR in jwt callback:', error);
                 }
             }
             return token;
