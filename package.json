@@ -21,6 +21,7 @@
     "country-state-city": "^3.2.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.3.1",
+    "flag-icons": "^7.5.0",
     "html2canvas": "^1.4.1",
     "ioredis": "^5.9.3",
     "lucide-react": "^0.574.0",

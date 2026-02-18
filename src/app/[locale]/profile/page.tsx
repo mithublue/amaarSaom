@@ -1,18 +1,20 @@
 import { Metadata } from 'next';
 import ProfileClient from './ProfileClient';
 import { auth } from '@/lib/auth/config';
-import { redirect } from 'next/navigation';
+import { redirect } from '@/i18n/routing';
 
 export const metadata: Metadata = {
     title: 'My Profile | Ramadan Companion',
     description: 'Manage your profile and location settings',
 };
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
     const session = await auth();
 
     if (!session) {
-        redirect('/auth/signin');
+        redirect({ href: '/auth/signin', locale });
+        return null;
     }
 
     return (

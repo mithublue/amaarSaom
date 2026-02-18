@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing';
 import { getAllCountries, getCitiesOfCountry } from '@/lib/locations-package';
+import { useTranslations } from 'next-intl';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 
 export default function ProfileClient({ user }: { user: any }) {
     const router = useRouter();
+    const t = useTranslations('Profile');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
@@ -71,14 +74,6 @@ export default function ProfileClient({ user }: { user: any }) {
         if (selectedCountryCode) {
             const countryCities = getCitiesOfCountry(selectedCountryCode);
             setCities(countryCities);
-
-            // Check if current cityName exists in new list, if not, reset (unless it's initial load)
-            // But for initial load, we want to keep it. 
-            // Better logic: If the list is not empty and current cityName is not in it, reset?
-            // Actually, if we just switched country, we should reset.
-            // But this effect runs on mount too after setting code.
-            // We can check if `cities` was already populated? No.
-            // Let's rely on user interaction to reset.
         } else {
             setCities([]);
         }
@@ -112,20 +107,20 @@ export default function ProfileClient({ user }: { user: any }) {
 
             const data = await response.json();
             if (data.success) {
-                setMessage('Profile updated successfully! ✅');
+                setMessage(t('success'));
                 setTimeout(() => setMessage(''), 3000);
                 router.refresh();
             } else {
-                setMessage('Failed to update profile. ❌');
+                setMessage(t('error'));
             }
         } catch (error) {
-            setMessage('An error occurred. ❌');
+            setMessage(t('genericError'));
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return <div className="text-white text-center py-20">Loading profile...</div>;
+    if (loading) return <div className="text-white text-center py-20">{t('loading')}</div>;
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -134,9 +129,10 @@ export default function ProfileClient({ user }: { user: any }) {
                     href="/"
                     className="p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition"
                 >
-                    ← Back
+                    ← {t('back')}
                 </Link>
-                <h1 className="text-3xl font-bold text-white">My Profile 👤</h1>
+                <h1 className="text-3xl font-bold text-white flex-1">{t('title')}</h1>
+                <LanguageSwitcher />
             </div>
 
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8">
@@ -149,36 +145,36 @@ export default function ProfileClient({ user }: { user: any }) {
                 <form onSubmit={handleSave} className="space-y-6">
                     {/* Name */}
                     <div>
-                        <label className="block text-primary-200 mb-2 font-semibold">Display Name</label>
+                        <label className="block text-primary-200 mb-2 font-semibold">{t('displayName')}</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent"
-                            placeholder="Your Name"
+                            placeholder={t('placeholderName')}
                         />
                         <p className="text-primary-300 text-sm mt-2">
-                            🔒 Others will see you as: <span className="text-accent font-semibold">{anonymousName}</span> in the leaderboard.
+                            🔒 {t('anonymousInfo', { name: anonymousName })}
                         </p>
                     </div>
 
                     {/* Location Section */}
                     <div className="border-t border-white/10 pt-6">
-                        <h3 className="text-xl font-bold text-white mb-4">📍 Location Settings</h3>
+                        <h3 className="text-xl font-bold text-white mb-4">{t('locationSettings')}</h3>
                         <p className="text-primary-300 text-sm mb-6">
-                            Select your country and city to customize your experience.
+                            {t('locationDesc')}
                         </p>
 
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* Country */}
                             <div>
-                                <label className="block text-primary-200 mb-2">Country</label>
+                                <label className="block text-primary-200 mb-2">{t('country')}</label>
                                 <select
                                     value={selectedCountryCode}
                                     onChange={handleCountryChange}
                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent [&>option]:bg-primary-900"
                                 >
-                                    <option value="">Select Country</option>
+                                    <option value="">{t('selectCountry')}</option>
                                     {allCountries.map((c) => (
                                         <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
                                     ))}
@@ -187,7 +183,7 @@ export default function ProfileClient({ user }: { user: any }) {
 
                             {/* City */}
                             <div>
-                                <label className="block text-primary-200 mb-2">City</label>
+                                <label className="block text-primary-200 mb-2">{t('city')}</label>
                                 {cities.length > 0 ? (
                                     <select
                                         value={cityName}
@@ -195,7 +191,7 @@ export default function ProfileClient({ user }: { user: any }) {
                                         disabled={!selectedCountryCode}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent disabled:opacity-50 [&>option]:bg-primary-900"
                                     >
-                                        <option value="">Select City</option>
+                                        <option value="">{t('selectCity')}</option>
                                         {cities.map((city) => (
                                             <option key={city.name} value={city.name}>{city.name}</option>
                                         ))}
@@ -206,11 +202,11 @@ export default function ProfileClient({ user }: { user: any }) {
                                         value={cityName}
                                         onChange={(e) => setCityName(e.target.value)}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent"
-                                        placeholder="Enter City Name"
+                                        placeholder={t('enterCity')}
                                     />
                                 )}
                                 {cities.length === 0 && selectedCountryCode && (
-                                    <p className="text-xs text-primary-300 mt-1">No cities found for this country, please type manually.</p>
+                                    <p className="text-xs text-primary-300 mt-1">{t('noCities')}</p>
                                 )}
                             </div>
                         </div>
@@ -222,7 +218,7 @@ export default function ProfileClient({ user }: { user: any }) {
                             disabled={saving}
                             className="w-full bg-accent text-white py-4 rounded-xl font-bold text-lg hover:bg-accent/80 transition disabled:opacity-50"
                         >
-                            {saving ? 'Saving...' : 'Save Changes'}
+                            {saving ? t('saving') : t('save')}
                         </button>
                     </div>
                 </form>

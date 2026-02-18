@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 
 interface PredefinedDeed {
     id: number;
@@ -27,13 +27,8 @@ interface CompletedDeed {
     notes?: string | null;
 }
 
-interface DeedsData {
-    deeds: CompletedDeed[];
-    totalPoints: number;
-    period: string;
-}
-
 export default function GoodDeedsClient() {
+    const t = useTranslations('GoodDeeds');
     const [predefinedDeeds, setPredefinedDeeds] = useState<PredefinedDeed[]>([]);
     const [completedDeeds, setCompletedDeeds] = useState<CompletedDeed[]>([]);
     const [totalPoints, setTotalPoints] = useState(0);
@@ -64,8 +59,12 @@ export default function GoodDeedsClient() {
                 // Map the DB fields to the interface
                 const mappedDeeds = data.data.map((deed: any) => ({
                     ...deed,
-                    name: deed.nameEn || deed.name, // Fallback to nameEn
-                    description: deed.descriptionEn || deed.description, // Fallback to descriptionEn
+                    // Ideally the API should handle localization or we handle it here if we had the locale.
+                    // For now, next-intl suggests fetching data already localized or handling it in render.
+                    // Since this is client side, we might need to pass locale to API or just use what we have.
+                    // The previous code had nameEn fallback. Let's keep it simple for now.
+                    name: deed.name || deed.nameEn || '',
+                    description: deed.description || deed.descriptionEn || '',
                 }));
                 setPredefinedDeeds(mappedDeeds);
             }
@@ -107,7 +106,7 @@ export default function GoodDeedsClient() {
             const data = await response.json();
 
             if (data.success) {
-                setSuccessMessage(data.message);
+                setSuccessMessage(t('success'));
                 setCustomDeedName('');
                 setShowCustomForm(false);
                 fetchHistory();
@@ -125,7 +124,7 @@ export default function GoodDeedsClient() {
 
     const filteredDeeds = predefinedDeeds.filter(d => {
         const matchesTier = selectedTier === 'all' || d.tier === selectedTier;
-        const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        const matchesSearch = (d.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (d.description && d.description.toLowerCase().includes(searchQuery.toLowerCase()));
         return matchesTier && matchesSearch;
     });
@@ -160,11 +159,11 @@ export default function GoodDeedsClient() {
             {/* Top Stats & Actions Bar */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Good Deeds Manager</h1>
-                    <p className="text-primary-200">Track and earn rewards for your good deeds</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">{t('title')}</h1>
+                    <p className="text-primary-200">{t('subtitle')}</p>
                 </div>
                 <Link href="/leaderboard" className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-orange-500/20 transition flex items-center gap-2">
-                    🏆 View Leaderboard
+                    {t('viewLeaderboard')}
                 </Link>
             </div>
 
@@ -173,19 +172,19 @@ export default function GoodDeedsClient() {
                 <div className="bg-gradient-to-br from-accent/20 to-secondary/20 backdrop-blur-md rounded-3xl border border-white/20 p-6 text-center">
                     <span className="text-5xl mb-3 block">🌟</span>
                     <h3 className="text-4xl font-bold text-accent mb-1">{totalPoints}</h3>
-                    <p className="text-primary-200">Total Points</p>
+                    <p className="text-primary-200">{t('totalPoints')}</p>
                 </div>
                 <div className="bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-md rounded-3xl border border-white/20 p-6 text-center">
                     <span className="text-5xl mb-3 block">✅</span>
                     <h3 className="text-4xl font-bold text-white mb-1">{completedDeeds.length}</h3>
-                    <p className="text-primary-200">Deeds Completed</p>
+                    <p className="text-primary-200">{t('deedsCompleted')}</p>
                 </div>
                 <div className="bg-gradient-to-br from-secondary/20 to-primary/20 backdrop-blur-md rounded-3xl border border-white/20 p-6 text-center">
                     <span className="text-5xl mb-3 block">🔥</span>
                     <h3 className="text-4xl font-bold text-secondary mb-1">
-                        {period === 'today' ? 'Today' : period === 'week' ? 'This Week' : period === 'month' ? 'This Month' : 'All Time'}
+                        {period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')}
                     </h3>
-                    <p className="text-primary-200">Period</p>
+                    <p className="text-primary-200">{t('period')}</p>
                 </div>
             </div>
 
@@ -200,7 +199,7 @@ export default function GoodDeedsClient() {
                             : 'bg-white/10 text-primary-200 hover:bg-white/20'
                             }`}
                     >
-                        {p === 'today' ? '📅 Today' : p === 'week' ? '📆 Week' : p === 'month' ? '🗓️ Month' : '♾️ All'}
+                        {p === 'today' ? t('today') : p === 'week' ? t('week') : p === 'month' ? t('month') : t('allTime')}
                     </button>
                 ))}
             </div>
@@ -209,12 +208,12 @@ export default function GoodDeedsClient() {
                 {/* Available Deeds */}
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-white">Available Good Deeds</h2>
+                        <h2 className="text-2xl font-bold text-white">{t('availableDeeds')}</h2>
                         <button
                             onClick={() => setShowCustomForm(!showCustomForm)}
                             className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/80 transition"
                         >
-                            {showCustomForm ? '❌ Cancel' : '➕ Custom'}
+                            {showCustomForm ? t('cancel') : t('customDeed')}
                         </button>
                     </div>
 
@@ -223,7 +222,7 @@ export default function GoodDeedsClient() {
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-300">🔍</span>
                         <input
                             type="text"
-                            placeholder="Search deeds..."
+                            placeholder={t('searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-primary-400 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition"
@@ -233,12 +232,12 @@ export default function GoodDeedsClient() {
                     {/* Custom Deed Form */}
                     {showCustomForm && (
                         <div className="mb-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6">
-                            <h3 className="text-white font-semibold mb-3">Log Custom Good Deed</h3>
+                            <h3 className="text-white font-semibold mb-3">{t('logCustomDeed')}</h3>
                             <input
                                 type="text"
                                 value={customDeedName}
                                 onChange={(e) => setCustomDeedName(e.target.value)}
-                                placeholder="Enter deed name (e.g., Helped a neighbor)"
+                                placeholder={t('customDeedPlaceholder')}
                                 className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent mb-3"
                             />
                             <button
@@ -246,7 +245,7 @@ export default function GoodDeedsClient() {
                                 disabled={!customDeedName || submitting}
                                 className="w-full px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition disabled:opacity-50"
                             >
-                                {submitting ? 'Logging...' : '✨ Log Custom Deed (+5 points)'}
+                                {submitting ? t('logging') : t('logButton')}
                             </button>
                         </div>
                     )}
@@ -274,7 +273,7 @@ export default function GoodDeedsClient() {
                                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
                             </div>
                         ) : filteredDeeds.length === 0 ? (
-                            <p className="text-center text-primary-300 py-8">No deeds found</p>
+                            <p className="text-center text-primary-300 py-8">{t('noDeeds')}</p>
                         ) : (
                             filteredDeeds.map((deed) => (
                                 <div
@@ -297,7 +296,7 @@ export default function GoodDeedsClient() {
                                         disabled={submitting}
                                         className="w-full mt-3 px-4 py-2 bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-white transition disabled:opacity-50 font-semibold"
                                     >
-                                        {submitting ? 'Logging...' : '✨ Complete This Deed'}
+                                        {submitting ? t('logging') : t('completeButton')}
                                     </button>
                                 </div>
                             ))
@@ -307,13 +306,13 @@ export default function GoodDeedsClient() {
 
                 {/* Completed Deeds History */}
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">Your History ({period})</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4">{t('history')} ({period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')})</h2>
                     <div className="space-y-3 max-h-[600px] overflow-y-auto">
                         {completedDeeds.length === 0 ? (
                             <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
                                 <span className="text-6xl mb-4 block">📝</span>
-                                <p className="text-primary-300">No deeds logged yet!</p>
-                                <p className="text-primary-400 text-sm mt-2">Start completing good deeds to earn points</p>
+                                <p className="text-primary-300">{t('noHistory')}</p>
+                                <p className="text-primary-400 text-sm mt-2">{t('startCompleting')}</p>
                             </div>
                         ) : (
                             completedDeeds.map((deed) => (
@@ -349,3 +348,4 @@ export default function GoodDeedsClient() {
         </div>
     );
 }
+

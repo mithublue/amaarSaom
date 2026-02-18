@@ -19,7 +19,9 @@ export const getStatesOfCountry = (countryCode: string) => {
 
 // Helper to get cities of a state
 export const getCitiesOfState = (countryCode: string, stateCode: string) => {
-    return City.getCitiesOfState(countryCode, stateCode).map(city => ({
+    const cities = City.getCitiesOfState(countryCode, stateCode);
+    if (!cities) return [];
+    return cities.map(city => ({
         name: city.name
     }));
 };
@@ -27,6 +29,8 @@ export const getCitiesOfState = (countryCode: string, stateCode: string) => {
 // Helper to get cities of a country (if no state selected, though usually too large)
 export const getCitiesOfCountry = (countryCode: string) => {
     const cities = City.getCitiesOfCountry(countryCode);
+    if (!cities) return [];
+
     const uniqueCityNames = new Set<string>();
     const uniqueCities: { name: string }[] = [];
 

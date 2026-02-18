@@ -46,93 +46,107 @@ export async function getLeaderboard(params: {
 
     // Determine date filter
     let dateFilter = '';
-    const queryParams: any[] = [];
 
+    // Format to YYYY-MM-DD string based on local server time
+    const todayStr = now.toISOString().split('T')[0];
+
+    // Interpolate values directly to avoid Prisma queryRaw parameter binding issues with mixed inputs
     if (period === 'daily') {
-        dateFilter = 'AND cd.date = ?';
-        queryParams.push(startOfDay(now));
+        dateFilter = `AND cd.date = '${todayStr}'`;
     } else if (period === 'weekly') {
-        dateFilter = 'AND cd.date >= ?';
-        queryParams.push(startOfWeek(now));
+        const weekStart = startOfWeek(now); // Local date object
+        const weekStartStr = weekStart.toISOString().split('T')[0];
+        dateFilter = `AND cd.date >= '${weekStartStr}'`;
     }
     // 'overall' needs no date filter
 
     // Determine scope filter
     let scopeFilter = '';
     if (scopeType !== 'global' && scopeId) {
-        if (scopeType === 'country') {
-            scopeFilter = 'AND u.country_id = ?';
-        } else if (scopeType === 'division') {
-            scopeFilter = 'AND u.division_id = ?';
-        } else if (scopeType === 'district') {
-            scopeFilter = 'AND u.district_id = ?';
+        // Ensure scopeId is a number to prevent injection (though params are typed)
+        const safeScopeId = Number(scopeId);
+        if (!isNaN(safeScopeId)) {
+            if (scopeType === 'country') {
+                scopeFilter = `AND u.country_id = ${safeScopeId}`;
+            } else if (scopeType === 'division') {
+                scopeFilter = `AND u.division_id = ${safeScopeId}`;
+            } else if (scopeType === 'district') {
+                scopeFilter = `AND u.district_id = ${safeScopeId}`;
+            }
         }
-        queryParams.push(scopeId);
     }
 
     // Common query parts
-    const sqlSelect = `
-        SELECT 
-            u.id as userId, 
-            u.name as userName, 
-            u.image as userImage, 
-            CAST(SUM(cd.total_points) AS UNSIGNED) as totalPoints,
-            COALESCE(dist.name_en, div.name_en, 'Unknown') as location
-    `;
+    // Construct query fragments as single valid SQL strings to prevent formatting issues
 
-    const sqlFrom = `
-        FROM completed_deeds cd
-        JOIN users u ON cd.user_id = u.id
-        LEFT JOIN districts dist ON u.district_id = dist.id
-        LEFT JOIN divisions div ON u.division_id = div.id
-    `;
+    // Simplified fetch: Get IDs and Scores first to avoid aggregation/logic issues
+    const sqlSelect = `SELECT u.id as userId, SUM(cd.total_points) as totalPoints`;
+
+    // We only need to join users for filtering by scope (ids are on user table)
+    const sqlFrom = `FROM completed_deeds cd JOIN users u ON cd.user_id = u.id`;
 
     const sqlWhere = `WHERE 1=1 ${dateFilter} ${scopeFilter}`;
     const sqlGroup = `GROUP BY u.id`;
-    const sqlOrder = `ORDER BY totalPoints DESC`;
 
-    // Fetch paginated entries
-    const entriesQuery = `
-        ${sqlSelect}
-        ${sqlFrom}
-        ${sqlWhere}
-        ${sqlGroup}
-        ${sqlOrder}
-        LIMIT ? OFFSET ?
-    `;
+    // NO ORDER BY or LIMIT in SQL - we do it in JS to avoid strict mode issues
+    const safeEntriesQuery = `${sqlSelect} ${sqlFrom} ${sqlWhere} ${sqlGroup}`;
 
     // Execute raw query
-    const entriesParams = [...queryParams, limit, offset];
     let entries: LeaderboardEntry[] = [];
     let totalUsers = 0;
 
     try {
-        const rawEntries = await prisma.$queryRawUnsafe<any[]>(entriesQuery, ...entriesParams);
+        console.log('DEBUG QUERY:', safeEntriesQuery);
+        const rawResults = await prisma.$queryRawUnsafe<any[]>(safeEntriesQuery);
 
-        // Map to interface with masked names for privacy
-        entries = rawEntries.map((entry: any, index: number) => {
-            // Simple masking strategy: "Servant of Allah {ID}" or similar anonymous name
-            const isCurrentUser = currentUserId && Number(entry.userId) === currentUserId;
-            const anonymousName = `Servant of Allah ${Number(entry.userId).toString().slice(-4)}`; // unique-ish suffix
+        // 1. Sort in JS
+        const allResults = rawResults.map((r: any) => ({
+            userId: Number(r.userId),
+            totalPoints: Number(r.totalPoints || 0)
+        })).sort((a, b) => b.totalPoints - a.totalPoints);
 
-            return {
-                rank: offset + index + 1,
-                userId: Number(entry.userId),
-                userName: isCurrentUser ? entry.userName : anonymousName, // Show real name only to self
-                userImage: isCurrentUser ? entry.userImage : undefined, // Hide images too
-                totalPoints: Number(entry.totalPoints || 0),
-                location: entry.location,
-            };
-        });
+        totalUsers = allResults.length;
+
+        // 2. Paginate in JS
+        const paginatedResults = allResults.slice(offset, offset + limit);
+
+        // 3. Hydrate with user details
+        if (paginatedResults.length > 0) {
+            const userIds = paginatedResults.map(r => r.userId);
+            const users = await prisma.user.findMany({
+                where: { id: { in: userIds } },
+                include: { district: true, division: true }
+            });
+
+            const userMap = new Map(users.map(u => [u.id, u]));
+
+            entries = paginatedResults.map((item, index) => {
+                const uid = item.userId;
+                const user = userMap.get(uid);
+                const score = item.totalPoints;
+
+                const isCurrentUser = currentUserId && uid === currentUserId;
+                // Anonymous name
+                const anonymousName = `Servant of Allah ${uid.toString().slice(-4)}`;
+
+                return {
+                    rank: offset + index + 1,
+                    userId: uid,
+                    userName: isCurrentUser ? (user?.name || 'Unknown') : anonymousName,
+                    userImage: isCurrentUser ? (user?.image || undefined) : undefined,
+                    totalPoints: score,
+                    location: user?.district?.nameEn || user?.division?.nameEn || 'Unknown',
+                };
+            });
+        }
 
         // Count total users
-        const countQuery = `
-            SELECT COUNT(DISTINCT cd.user_id) as count
-            ${sqlFrom}
-            ${sqlWhere}
-        `;
-        const totalCountResult = await prisma.$queryRawUnsafe<any[]>(countQuery, ...queryParams);
-        totalUsers = Number(totalCountResult[0]?.count || 0);
+        // Since we fetch all matched IDs in the first query, we can just use length
+        // However, if we want total matching users without limit:
+        // Actually, we fetched *all* results matching filter in safeEntriesQuery!
+        // So totalUsers is just allResults.length.
+        // We already set totalUsers = allResults.length above.
+        // So we don't need a separate count query!
 
     } catch (error) {
         console.error('Error executing leaderboard query:', error);
@@ -147,11 +161,10 @@ export async function getLeaderboard(params: {
                 SELECT SUM(cd.total_points) as totalPoints
                 FROM completed_deeds cd
                 JOIN users u ON cd.user_id = u.id
-                WHERE u.id = ? ${dateFilter}
+                WHERE u.id = ${currentUserId} ${dateFilter}
             `;
 
-            const dateParams = period === 'daily' || period === 'weekly' ? [queryParams[0]] : [];
-            const userPointsResult = await prisma.$queryRawUnsafe<any[]>(userPointsQuery, currentUserId, ...dateParams);
+            const userPointsResult = await prisma.$queryRawUnsafe<any[]>(userPointsQuery);
 
             const userPoints = userPointsResult[0]?.totalPoints ? Number(userPointsResult[0].totalPoints) : 0;
 
@@ -164,9 +177,9 @@ export async function getLeaderboard(params: {
                         ${sqlWhere}
                         GROUP BY u.id
                     ) as scores
-                    WHERE scores.totalPoints > ?
+                    WHERE scores.totalPoints > ${userPoints}
                 `;
-                const rankResult = await prisma.$queryRawUnsafe<any[]>(rankQuery, ...queryParams, userPoints);
+                const rankResult = await prisma.$queryRawUnsafe<any[]>(rankQuery);
                 // Rank is count of people with MORE points + 1
                 const rank = Number(rankResult[0]?.rank || 0) + 1;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { useTranslations, useFormatter } from 'next-intl';
 import { countries, commonCities } from '@/lib/locations';
 
 interface PrayerTimes {
@@ -33,9 +33,17 @@ interface AladhanResponse {
 }
 
 export default function PrayerTimesClient() {
+    const t = useTranslations('PrayerTimes');
+    const format = useFormatter();
+
+    // Time Format State
+    const [is24Hour, setIs24Hour] = useState(false);
+
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Effective Location (used for fetching)
     const [location, setLocation] = useState<{
         city: string;
         country: string;
@@ -43,6 +51,9 @@ export default function PrayerTimesClient() {
         lng?: number;
         useCoords?: boolean;
     }>({ city: 'Dhaka', country: 'Bangladesh', useCoords: false });
+
+    // Input States
+    const [cityInput, setCityInput] = useState('Dhaka');
     const [hijriDate, setHijriDate] = useState('');
 
     // City suggestions
@@ -54,12 +65,21 @@ export default function PrayerTimesClient() {
         const loadProfile = async () => {
             try {
                 const res = await fetch('/api/user/profile');
-                const data = await res.json();
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) { console.warn('Profile not JSON'); return; }
+
                 if (data.success && data.data?.cityName) {
+                    const profileCity = data.data.cityName;
+                    const profileCountry = data.data.countryName || 'Bangladesh';
+
+                    setCityInput(profileCity);
                     setLocation(prev => ({
                         ...prev,
-                        city: data.data.cityName,
-                        country: data.data.countryName || 'Bangladesh',
+                        city: profileCity,
+                        country: profileCountry,
                         useCoords: false
                     }));
                 }
@@ -79,6 +99,7 @@ export default function PrayerTimesClient() {
         }
     }, [location.country]);
 
+    // Fetch only when effective location changes
     useEffect(() => {
         fetchPrayerTimes();
     }, [location]);
@@ -101,7 +122,7 @@ export default function PrayerTimesClient() {
             const data: AladhanResponse = await response.json();
 
             if (data.code !== 200) {
-                throw new Error('Failed to fetch prayer times. Check city/country.');
+                throw new Error(t('error'));
             }
 
             setPrayerTimes(data.data.timings);
@@ -113,13 +134,58 @@ export default function PrayerTimesClient() {
         }
     };
 
+    const formatTime = (time: string) => {
+        if (!time) return '';
+        if (is24Hour) return time;
+
+        // Convert to 12h
+        const [hourStr, minStr] = time.split(':');
+        let hour = parseInt(hourStr);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12;
+        hour = hour ? hour : 12; // the hour '0' should be '12'
+        return `${hour}:${minStr} ${ampm}`;
+    };
+
+    const handleCitySelect = (city: string) => {
+        setCityInput(city);
+        setLocation(prev => ({ ...prev, city, useCoords: false }));
+        setShowSuggestions(false);
+    };
+
+    const handleManualSubmit = () => {
+        if (cityInput.trim()) {
+            setLocation(prev => ({ ...prev, city: cityInput, useCoords: false }));
+            setShowSuggestions(false);
+        }
+    };
+
     return (
         <div className="max-w-4xl mx-auto">
             {/* Location Selector */}
-            <div className="mb-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6">
-                <label className="block text-white font-semibold mb-3">
-                    📍 your Location:
-                </label>
+            <div className="mb-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 relative z-10">
+                <div className="flex justify-between items-center mb-3">
+                    <label className="block text-white font-semibold">
+                        {t('yourLocation')}
+                    </label>
+
+                    {/* Time Format Toggle */}
+                    <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
+                        <button
+                            onClick={() => setIs24Hour(false)}
+                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${!is24Hour ? 'bg-accent text-white' : 'text-primary-200 hover:text-white'}`}
+                        >
+                            12H
+                        </button>
+                        <button
+                            onClick={() => setIs24Hour(true)}
+                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${is24Hour ? 'bg-accent text-white' : 'text-primary-200 hover:text-white'}`}
+                        >
+                            24H
+                        </button>
+                    </div>
+                </div>
+
                 <div className="flex flex-col md:flex-row gap-4">
                     {/* Country Selector */}
                     <select
@@ -127,7 +193,8 @@ export default function PrayerTimesClient() {
                         onChange={(e) => {
                             const newCountry = e.target.value;
                             const newCity = commonCities[newCountry] ? commonCities[newCountry][0] : '';
-                            setLocation({ ...location, country: newCountry, city: newCity, useCoords: false });
+                            setLocation(prev => ({ ...prev, country: newCountry, city: newCity, useCoords: false }));
+                            setCityInput(newCity);
                         }}
                         className="flex-1 px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent [&>option]:bg-primary-900"
                     >
@@ -140,26 +207,34 @@ export default function PrayerTimesClient() {
                     <div className="relative flex-1">
                         <input
                             type="text"
-                            value={location.city}
+                            value={cityInput}
                             onChange={(e) => {
-                                setLocation({ ...location, city: e.target.value, useCoords: false });
+                                setCityInput(e.target.value);
                                 setShowSuggestions(true);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleManualSubmit();
                             }}
                             onFocus={() => setShowSuggestions(true)}
                             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                             className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent placeholder-white/50"
-                            placeholder="Enter City"
+                            placeholder={t('enterCity')}
                         />
+                        {/* Search Button (Visible on mobile or if needed, but Enter works) */}
+                        <button
+                            onClick={handleManualSubmit}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary-200 hover:text-white"
+                        >
+                            🔍
+                        </button>
+
                         {showSuggestions && citySuggestions.length > 0 && (
-                            <div className="absolute z-10 w-full mt-1 bg-primary-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                                {citySuggestions.filter(c => c.toLowerCase().includes(location.city.toLowerCase())).map((suggestion) => (
+                            <div className="absolute z-50 w-full mt-1 bg-primary-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                                {citySuggestions.filter(c => c.toLowerCase().includes(cityInput.toLowerCase())).map((suggestion) => (
                                     <button
                                         key={suggestion}
                                         type="button"
-                                        onClick={() => {
-                                            setLocation({ ...location, city: suggestion, useCoords: false });
-                                            setShowSuggestions(false);
-                                        }}
+                                        onClick={() => handleCitySelect(suggestion)}
                                         className="w-full text-left px-4 py-2 text-white hover:bg-white/10 transition"
                                     >
                                         {suggestion}
@@ -181,13 +256,10 @@ export default function PrayerTimesClient() {
                                             lng: position.coords.longitude,
                                             useCoords: true
                                         });
+                                        setCityInput('Your Location');
                                     },
                                     (error) => {
-                                        if (error.code === error.PERMISSION_DENIED) {
-                                            alert('Location access denied. Please enable location permissions.');
-                                        } else {
-                                            alert('Error getting location: ' + error.message);
-                                        }
+                                        alert('Error getting location: ' + error.message);
                                         setLoading(false);
                                     }
                                 );
@@ -198,19 +270,19 @@ export default function PrayerTimesClient() {
                         className="px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition flex items-center gap-2 font-medium whitespace-nowrap justify-center"
                         title="Use My Exact Location"
                     >
-                        📍 Use My Location
+                        {t('useMyLocation')}
                     </button>
                 </div>
             </div>
 
             {/* Prayer Times Card */}
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 relative z-0">
                 <div className="text-center mb-6">
                     <h2 className="text-3xl font-bold text-white mb-2">
-                        Today's Prayer Times
+                        {t('title')}
                     </h2>
                     <p className="text-primary-200">
-                        {location.useCoords ? '📍 Your Exact Location' : `${location.city}, ${location.country}`}
+                        {location.useCoords ? t('yourLocation') : `${location.city}, ${location.country}`}
                     </p>
                     {hijriDate && (
                         <p className="text-accent text-sm mt-1">
@@ -218,14 +290,14 @@ export default function PrayerTimesClient() {
                         </p>
                     )}
                     <p className="text-primary-300 text-sm">
-                        {format(new Date(), 'EEEE, MMMM d, yyyy')}
+                        {format.dateTime(new Date(), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                     </p>
                 </div>
 
                 {loading && (
                     <div className="text-center py-12">
                         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
-                        <p className="text-white mt-4">Loading prayer times...</p>
+                        <p className="text-white mt-4">{t('loading')}</p>
                     </div>
                 )}
 
@@ -236,7 +308,7 @@ export default function PrayerTimesClient() {
                             onClick={fetchPrayerTimes}
                             className="mt-3 px-6 py-2 bg-accent rounded-lg text-white hover:bg-accent/80 transition"
                         >
-                            Retry
+                            {t('retry')}
                         </button>
                     </div>
                 )}
@@ -260,7 +332,7 @@ export default function PrayerTimesClient() {
                                     <span className="text-xl font-semibold text-white">{name}</span>
                                 </div>
                                 <span className="text-2xl font-bold text-accent group-hover:scale-110 transition-transform">
-                                    {time}
+                                    {formatTime(time as string)}
                                 </span>
                             </div>
                         ))}
@@ -270,7 +342,7 @@ export default function PrayerTimesClient() {
                 {/* Info Footer */}
                 <div className="mt-6 pt-6 border-t border-white/10 text-center">
                     <p className="text-primary-300 text-sm">
-                        Prayer times calculated using Islamic Society of North America (ISNA) method
+                        {t('calculationMethod')}
                     </p>
                 </div>
             </div>
@@ -279,16 +351,16 @@ export default function PrayerTimesClient() {
             <div className="mt-6 grid md:grid-cols-2 gap-4">
                 <div className="bg-gradient-to-br from-accent/20 to-secondary/20 backdrop-blur-md rounded-2xl border border-white/20 p-6 text-center">
                     <span className="text-4xl block mb-2">🌅</span>
-                    <h3 className="text-white font-semibold mb-1">Next: Iftar Time</h3>
+                    <h3 className="text-white font-semibold mb-1">{t('nextIftar')}</h3>
                     <p className="text-primary-200 text-sm">
-                        {prayerTimes?.Maghrib || '--:--'}
+                        {formatTime(prayerTimes?.Maghrib as string || '') || '--:--'}
                     </p>
                 </div>
                 <div className="bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-md rounded-2xl border border-white/20 p-6 text-center">
                     <span className="text-4xl block mb-2">🌙</span>
-                    <h3 className="text-white font-semibold mb-1">Sehri Ends At</h3>
+                    <h3 className="text-white font-semibold mb-1">{t('sehriEnds')}</h3>
                     <p className="text-primary-200 text-sm">
-                        {prayerTimes?.Fajr || '--:--'}
+                        {formatTime(prayerTimes?.Fajr as string || '') || '--:--'}
                     </p>
                 </div>
             </div>

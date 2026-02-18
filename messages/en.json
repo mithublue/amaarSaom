@@ -1,0 +1,148 @@
+{
+    "HomePage": {
+        "title": "Ramadan Companion",
+        "profile": "Profile",
+        "signOut": "Sign Out",
+        "greeting": "Assalamu Alaikum",
+        "guest": "Guest User",
+        "welcomeMessage": "May this Ramadan bring you peace, blessings, and spiritual growth",
+        "signInTitle": "🔒 Sign In to Start Your Journey",
+        "signInDesc": "Track your prayers, complete good deeds, and compete with your community!",
+        "signInButton": "Sign In with Google 🚀",
+        "features": {
+            "prayerTimes": {
+                "title": "Prayer Times",
+                "desc": "View accurate prayer times for your location"
+            },
+            "iftarSehri": {
+                "title": "Iftar & Sehri",
+                "desc": "Countdown timers for Iftar and Sehri"
+            },
+            "goodDeeds": {
+                "title": "Good Deeds",
+                "desc": "Track and manage your daily good deeds"
+            },
+            "hadith": {
+                "title": "Daily Hadith",
+                "desc": "Read authentic Hadith daily for inspiration"
+            },
+            "duas": {
+                "title": "Duas & Amal",
+                "desc": "Essential duas and spiritual practices"
+            },
+            "quran": {
+                "title": "Quran",
+                "desc": "Read and reflect on the Holy Quran"
+            },
+            "leaderboard": {
+                "title": "Leaderboard",
+                "desc": "Compete with your community"
+            }
+        }
+    },
+    "Dashboard": {
+        "title": "Ramadan Companion",
+        "signOut": "Sign Out",
+        "guest": "Guest User",
+        "greeting": "Assalamu Alaikum",
+        "greetingSuffix": "Friend",
+        "welcomeMessage": "May this Ramadan bring you peace, blessings, and spiritual growth"
+    },
+    "Leaderboard": {
+        "title": "Community Leaderboard 🏆",
+        "back": "Back"
+    },
+    "Footer": {
+        "disclaimer": "This point system is only to encourage you. The real reward is known and given by Allah alone.",
+        "copyright": "Ramadan Companion. Built for the Ummah."
+    },
+    "Profile": {
+        "title": "My Profile 👤",
+        "back": "Back",
+        "loading": "Loading profile...",
+        "success": "Profile updated successfully! ✅",
+        "error": "Failed to update profile. ❌",
+        "genericError": "An error occurred. ❌",
+        "displayName": "Display Name",
+        "placeholderName": "Your Name",
+        "anonymousInfo": "Others will see you as: {name} in the leaderboard.",
+        "locationSettings": "📍 Location Settings",
+        "locationDesc": "Select your country and city to customize your experience.",
+        "country": "Country",
+        "city": "City",
+        "selectCountry": "Select Country",
+        "selectCity": "Select City",
+        "enterCity": "Enter City Name",
+        "noCities": "No cities found for this country, please type manually.",
+        "save": "Save Changes",
+        "saving": "Saving..."
+    },
+    "PrayerTimes": {
+        "title": "Today's Prayer Times",
+        "yourLocation": "📍 Your Location:",
+        "useMyLocation": "📍 Use My Location",
+        "loading": "Loading prayer times...",
+        "error": "Failed to fetch prayer times. Check city/country.",
+        "retry": "Retry",
+        "calculationMethod": "Prayer times calculated using Islamic Society of North America (ISNA) method",
+        "nextIftar": "Next: Iftar Time",
+        "sehriEnds": "Sehri Ends At",
+        "enterCity": "Enter City"
+    },
+    "IftarSehri": {
+        "locationSet": "Location set to:",
+        "findMyLocation": "📍 Find time in my location",
+        "timeUntilIftar": "Time Until Iftar",
+        "timeUntilSehri": "Time Until Sehri Ends",
+        "iftarTime": "Iftar Time:",
+        "sehriTime": "Sehri Ends:",
+        "country": "Country",
+        "city": "City",
+        "selectCountry": "Select Country",
+        "selectCity": "Select City",
+        "enterCityName": "Enter City Name",
+        "selectCountryFirst": "Select Country First"
+    },
+    "Navigation": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "profile": "Profile"
+    },
+    "LanguageSwitcher": {
+        "label": "Language"
+    },
+    "GoodDeeds": {
+        "title": "Good Deeds Manager",
+        "subtitle": "Track and earn rewards for your good deeds",
+        "viewLeaderboard": "🏆 View Leaderboard",
+        "totalPoints": "Total Points",
+        "deedsCompleted": "Deeds Completed",
+        "period": "Period",
+        "today": "📅 Today",
+        "week": "📆 Week",
+        "month": "🗓️ Month",
+        "allTime": "♾️ All",
+        "availableDeeds": "Available Good Deeds",
+        "customDeed": "➕ Custom",
+        "cancel": "❌ Cancel",
+        "searchPlaceholder": "Search deeds...",
+        "logCustomDeed": "Log Custom Good Deed",
+        "customDeedPlaceholder": "Enter deed name (e.g., Helped a neighbor)",
+        "logButton": "✨ Log Custom Deed (+5 points)",
+        "logging": "Logging...",
+        "completeButton": "✨ Complete This Deed",
+        "history": "Your History",
+        "noDeeds": "No deeds found",
+        "noHistory": "📝 No deeds logged yet!",
+        "startCompleting": "Start completing good deeds to earn points",
+        "success": "Deed completed successfully! 🎉"
+    },
+    "Hadith": {
+        "title": "Daily Hadith 📖",
+        "browseMore": "Browse More Hadith",
+        "comingSoon": "More authentic Hadith collection coming soon! Browse by topic, collection, and bookmark your favorites."
+    },
+    "Duas": {
+        "title": "Duas & Amal 🤲"
+    }
+}

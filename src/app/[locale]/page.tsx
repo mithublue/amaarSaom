@@ -1,9 +1,52 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import Footer from '@/components/layout/Footer';
 import { auth } from '@/lib/auth/config';
+import { getTranslations } from 'next-intl/server';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 
-export default async function HomePage() {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const session = await auth();
+  const t = await getTranslations('HomePage');
+
+  const features = [
+    {
+      icon: '🕌',
+      title: t('features.prayerTimes.title'),
+      description: t('features.prayerTimes.desc'),
+      href: '/prayer-times',
+    },
+    {
+      icon: '🌅',
+      title: t('features.iftarSehri.title'),
+      description: t('features.iftarSehri.desc'),
+      href: '/iftar-sehri',
+    },
+    {
+      icon: '✨',
+      title: t('features.goodDeeds.title'),
+      description: t('features.goodDeeds.desc'),
+      href: '/good-deeds',
+    },
+    {
+      icon: '📖',
+      title: t('features.hadith.title'),
+      description: t('features.hadith.desc'),
+      href: '/hadith',
+    },
+    {
+      icon: '🤲',
+      title: t('features.duas.title'),
+      description: t('features.duas.desc'),
+      href: '/duas',
+    },
+    {
+      icon: '📕',
+      title: t('features.quran.title'),
+      description: t('features.quran.desc'),
+      href: '/quran',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900">
@@ -12,25 +55,26 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
             <span className="text-4xl">🌙</span>
-            <h1 className="text-2xl font-bold text-white">Ramadan Companion</h1>
+            <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
           </div>
           <div className="flex flex-wrap justify-center items-center gap-3 md:gap-4">
+            <LanguageSwitcher />
             <span className="text-primary-100 text-sm md:text-base">
-              {session?.user?.name || 'Guest User'}
+              {session?.user?.name || t('guest')}
             </span>
             <Link
               href="/profile"
               className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition flex items-center gap-2 text-sm md:text-base"
             >
-              <span>👤</span> Profile
+              <span>👤</span> {t('profile')}
             </Link>
             {session && (
-              <Link
-                href="/api/auth/signout"
+              <a
+                href={`/api/auth/signout?callbackUrl=/${locale}`}
                 className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm md:text-base"
               >
-                Sign Out
-              </Link>
+                {t('signOut')}
+              </a>
             )}
           </div>
         </div>
@@ -43,13 +87,13 @@ export default async function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-white mb-3">
               {session ? (
-                <>Assalamu Alaikum, {session.user?.name?.split(' ')[0]}! 👋</>
+                <>{t('greeting')}, {session.user?.name?.split(' ')[0]}! 👋</>
               ) : (
-                <>Assalamu Alaikum! 👋</>
+                <>{t('greeting')}! 👋</>
               )}
             </h2>
             <p className="text-xl text-primary-100">
-              May this Ramadan bring you peace, blessings, and spiritual growth
+              {t('welcomeMessage')}
             </p>
           </div>
 
@@ -57,16 +101,16 @@ export default async function HomePage() {
           {!session && (
             <div className="mb-12 bg-accent/20 backdrop-blur-md rounded-3xl border border-accent/30 p-8 text-center">
               <h3 className="text-2xl font-bold text-white mb-3">
-                🔒 Sign In to Start Your Journey
+                {t('signInTitle')}
               </h3>
               <p className="text-primary-200 mb-6">
-                Track your prayers, complete good deeds, and compete with your community!
+                {t('signInDesc')}
               </p>
               <Link
                 href="/auth/signin"
                 className="inline-block px-8 py-4 bg-accent text-white font-semibold rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
               >
-                Sign In with Google 🚀
+                {t('signInButton')}
               </Link>
             </div>
           )}
@@ -103,46 +147,7 @@ export default async function HomePage() {
       </main>
 
       {/* Footer */}
-      <Footer language={session?.user?.language || 'en'} />
+      <Footer language={locale as any} />
     </div>
   );
 }
-
-const features = [
-  {
-    icon: '🕌',
-    title: 'Prayer Times',
-    description: 'View accurate prayer times for your location',
-    href: '/prayer-times',
-  },
-  {
-    icon: '🌅',
-    title: 'Iftar & Sehri',
-    description: 'Countdown timers for Iftar and Sehri',
-    href: '/iftar-sehri',
-  },
-  {
-    icon: '✨',
-    title: 'Good Deeds',
-    description: 'Track and manage your daily good deeds',
-    href: '/good-deeds',
-  },
-  {
-    icon: '📖',
-    title: 'Daily Hadith',
-    description: 'Read authentic Hadith daily for inspiration',
-    href: '/hadith',
-  },
-  {
-    icon: '🤲',
-    title: 'Duas & Amal',
-    description: 'Essential duas and spiritual practices',
-    href: '/duas',
-  },
-  {
-    icon: '📕',
-    title: 'Quran',
-    description: 'Read and reflect on the Holy Quran',
-    href: '/quran',
-  },
-];

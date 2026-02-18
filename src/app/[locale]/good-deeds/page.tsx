@@ -1,5 +1,6 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import GoodDeedsClient from './GoodDeedsClient';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 
 export default function GoodDeedsPage() {
     return (
@@ -13,7 +14,8 @@ export default function GoodDeedsPage() {
                     >
                         ← Back
                     </Link>
-                    <h1 className="text-2xl font-bold text-white">Good Deeds Manager ✨</h1>
+                    <h1 className="text-2xl font-bold text-white flex-1">Good Deeds Manager ✨</h1>
+                    <LanguageSwitcher />
                 </div>
             </header>
 

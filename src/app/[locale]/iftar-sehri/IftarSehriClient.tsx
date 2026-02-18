@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getAllCountries, getCitiesOfCountry } from '@/lib/locations-package';
+import { useTranslations } from 'next-intl';
 
 export default function IftarSehriClient() {
+    const t = useTranslations('IftarSehri');
     const [timeLeftIftar, setTimeLeftIftar] = useState<string>('--:--:--');
     const [timeLeftSehri, setTimeLeftSehri] = useState<string>('--:--:--');
     const [prayerTimes, setPrayerTimes] = useState<any>(null);
@@ -163,7 +165,7 @@ export default function IftarSehriClient() {
     };
 
     const getDisplayLocation = () => {
-        if (location.useCoords) return '📍 Your Exact Location';
+        if (location.useCoords) return '📍 Your Exact Location'; // Ideally localize this too generally
         if (location.city && location.country) return `${location.city}, ${location.country}`;
         if (location.country) return `${location.country}`;
         return 'Select Location';
@@ -173,7 +175,7 @@ export default function IftarSehriClient() {
         <div className="max-w-4xl mx-auto">
             <div className="mb-8 bg-white/5 p-6 rounded-xl border border-white/10">
                 <div className="flex flex-col md:flex-row items-center gap-4 justify-between mb-4">
-                    <p className="text-primary-200 text-sm">Location set to: <span className="text-white font-bold">{getDisplayLocation()}</span></p>
+                    <p className="text-primary-200 text-sm">{t('locationSet')} <span className="text-white font-bold">{getDisplayLocation()}</span></p>
 
                     <button
                         onClick={() => {
@@ -199,20 +201,20 @@ export default function IftarSehriClient() {
                         }}
                         className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/80 transition text-sm flex items-center gap-2"
                     >
-                        📍 Find time in my location
+                        {t('findMyLocation')}
                     </button>
                 </div>
 
                 {/* Dropdowns */}
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="relative">
-                        <label className="text-xs text-primary-300 mb-1 block ml-1">Country</label>
+                        <label className="text-xs text-primary-300 mb-1 block ml-1">{t('country')}</label>
                         <select
                             value={selectedCountryCode}
                             onChange={handleCountryChange}
                             className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent [&>option]:bg-primary-900 appearance-none cursor-pointer"
                         >
-                            <option value="">Select Country</option>
+                            <option value="">{t('selectCountry')}</option>
                             {allCountries.map((c) => (
                                 <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
                             ))}
@@ -220,7 +222,7 @@ export default function IftarSehriClient() {
                     </div>
 
                     <div className="relative">
-                        <label className="text-xs text-primary-300 mb-1 block ml-1">City</label>
+                        <label className="text-xs text-primary-300 mb-1 block ml-1">{t('city')}</label>
                         {cities.length > 0 ? (
                             <select
                                 value={location.city}
@@ -228,7 +230,7 @@ export default function IftarSehriClient() {
                                 disabled={!selectedCountryCode}
                                 className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent [&>option]:bg-primary-900 disabled:opacity-50 appearance-none cursor-pointer"
                             >
-                                <option value="">Select City</option>
+                                <option value="">{t('selectCity')}</option>
                                 {cities.map((city) => (
                                     <option key={city.name} value={city.name}>{city.name}</option>
                                 ))}
@@ -239,7 +241,7 @@ export default function IftarSehriClient() {
                                 value={location.city}
                                 onChange={(e) => setLocation({ ...location, city: e.target.value, useCoords: false })}
                                 className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent placeholder-white/50"
-                                placeholder={selectedCountryCode ? "Enter City Name" : "Select Country First"}
+                                placeholder={selectedCountryCode ? t('enterCityName') : t('selectCountryFirst')}
                                 disabled={!selectedCountryCode}
                             />
                         )}
@@ -252,13 +254,13 @@ export default function IftarSehriClient() {
                 <div className="bg-gradient-to-br from-secondary/20 to-accent/20 backdrop-blur-md rounded-3xl border border-white/20 p-8 transform hover:scale-105 transition duration-300">
                     <div className="text-center">
                         <span className="text-6xl mb-4 block">🌙</span>
-                        <h2 className="text-2xl font-bold text-white mb-2">Time Until Iftar</h2>
+                        <h2 className="text-2xl font-bold text-white mb-2">{t('timeUntilIftar')}</h2>
                         <div className="text-5xl font-bold text-accent my-6 font-mono tracking-wider">
                             {timeLeftIftar}
                         </div>
                         <div className="inline-block px-4 py-2 bg-black/20 rounded-lg">
                             <p className="text-primary-100 flex items-center gap-2">
-                                <span>Iftar Time:</span>
+                                <span>{t('iftarTime')}</span>
                                 <span className="font-bold text-white text-xl">{prayerTimes?.Maghrib || '--:--'}</span>
                             </p>
                         </div>
@@ -269,13 +271,13 @@ export default function IftarSehriClient() {
                 <div className="bg-gradient-to-br from-primary/20 to-secondary/20 backdrop-blur-md rounded-3xl border border-white/20 p-8 transform hover:scale-105 transition duration-300">
                     <div className="text-center">
                         <span className="text-6xl mb-4 block">☀️</span>
-                        <h2 className="text-2xl font-bold text-white mb-2">Time Until Sehri Ends</h2>
+                        <h2 className="text-2xl font-bold text-white mb-2">{t('timeUntilSehri')}</h2>
                         <div className="text-5xl font-bold text-white my-6 font-mono tracking-wider">
                             {timeLeftSehri}
                         </div>
                         <div className="inline-block px-4 py-2 bg-black/20 rounded-lg">
                             <p className="text-primary-100 flex items-center gap-2">
-                                <span>Sehri Ends:</span>
+                                <span>{t('sehriTime')}</span>
                                 <span className="font-bold text-white text-xl">{prayerTimes?.Fajr || '--:--'}</span>
                             </p>
                         </div>

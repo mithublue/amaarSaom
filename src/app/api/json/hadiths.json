@@ -1,0 +1,242 @@
+[
+    {
+        "id": 1,
+        "source": "Sahih Bukhari 5027",
+        "category": "Quran",
+        "textEn": "The best among you (Muslims) are those who learn the Quran and teach it.",
+        "textBn": "তোমাদের মধ্যে সর্বোত্তম ঐ ব্যক্তি যে কুরআন শিখে এবং অপরকে শিক্ষা দেয়।",
+        "textAr": "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ"
+    },
+    {
+        "id": 2,
+        "source": "Sahih Muslim 2699",
+        "category": "Character",
+        "textEn": "Whoever travels a path in search of knowledge, Allah will make easy for him a path to Paradise.",
+        "textBn": "যে ব্যক্তি জ্ঞান অর্জনের জন্য কোনো পথ অবলম্বন করে, আল্লাহ তার জন্য জান্নাতের পথ সহজ করে দেন।",
+        "textAr": "مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ"
+    },
+    {
+        "id": 3,
+        "source": "Sahih Bukhari 13",
+        "category": "Faith",
+        "textEn": "None of you will have faith till he wishes for his (Muslim) brother what he likes for himself.",
+        "textBn": "তোমাদের কেউ ততক্ষণ পর্যন্ত মুমিন হতে পারবে না, যতক্ষণ না সে তার মুসলিম ভাইয়ের জন্য তাই পছন্দ করবে যা সে নিজের জন্য পছন্দ করে।",
+        "textAr": "لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لِأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ"
+    },
+    {
+        "id": 4,
+        "source": "Sahih Bukhari 6011",
+        "category": "Character",
+        "textEn": "A Muslim is the one from whose tongue and hands the Muslims are safe.",
+        "textBn": "প্রকৃত মুসলিম সেই ব্যক্তি যার জিহ্বা ও হাত থেকে অন্য মুসলিমরা নিরাপদ থাকে।",
+        "textAr": "الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ"
+    },
+    {
+        "id": 5,
+        "source": "Sahih Bukhari 6136",
+        "category": "Dua",
+        "textEn": "The most beloved of deeds to Allah are those that are most consistent, even if it is small.",
+        "textBn": "আল্লাহর নিকট সর্বাধিক প্রিয় আমল হলো সেটি, যা নিয়মিত করা হয়, যদিও তা পরিমাণে অল্প হয়।",
+        "textAr": "أَحَبُّ الأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ"
+    },
+    {
+        "id": 6,
+        "source": "Sahih Bukhari 1903",
+        "category": "Fasting",
+        "textEn": "Whoever does not give up forged speech and evil actions, Allah is not in need of his leaving his food and drink (i.e. Allah will not accept his fasting).",
+        "textBn": "যে ব্যক্তি (রোজা রেখে) মিথ্যা কথা ও কাজ পরিত্যাগ করল না, তার পানাহার ত্যাগ করায় আল্লাহর কোনো প্রয়োজন নেই।",
+        "textAr": "مَنْ لَمْ يَدَعْ قَوْلَ الزُّورِ وَالْعَمَلَ بِهِ فَلَيْسَ لِلَّهِ حَاجَةٌ فِي أَنْ يَدَعَ طَعَامَهُ وَشَرَابَهُ"
+    },
+    {
+        "id": 7,
+        "source": "Sahih Bukhari 1899",
+        "category": "Fasting",
+        "textEn": "When Ramadan enters, the gates of Paradise are opened, the gates of Hellfire are closed and the devils are chained.",
+        "textBn": "যখন রমজান মাস আসে, জান্নাতের দরজাগুলো খুলে দেওয়া হয়, জাহান্নামের দরজাগুলো বন্ধ করে দেওয়া হয় এবং শয়তানদের শৃঙ্খলাবদ্ধ করা হয়।",
+        "textAr": "إِذَا دَخَلَ رَمَضَانُ فُتِّحَتْ أَبْوَابُ الْجَنَّةِ وَغُلِّقَتْ أَبْوَابُ جَهَنَّمَ وَسُلْسِلَتِ الشَّيَاطِينُ"
+    },
+    {
+        "id": 8,
+        "source": "Sahih Bukhari 1923",
+        "category": "Fasting",
+        "textEn": "Take Suhur as there is a blessing in it.",
+        "textBn": "তোমরা সাহরি খাও, কেননা সাহরতে বরকত রয়েছে।",
+        "textAr": "تَسَحَّرُوا فَإِنَّ فِي السَّحُورِ بَرَكَةً"
+    },
+    {
+        "id": 9,
+        "source": "Sahih Bukhari 35",
+        "category": "Faith",
+        "textEn": "Whoever establishes prayers during the nights of Ramadan faithfully out of sincere faith and hoping to attain Allah's rewards (not for showing off), all his past sins will be forgiven.",
+        "textBn": "যে ব্যক্তি ঈমানের সাথে ও সওয়াবের আশায় রমজানের রাতে নামাজ আদায় করে (তারাবীহ), তার পূর্বের সব গুনাহ মাফ করে দেওয়া হবে।",
+        "textAr": "مَنْ قَامَ رَمَضَانَ إِيمَانًا وَاحْتِسَابًا غُفِرَ لَهُ مَا تَقَدَّمَ مِنْ ذَنْبِهِ"
+    },
+    {
+        "id": 10,
+        "source": "Sahih Muslim 2588",
+        "category": "Charity",
+        "textEn": "Charity does not decrease wealth, no one forgives another except that Allah increases his honor, and no one humbles himself for the sake of Allah except that Allah raises his status.",
+        "textBn": "দান সম্পদ কমায় না, ক্ষমা করলে আল্লাহ সম্মান বাড়িয়ে দেন এবং কেউ আল্লাহর জন্য বিনয়ী হলে আল্লাহ তাকে উচ্চ মর্যাদা দান করেন।",
+        "textAr": "مَا نَقَصَتْ صَدَقَةٌ مِنْ مَالٍ وَمَا زَادَ اللَّهُ عَبْدًا بِعَفْوٍ إِلاَّ عِزًّا وَمَا تَوَاضَعَ أَحَدٌ لِلَّهِ إِلاَّ رَفَعَهُ اللَّهُ"
+    },
+    {
+        "id": 11,
+        "source": "Sahih Bukhari 6046",
+        "category": "Character",
+        "textEn": "The strong believer is better and more beloved to Allah than the weak believer, while there is good in both.",
+        "textBn": "দুর্বল মুমিনের চেয়ে শক্তিশালী মুমিন আল্লাহর কাছে বেশি উত্তম ও প্রিয়, তবে উভয়ের মধ্যেই কল্যাণ রয়েছে।",
+        "textAr": "الْمُؤْمِنُ الْقَوِيُّ خَيْرٌ وَأَحَبُّ إِلَى اللَّهِ مِنَ الْمُؤْمِنِ الضَّعِيفِ وَفِي كُلٍّ خَيْرٌ"
+    },
+    {
+        "id": 12,
+        "source": "At-Tirmidhi 1987",
+        "category": "Character",
+        "textEn": "Fear Allah wherever you are, do good deeds after doing bad ones, the former will wipe out the latter, and behave decently towards people.",
+        "textBn": "তুমি যেখানেই থাকো আল্লাহকে ভয় করো। কোনো পাপ কাজের পর পুণ্য কাজ করো, তা পাপকে মুছে দিবে এবং মানুষের সাথে ভালো ব্যবহার করো।",
+        "textAr": "اتَّقِ اللَّهَ حَيْثُمَا كُنْتَ وَأَتْبِعِ السَّيِّئَةَ الْحَسَنَةَ تَمْحُهَا وَخَالِقِ النَّاسَ بِخُلُقٍ حَسَنٍ"
+    },
+    {
+        "id": 13,
+        "source": "Sahih Bukhari 6018",
+        "category": "Relationships",
+        "textEn": "A believer to another believer is like a building whose different parts enforce each other.",
+        "textBn": "এক মুমিন অন্য মুমিনের জন্য ইমারতের মতো, যার এক অংশ অন্য অংশকে শক্তিশালী করে।",
+        "textAr": "الْمُؤْمِنُ لِلْمُؤْمِنِ كَالْبُنْيَانِ يَشُدُّ بَعْضُهُ بَعْضًا"
+    },
+    {
+        "id": 14,
+        "source": "Sahih Bukhari 6035",
+        "category": "Relationships",
+        "textEn": "He who believes in Allah and the Last Day must not harm his neighbor.",
+        "textBn": "যে আল্লাহ ও পরকালে বিশ্বাস রাখে, সে যেন তার প্রতিবেশীকে কষ্ট না দেয়।",
+        "textAr": "مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الآخِرِ فَلاَ يُؤْذِ جَارَهُ"
+    },
+    {
+        "id": 15,
+        "source": "Sahih Muslim 223",
+        "category": "Health",
+        "textEn": "Cleanliness is half of faith.",
+        "textBn": "পবিত্রতা ঈমানের অর্ধেক।",
+        "textAr": "الطُّهُورُ شَطْرُ الإِيمَانِ"
+    },
+    {
+        "id": 16,
+        "source": "Sahih Bukhari 5971",
+        "category": "Family",
+        "textEn": "The best of you is the one who is best to his family, and I am the best among you to my family.",
+        "textBn": "তোমাদের মধ্যে সেই উত্তম, যে তার পরিবারের কাছে উত্তম। আর আমি আমার পরিবারের কাছে তোমাদের চেয়ে উত্তম।",
+        "textAr": "خَيْرُكُمْ خَيْرُكُمْ لأَهْلِهِ وَأَنَا خَيْرُكُمْ لأَهْلِي"
+    },
+    {
+        "id": 17,
+        "source": "Sahih Bukhari 6412",
+        "category": "Life",
+        "textEn": "Be in this world as if you were a stranger or a traveler.",
+        "textBn": "দুনিয়াতে এমনভাবে থাকো যেন তুমি একজন অপরিচিত ব্যক্তি অথবা একজন পথচারী মুসাফির।",
+        "textAr": "كُنْ فِي الدُّنْيَا كَأَنَّكَ غَرِيبٌ أَوْ عَابِرُ سَبِيلٍ"
+    },
+    {
+        "id": 18,
+        "source": "Sahih Bukhari 2014",
+        "category": "Fasting",
+        "textEn": "Search for the Night of Qadr in the odd nights of the last ten days of Ramadan.",
+        "textBn": "রমজানের শেষ দশ দিনের বেজোড় রাতগুলোতে শবে কদর অন্বেষণ করো।",
+        "textAr": "تَحَرَّوْا لَيْلَةَ الْقَدْرِ فِي الْوِتْرِ مِنَ الْعَشْرِ الأَوَاخِرِ مِنْ رَمَضَانَ"
+    },
+    {
+        "id": 19,
+        "source": "Sahih Bukhari 6668",
+        "category": "Fasting",
+        "textEn": "Actions are judged by intentions, so each man will have what he intended.",
+        "textBn": "সকল কাজ নিয়তের ওপর নির্ভরশীল, আর মানুষ তার নিয়ত অনুযায়ী ফল পাবে।",
+        "textAr": "إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى"
+    },
+    {
+        "id": 20,
+        "source": "Sahih Bukhari 6499",
+        "category": "Dua",
+        "textEn": "There are two phrases that are light on the tongue but heavy on the scale of rewards and are beloved to the Gracious One: 'Subhan-Allahi wa bihamdihi' and 'Subhan-Allahil-Azim'.",
+        "textBn": "দুটি বাক্য এমন আছে যা বলা সহজ, মিজানের পাল্লায় ভারী এবং দয়াময় আল্লাহর কাছে প্রিয়: 'সুবহানাল্লাহি ওয়া বিহামদিহি' এবং 'সুবহানাল্লাহিল আজিম' (আল্লাহ পবিত্র ও প্রশংসা তাঁরই, মহান আল্লাহ পবিত্র)।",
+        "textAr": "كَلِمَتَانِ خَفِيفَتَانِ عَلَى اللِّسَانِ، ثَقِيلَتَانِ فِي الْمِيزَانِ، حَبِيبَتَانِ إِلَى الرَّحْمَنِ سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ"
+    },
+    {
+        "id": 21,
+        "source": "Sahih Muslim 2674",
+        "category": "General",
+        "textEn": "He who calls (others) to guidance, reward like that of those who follow him will be his, without that detracting from their reward in the slightest.",
+        "textBn": "যে ব্যক্তি সঠিক পথের দিকে আহ্বান জানায়, সে তাকে অনুসরণকারীদের সমান সওয়াব পাবে, এতে তাদের সওয়াবের কোনো কমতি হবে না।",
+        "textAr": "مَنْ دَعَا إِلَى هُدًى كَانَ لَهُ مِنَ الأَجْرِ مِثْلُ أُجُورِ مَنْ تَبِعَهُ لاَ يَنْقُصُ ذَلِكَ مِنْ أُجُورِهِمْ شَيْئًا"
+    },
+    {
+        "id": 22,
+        "source": "Sunan Ibn Majah 224",
+        "category": "Knowledge",
+        "textEn": "Seeking knowledge is a duty upon every Muslim.",
+        "textBn": "জ্ঞান অর্জন করা প্রত্যেক মুসলিমের ওপর ফরজ।",
+        "textAr": "طَلَبُ الْعِلْمِ فَرِيضَةٌ عَلَى كُلِّ مُسْلِمٍ"
+    },
+    {
+        "id": 23,
+        "source": "Sahih Bukhari 5997",
+        "category": "Manners",
+        "textEn": "He who pleases Allah at the expense of people's displeasure, Allah will suffice him against people. He who pleases people at the expense of Allah's displeasure, Allah will leave him to people.",
+        "textBn": "যে ব্যক্তি মানুষের অসন্তুষ্টি সত্ত্বেও আল্লাহকে খুশি করে, আল্লাহ তাকে মানুষের অনিষ্ট থেকে রক্ষা করেন। আর যে আল্লাহকে অসন্তুষ্ট করে মানুষকে খুশি করে, আল্লাহ তাকে মানুষের হাতেই ছেড়ে দেন।",
+        "textAr": "مَنِ الْتَمَسَ رِضَا اللَّهِ بِسَخَطِ النَّاسِ كَفَاهُ اللَّهُ مُؤْنَةَ النَّاسِ، وَمَنِ الْتَمَسَ رِضَا النَّاسِ بِسَخَطِ اللَّهِ وَكَلَهُ اللَّهُ إِلَى النَّاسِ"
+    },
+    {
+        "id": 24,
+        "source": "Tirmidhi 3540",
+        "category": "Dua",
+        "textEn": "Supplication(Dua) is the essence of worship.",
+        "textBn": "দোয়া হলো ইবাদতের মূল।",
+        "textAr": "الدُّعَاءُ مُخُّ الْعِبَادَةِ"
+    },
+    {
+        "id": 25,
+        "source": "Sahih Bukhari 2008",
+        "category": "Fasting",
+        "textEn": "The people will remain on the right path as long as they hasten the breaking of the fast.",
+        "textBn": "মানুষ ততদিন কল্যাণের মধ্যে থাকবে, যতদিন তারা ইফতার করতে দেরি করবে না (সূর্য ডোবার সাথে সাথে ইফতার করা)।",
+        "textAr": "لاَ يَزَالُ النَّاسُ بِخَيْرٍ مَا عَجَّلُوا الْفِطْرَ"
+    },
+    {
+        "id": 26,
+        "source": "Sahih Bukhari 5705",
+        "category": "Character",
+        "textEn": "The strong man is not the one who can overpower others (in wrestling); rather, the strong man is the one who controls himself when he gets angry.",
+        "textBn": "সেই প্রকৃত শক্তিশালী নয় যে কুস্তিতে অন্যকে হারিয়ে দেয়; বরং সেই প্রকৃত শক্তিশালী, যে রাগের সময় নিজেকে নিয়ন্ত্রণ করতে পারে।",
+        "textAr": "لَيْسَ الشَّدِيدُ بِالصُّرْعَةِ، إِنَّمَا الشَّدِيدُ الَّذِي يَمْلِكُ نَفْسَهُ عِنْدَ الْغَضَبِ"
+    },
+    {
+        "id": 27,
+        "source": "Sahih Bukhari 660",
+        "category": "Prayer",
+        "textEn": "The reward of the congregational prayer is twenty seven times greater (in reward) than the prayer offered alone.",
+        "textBn": "একাকী নামাজের চেয়ে জামাতে নামাজের সওয়াব সাতাশ গুণ বেশি।",
+        "textAr": "صَلاَةُ الْجَمَاعَةِ تَفْضِلُ صَلاَةَ الْفَذِّ بِسَبْعٍ وَعِشْرِينَ دَرَجَةً"
+    },
+    {
+        "id": 28,
+        "source": "Sahih Bukhari 5373",
+        "category": "Manners",
+        "textEn": "Make things easy for people and do not make them difficult, and cheer people up and do not drive them away.",
+        "textBn": "মানুষের জন্য সহজ করো, কঠিন করো না; সুসংবাদ দাও, দূরে ঠেলে দিও না।",
+        "textAr": "يَسِّرُوا وَلاَ تُعَسِّرُوا، وَبَشِّرُوا، وَلاَ تُنَفِّرُوا"
+    },
+    {
+        "id": 29,
+        "source": "Sahih Bukhari 1358",
+        "category": "Life",
+        "textEn": "Three things follow a deceased person (to the grave), two of them return and one remains: his family, his wealth and his deeds. His family and wealth return, but his deeds remain.",
+        "textBn": "মৃত ব্যক্তির সাথে তিনটি জিনিস কবরে যায়: তার পরিবার, সম্পদ ও আমল। দুটি ফিরে আসে এবং একটি থেকে যায়। পরিবার ও সম্পদ ফিরে আসে, কিন্তু তার আমল তার সাথে থেকে যায়।",
+        "textAr": "يَتْبَعُ الْمَيِّتَ ثَلاَثَةٌ، فَيَرْجِعُ اثْنَانِ وَيَبْقَى وَاحِدٌ، يَتْبَعُهُ أَهْلُهُ وَمَالُهُ وَعَمَلُهُ، فَيَرْجِعُ أَهْلُهُ وَمَالُهُ وَيَبْقَى عَمَلُهُ"
+    },
+    {
+        "id": 30,
+        "source": "Sahih Bukhari 113",
+        "category": "Knowledge",
+        "textEn": "Envy is permitted only in two cases: A man whom Allah gives wealth, and he disposes of it rightfully, and a man to whom Allah gives knowledge which he applies and teaches it.",
+        "textBn": "কেবল দুটি বিষয়ে ঈর্ষা করা জায়েজ: ১. যাকে আল্লাহ সম্পদ দিয়েছেন এবং সে তা ভালো কাজে ব্যয় করে। ২. যাকে আল্লাহ জ্ঞান দিয়েছেন এবং সে অনুযায়ী বিচার করে ও অন্যকে শিক্ষা দেয়।",
+        "textAr": "لاَ حَسَدَ إِلاَّ فِي اثْنَتَيْنِ رَجُلٌ آتَاهُ اللَّهُ مَالاً فَسُلِّطَ عَلَى هَلَكَتِهِ فِي الْحَقِّ، وَرَجُلٌ آتَاهُ اللَّهُ الْحِكْمَةَ، فَهْوَ يَقْضِي بِهَا وَيُعَلِّمُهَا"
+    }
+]
