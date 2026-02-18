@@ -215,11 +215,11 @@ export default function IftarSehriClient() {
                         <select
                             value={selectedCountryCode}
                             onChange={handleCountryChange}
-                            className="w-full px-4 py-3 rounded-xl bg-primary-950/50 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
+                            className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
                         >
                             <option value="" className="bg-primary-900 text-gray-400">{t('selectCountry')}</option>
                             {allCountries.map((c) => (
-                                <option key={c.isoCode} value={c.isoCode} className="bg-primary-900">{c.name}</option>
+                                <option key={c.isoCode} value={c.isoCode} className="bg-primary-900 text-white">{c.name}</option>
                             ))}
                         </select>
                         <div className="absolute right-4 bottom-3.5 pointer-events-none text-primary-400 text-xs">▼</div>
@@ -232,11 +232,11 @@ export default function IftarSehriClient() {
                                 value={location.city}
                                 onChange={(e) => setLocation({ ...location, city: e.target.value, useCoords: false })}
                                 disabled={!selectedCountryCode}
-                                className="w-full px-4 py-3 rounded-xl bg-primary-950/50 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 disabled:opacity-50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
+                                className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 disabled:opacity-50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
                             >
                                 <option value="" className="bg-primary-900 text-gray-400">{t('selectCity')}</option>
                                 {cities.map((city) => (
-                                    <option key={city.name} value={city.name} className="bg-primary-900">{city.name}</option>
+                                    <option key={city.name} value={city.name} className="bg-primary-900 text-white">{city.name}</option>
                                 ))}
                             </select>
                         ) : (
@@ -244,7 +244,7 @@ export default function IftarSehriClient() {
                                 type="text"
                                 value={location.city}
                                 onChange={(e) => setLocation({ ...location, city: e.target.value, useCoords: false })}
-                                className="w-full px-4 py-3 rounded-xl bg-primary-950/50 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 placeholder-primary-500 transition-colors hover:bg-primary-950/70"
+                                className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 placeholder:text-primary-400 transition-colors hover:bg-primary-950/70"
                                 placeholder={selectedCountryCode ? t('enterCityName') : t('selectCountryFirst')}
                                 disabled={!selectedCountryCode}
                             />

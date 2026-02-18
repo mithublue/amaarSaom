@@ -136,7 +136,7 @@ export default function HadithClient({ initialHadithData }: HadithClientProps) {
         // Award Points (once per platform)
         if (!sharedPlatforms.has(platform)) {
             try {
-                const res = await fetch('/api/deeds/complete', {
+                const res = await fetch('/api/deeds', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -163,18 +163,6 @@ export default function HadithClient({ initialHadithData }: HadithClientProps) {
             {/* Daily Hadith Card (The Hero) */}
             <div className={`bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass overflow-hidden`}>
                 <div className="p-8 md:p-12">
-                    <div className="text-center mb-10">
-                        <div className="inline-block p-4 rounded-full bg-primary-800/20 border border-primary-500/30 mb-6 shadow-glow animate-float">
-                            <span className="text-5xl">📖</span>
-                        </div>
-                        <h2 className="text-3xl font-heading font-bold text-white mb-2 tracking-tight drop-shadow-md">{t('title')}</h2>
-                        <p className="text-primary-300 font-medium opacity-80 uppercase tracking-widest text-xs">
-                            {isRamadan
-                                ? `Day ${diffDays} of Ramadan`
-                                : new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-                            }
-                        </p>
-                    </div>
 
                     <div
                         ref={cardRef}
@@ -276,7 +264,7 @@ export default function HadithClient({ initialHadithData }: HadithClientProps) {
                             placeholder="Search by keywords, source, or text..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 bg-primary-950/40 border border-white/10 rounded-2xl text-white placeholder-primary-500 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all shadow-inner"
+                            className="w-full pl-12 pr-4 py-4 bg-primary-950/60 border border-white/10 rounded-2xl text-white placeholder:text-primary-500/70 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all shadow-inner"
                         />
                     </div>
                     <div className="flex gap-2 overflow-x-auto pb-4 xl:pb-0 scrollbar-hide no-scrollbar">
