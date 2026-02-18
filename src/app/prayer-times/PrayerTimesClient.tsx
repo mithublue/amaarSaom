@@ -113,7 +113,12 @@ export default function PrayerTimesClient() {
                                         });
                                     },
                                     (error) => {
-                                        alert('Error getting location: ' + error.message);
+                                        // Specific error handling for user permission
+                                        if (error.code === error.PERMISSION_DENIED) {
+                                            alert('Location access denied. Please enable location permissions in your browser or phone settings to use this feature.');
+                                        } else {
+                                            alert('Error getting location: ' + error.message);
+                                        }
                                         setLoading(false);
                                     }
                                 );
@@ -121,10 +126,10 @@ export default function PrayerTimesClient() {
                                 alert('Geolocation is not supported by this browser.');
                             }
                         }}
-                        className="px-4 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition flex items-center gap-2"
+                        className="px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition flex items-center gap-2 font-medium whitespace-nowrap"
                         title="Use My Exact Location"
                     >
-                        📍
+                        📍 Show prayer time in my location
                     </button>
                 </div>
             </div>

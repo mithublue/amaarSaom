@@ -9,25 +9,25 @@ export default async function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900">
       {/* Header */}
       <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
             <span className="text-4xl">🌙</span>
             <h1 className="text-2xl font-bold text-white">Ramadan Companion</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-primary-100">
+          <div className="flex flex-wrap justify-center items-center gap-3 md:gap-4">
+            <span className="text-primary-100 text-sm md:text-base">
               {session?.user?.name || 'Guest User'}
             </span>
             <Link
               href="/profile"
-              className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition flex items-center gap-2"
+              className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition flex items-center gap-2 text-sm md:text-base"
             >
               <span>👤</span> Profile
             </Link>
             {session && (
               <Link
                 href="/api/auth/signout"
-                className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition"
+                className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm md:text-base"
               >
                 Sign Out
               </Link>

@@ -47,7 +47,7 @@ export default function ProfileClient({ user }: { user: any }) {
 
                 // Fetch Divisions (Bangladesh ID is likely 1, or just fetch all for now)
                 // Assuming we default to Bangladesh for now as per requirements
-                const divRes = await fetch('/api/locations/divisions?countryId=1');
+                const divRes = await fetch('/api/locations/divisions');
                 const divData = await divRes.json();
                 setDivisions(divData.data || []);
 
