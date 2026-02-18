@@ -20,7 +20,7 @@ interface LeaderboardData {
 export default function LeaderboardClient() {
     const [data, setData] = useState<LeaderboardData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [period, setPeriod] = useState<'daily' | 'weekly' | 'overall'>('weekly');
+    const [period, setPeriod] = useState<'daily' | 'weekly' | 'overall'>('daily');
     const [scope, setScope] = useState<'global' | 'district' | 'division' | 'district_ranking'>('global');
 
     useEffect(() => {

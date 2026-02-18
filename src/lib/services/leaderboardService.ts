@@ -52,12 +52,14 @@ export async function getLeaderboard(params: {
     const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
     // Interpolate values directly to avoid Prisma queryRaw parameter binding issues with mixed inputs
+    // User Update: Use 'completed_at' timestamp instead of 'date' column as 'date' may be asynchronous/logical
+    // DATE(cd.completed_at) extracts the date part from the timestamp
     if (period === 'daily') {
-        dateFilter = `AND cd.date = '${todayStr}'`;
+        dateFilter = `AND DATE(cd.completed_at) = '${todayStr}'`;
     } else if (period === 'weekly') {
         const weekStart = startOfWeek(now); // Local date object
         const weekStartStr = `${weekStart.getFullYear()}-${pad(weekStart.getMonth() + 1)}-${pad(weekStart.getDate())}`;
-        dateFilter = `AND cd.date >= '${weekStartStr}'`;
+        dateFilter = `AND DATE(cd.completed_at) >= '${weekStartStr}'`; // Using timestamp for weekly too for consistency
     }
     // 'overall' needs no date filter
 
