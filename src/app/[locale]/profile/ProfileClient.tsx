@@ -150,7 +150,7 @@ export default function ProfileClient({ user }: { user: any }) {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm placeholder-primary-600"
+                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-black focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500/20 transition shadow-sm placeholder:text-gray-400"
                             placeholder={t('placeholderName')}
                         />
                         <p className="text-primary-400 text-sm mt-2">
@@ -172,11 +172,11 @@ export default function ProfileClient({ user }: { user: any }) {
                                 <select
                                     value={selectedCountryCode}
                                     onChange={handleCountryChange}
-                                    className="w-full px-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm appearance-none cursor-pointer"
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-black focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500/20 transition shadow-sm appearance-none cursor-pointer"
                                 >
-                                    <option value="" className="bg-primary-900">{t('selectCountry')}</option>
+                                    <option value="" className="text-gray-400">{t('selectCountry')}</option>
                                     {allCountries.map((c) => (
-                                        <option key={c.isoCode} value={c.isoCode} className="bg-primary-900 text-white">{c.name}</option>
+                                        <option key={c.isoCode} value={c.isoCode} className="text-black">{c.name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -189,11 +189,11 @@ export default function ProfileClient({ user }: { user: any }) {
                                         value={cityName}
                                         onChange={(e) => setCityName(e.target.value)}
                                         disabled={!selectedCountryCode}
-                                        className="w-full px-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm disabled:opacity-50 appearance-none cursor-pointer"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-black focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500/20 transition shadow-sm disabled:opacity-50 appearance-none cursor-pointer"
                                     >
-                                        <option value="" className="bg-primary-900">{t('selectCity')}</option>
+                                        <option value="" className="text-gray-400">{t('selectCity')}</option>
                                         {cities.map((city) => (
-                                            <option key={city.name} value={city.name} className="bg-primary-900 text-white">{city.name}</option>
+                                            <option key={city.name} value={city.name} className="text-black">{city.name}</option>
                                         ))}
                                     </select>
                                 ) : (
@@ -201,7 +201,7 @@ export default function ProfileClient({ user }: { user: any }) {
                                         type="text"
                                         value={cityName}
                                         onChange={(e) => setCityName(e.target.value)}
-                                        className="w-full px-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm placeholder-primary-600"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-black focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500/20 transition shadow-sm placeholder:text-gray-400"
                                         placeholder={t('enterCity')}
                                     />
                                 )}
