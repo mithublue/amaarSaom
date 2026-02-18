@@ -177,111 +177,134 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
     };
 
     return (
-        <div className="space-y-8">
-            {/* Daily Hadith Card */}
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8">
-                <div className="text-center mb-6">
-                    <span className="text-5xl block mb-4">📖</span>
-                    <h2 className="text-2xl font-bold text-primary-900 mb-2">{t('title')}</h2>
-                    <p className="text-text-secondary text-sm">
-                        {isRamadan
-                            ? `Day ${diffDays} of Ramadan`
-                            : new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-                        }
-                    </p>
-                </div>
-
-                <div
-                    ref={cardRef}
-                    className="bg-slate-50 rounded-2xl p-8 mb-8 group relative overflow-hidden transition-all hover:shadow-md border border-gray-100"
-                >
-                    {/* Branding for Screenshot */}
-                    <div className="absolute top-4 left-4 text-xs text-primary-300 font-bold uppercase tracking-widest pointer-events-none">
-                        Ramadan Companion
-                    </div>
-
-                    <div className="absolute -right-10 -top-10 text-9xl opacity-5 text-primary-900">❝</div>
-                    <p className="text-primary-900 text-xl md:text-2xl italic leading-relaxed text-center mb-6 font-serif relative z-10 pt-4">
-                        "{currentHadithText}"
-                    </p>
-                    <div className="w-16 h-1 bg-accent/50 mx-auto mb-4 rounded-full"></div>
-                    <p className="text-text-secondary text-sm md:text-base text-center font-semibold tracking-wide uppercase">
-                        — {currentHadithSource}
-                    </p>
-                </div>
-
-                <div className="flex flex-col items-center gap-4">
-                    <div className="text-center">
-                        <p className="text-text-muted text-sm mb-2">Share this beautiful message:</p>
-                        <p className="text-accent text-xs font-semibold mb-4 bg-accent/10 px-3 py-1 rounded-full inline-block">
-                            🎁 Reward: 10 Points (once per platform)
+        <div className="space-y-12 animate-fade-in mb-20">
+            {/* Daily Hadith Card (The Hero) */}
+            <div className={`bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass overflow-hidden`}>
+                <div className="p-8 md:p-12">
+                    <div className="text-center mb-10">
+                        <div className="inline-block p-4 rounded-full bg-primary-800/20 border border-primary-500/30 mb-6 shadow-glow animate-float">
+                            <span className="text-5xl">📖</span>
+                        </div>
+                        <h2 className="text-3xl font-heading font-bold text-white mb-2 tracking-tight drop-shadow-md">{t('title')}</h2>
+                        <p className="text-primary-300 font-medium opacity-80 uppercase tracking-widest text-xs">
+                            {isRamadan
+                                ? `Day ${diffDays} of Ramadan`
+                                : new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                            }
                         </p>
                     </div>
-                    <div className="flex gap-4">
-                        <button
-                            onClick={handleDownloadImage}
-                            className="p-3 rounded-full transition-all text-primary-600 border border-gray-200 bg-slate-100 hover:bg-accent hover:text-white hover:border-accent hover:scale-110 shadow-sm"
-                            title="Download Image"
-                        >
-                            <span className="text-xl">⬇️</span>
-                        </button>
-                        <button
-                            onClick={() => handleShare('native')}
-                            className="p-3 rounded-full transition-all text-primary-600 border border-gray-200 bg-slate-100 hover:bg-accent hover:text-white hover:border-accent hover:scale-110 shadow-sm"
-                            title="Share Highlight"
-                        >
-                            <span className="text-xl">✨</span> Share
-                        </button>
-                        <button
-                            onClick={() => handleShare('twitter')}
-                            className={`p-3 rounded-full transition-all border shadow-sm ${sharedPlatforms.has('twitter') ? 'bg-green-100 text-green-600 border-green-200' : 'bg-slate-100 text-primary-600 border-gray-200 hover:bg-[#1DA1F2] hover:text-white hover:scale-110'}`}
-                            title="Share on Twitter"
-                            disabled={sharedPlatforms.has('twitter')}
-                        >
-                            {sharedPlatforms.has('twitter') ? '✅' : <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" /></svg>}
-                        </button>
-                        <button
-                            onClick={() => handleShare('facebook')}
-                            className={`p-3 rounded-full transition-all border shadow-sm ${sharedPlatforms.has('facebook') ? 'bg-green-100 text-green-600 border-green-200' : 'bg-slate-100 text-primary-600 border-gray-200 hover:bg-[#4267B2] hover:text-white hover:scale-110'}`}
-                            title="Share on Facebook"
-                            disabled={sharedPlatforms.has('facebook')}
-                        >
-                            {sharedPlatforms.has('facebook') ? '✅' : <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>}
-                        </button>
-                        <button
-                            onClick={() => handleShare('email')}
-                            className={`p-3 rounded-full transition-all border shadow-sm ${sharedPlatforms.has('email') ? 'bg-green-100 text-green-600 border-green-200' : 'bg-slate-100 text-primary-600 border-gray-200 hover:bg-green-600 hover:text-white hover:scale-110'}`}
-                            title="Share via Email"
-                            disabled={sharedPlatforms.has('email')}
-                        >
-                            {sharedPlatforms.has('email') ? '✅' : <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>}
-                        </button>
+
+                    <div
+                        ref={cardRef}
+                        className="bg-linear-to-br from-primary-950/80 to-primary-900/80 rounded-3xl p-10 mb-10 group relative overflow-hidden transition-all duration-500 border border-white/10 shadow-inner"
+                    >
+                        {/* Branding for Screenshot */}
+                        <div className="absolute top-6 left-6 text-[10px] text-accent-500/40 font-black uppercase tracking-[0.3em] pointer-events-none select-none">
+                            Ramadan Companion
+                        </div>
+
+                        <div className="absolute -right-12 -top-12 text-[12rem] opacity-[0.03] text-white font-serif pointer-events-none select-none">❝</div>
+                        <div className="absolute -left-12 -bottom-12 text-[12rem] opacity-[0.03] text-white font-serif rotate-180 pointer-events-none select-none">❝</div>
+
+                        <div className="relative z-10 py-6">
+                            <p className="text-white text-2xl md:text-4xl leading-relaxed text-center mb-10 font-serif drop-shadow-sm select-all">
+                                "{currentHadithText}"
+                            </p>
+                            <div className="w-24 h-1 bg-linear-to-r from-transparent via-accent-500 to-transparent mx-auto mb-6 rounded-full opacity-60"></div>
+                            <p className="text-accent-300 text-sm md:text-lg text-center font-bold tracking-[0.15em] uppercase drop-shadow-sm">
+                                — {currentHadithSource}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="bg-primary-950/40 rounded-2xl p-6 border border-white/5 flex flex-col items-center gap-6">
+                        <div className="text-center">
+                            <p className="text-accent-400 text-xs font-bold uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-accent-500 animate-pulse"></span>
+                                Reward: 10 Points
+                            </p>
+                            <p className="text-primary-300 text-sm font-medium opacity-70">Share this wisdom to inspire others and earn rewards.</p>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-4">
+                            <button
+                                onClick={handleDownloadImage}
+                                className="group flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold text-sm transition-all duration-300 border border-white/10 hover:border-accent-500/30"
+                                title="Download Image"
+                            >
+                                <span className="text-xl group-hover:scale-125 group-hover:-translate-y-1 transition-transform inline-block">📸</span>
+                                <span>Save Image</span>
+                            </button>
+
+                            <div className="h-10 w-px bg-white/5 mx-2 hidden md:block"></div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => handleShare('native')}
+                                    className="p-3.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-white transition-all duration-300 shadow-gold-glow hover:scale-110 active:scale-95"
+                                    title="Share Highlight"
+                                >
+                                    <span className="text-xl">✨</span>
+                                </button>
+                                <button
+                                    onClick={() => handleShare('twitter')}
+                                    className={`p-3.5 rounded-xl transition-all duration-300 border ${sharedPlatforms.has('twitter') ? 'bg-emerald-600/20 border-emerald-500/30 text-emerald-400' : 'bg-white/5 border-white/10 text-white hover:bg-[#1DA1F2] hover:border-[#1DA1F2] hover:shadow-lg hover:scale-110'}`}
+                                    title="Share on Twitter"
+                                    disabled={sharedPlatforms.has('twitter')}
+                                >
+                                    {sharedPlatforms.has('twitter') ? '✅' : <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" /></svg>}
+                                </button>
+                                <button
+                                    onClick={() => handleShare('facebook')}
+                                    className={`p-3.5 rounded-xl transition-all duration-300 border ${sharedPlatforms.has('facebook') ? 'bg-emerald-600/20 border-emerald-500/30 text-emerald-400' : 'bg-white/5 border-white/10 text-white hover:bg-[#4267B2] hover:border-[#4267B2] hover:shadow-lg hover:scale-110'}`}
+                                    title="Share on Facebook"
+                                    disabled={sharedPlatforms.has('facebook')}
+                                >
+                                    {sharedPlatforms.has('facebook') ? '✅' : <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>}
+                                </button>
+                                <button
+                                    onClick={() => handleShare('email')}
+                                    className={`p-3.5 rounded-xl transition-all duration-300 border ${sharedPlatforms.has('email') ? 'bg-emerald-600/20 border-emerald-500/30 text-emerald-400' : 'bg-white/5 border-white/10 text-white hover:bg-emerald-600 hover:border-emerald-600 hover:shadow-lg hover:scale-110'}`}
+                                    title="Share via Email"
+                                    disabled={sharedPlatforms.has('email')}
+                                >
+                                    {sharedPlatforms.has('email') ? '✅' : <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.1" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Browse Section */}
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
-                <h3 className="text-2xl font-bold text-primary-900 mb-6">{t('browseMore')}</h3>
+            <div className="bg-primary-900/20 backdrop-blur-sm rounded-app-lg border border-white/5 p-8 md:p-12">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 border-b border-white/5 pb-8">
+                    <div>
+                        <h3 className="text-3xl font-heading font-bold text-white mb-2">{t('browseMore')}</h3>
+                        <p className="text-primary-400 font-medium">Explore the vast wisdom of Prophetic narrations.</p>
+                    </div>
+                </div>
 
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 mb-8">
-                    <div className="relative flex-1">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">🔍</span>
+                {/* Filters Row */}
+                <div className="flex flex-col xl:flex-row gap-6 mb-10">
+                    <div className="relative flex-1 group">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400 group-focus-within:text-accent-400 transition-colors">🔍</span>
                         <input
                             type="text"
-                            placeholder="Search Hadiths..."
+                            placeholder="Search by keywords, source, or text..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-primary-900 placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition shadow-sm"
+                            className="w-full pl-12 pr-4 py-4 bg-primary-950/40 border border-white/10 rounded-2xl text-white placeholder-primary-500 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all shadow-inner"
                         />
                     </div>
-                    <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                    <div className="flex gap-2 overflow-x-auto pb-4 xl:pb-0 scrollbar-hide no-scrollbar">
                         {categories.map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-accent text-white font-bold shadow-md' : 'bg-slate-50 text-primary-600 hover:bg-slate-100 border border-gray-200'}`}
+                                className={`px-6 py-3 rounded-2xl whitespace-nowrap font-bold text-sm transition-all duration-300 ${selectedCategory === cat
+                                    ? 'bg-accent-600 text-white shadow-gold-glow scale-[1.05]'
+                                    : 'bg-white/5 text-primary-300 border border-white/5 hover:bg-white/10 hover:text-white'}`}
                             >
                                 {cat}
                             </button>
@@ -289,39 +312,59 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                     </div>
                 </div>
 
-                {/* Grid */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Hadiths Grid */}
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {filteredHadiths.slice(0, visibleCount).map((h) => (
-                        <div key={h.id} className="bg-slate-50 border border-gray-200 rounded-2xl p-6 hover:bg-white hover:shadow-md transition group">
-                            <span className="text-xs font-bold text-accent px-2 py-1 bg-accent/10 rounded mb-3 inline-block">
-                                {h.category}
-                            </span>
-                            <p className="text-primary-900 text-lg italic mb-4 font-serif leading-relaxed">"{getLocalizedText(h as Hadith)}"</p>
-                            <p className="text-text-secondary text-xs font-semibold uppercase tracking-wide border-t border-gray-200 pt-3">
-                                {h.source}
+                        <div key={h.id} className="bg-primary-900/40 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:bg-primary-900/60 hover:border-accent-500/30 transition-all duration-500 group flex flex-col h-full shadow-glass animate-slide-up">
+                            <div className="mb-6 flex justify-between items-start">
+                                <span className="text-[10px] font-black text-accent-400 px-3 py-1 bg-accent-500/10 border border-accent-500/20 rounded-full uppercase tracking-widest group-hover:bg-accent-500/20 transition-colors">
+                                    {h.category}
+                                </span>
+                                <span className="text-2xl opacity-20 group-hover:opacity-40 transition-opacity">❝</span>
+                            </div>
+
+                            <p className="text-white text-xl italic mb-8 font-serif leading-relaxed flex-grow group-hover:text-primary-50 transition-colors">
+                                "{getLocalizedText(h as Hadith)}"
                             </p>
+
+                            <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+                                <p className="text-accent-300 text-xs font-black uppercase tracking-widest opacity-80 group-hover:opacity-100 transition-opacity">
+                                    — {h.source}
+                                </p>
+                                <button className="text-white/20 hover:text-accent-400 transition-colors">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Load More */}
-                {visibleCount < filteredHadiths.length && (
-                    <div className="text-center mt-8">
-                        <button
-                            onClick={() => setVisibleCount(prev => prev + 6)}
-                            className="px-6 py-2 bg-white border border-gray-200 text-primary-600 rounded-xl hover:bg-slate-50 transition shadow-sm"
-                        >
-                            Load More
-                        </button>
+                {/* Empty State */}
+                {filteredHadiths.length === 0 && (
+                    <div className="text-center py-24 bg-primary-950/20 rounded-3xl border border-dashed border-white/10">
+                        <div className="text-7xl mb-6 opacity-20">🔍</div>
+                        <h4 className="text-2xl font-bold text-white mb-2">No Hadiths Found</h4>
+                        <p className="text-primary-400">Try adjusting your search terms or filter criteria.</p>
                     </div>
                 )}
 
-                {filteredHadiths.length === 0 && (
-                    <div className="text-center py-12 text-text-muted">
-                        No Hadiths found matching your criteria.
+                {/* Load More Row */}
+                {visibleCount < filteredHadiths.length && (
+                    <div className="text-center mt-12">
+                        <button
+                            onClick={() => setVisibleCount(prev => prev + 6)}
+                            className="px-10 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-bold hover:bg-white/10 hover:border-accent-500/30 transition-all duration-300 shadow-glass group"
+                        >
+                            <span className="flex items-center gap-2">
+                                Load More Knowledge
+                                <span className="group-hover:translate-y-1 transition-transform">↓</span>
+                            </span>
+                        </button>
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
 }

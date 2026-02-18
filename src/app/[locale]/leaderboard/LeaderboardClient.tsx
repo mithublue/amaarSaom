@@ -61,57 +61,58 @@ export default function LeaderboardClient() {
         ];
 
         const PodiumItem = ({ entry, color, height, icon }: { entry?: LeaderboardEntry, color: string, height: string, icon: string }) => (
-            <div className="flex flex-col items-center justify-end">
+            <div className="flex flex-col items-center justify-end animate-slide-up group">
                 {entry ? (
                     <>
-                        <div className="relative mb-2">
-                            <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                        <div className="relative mb-4">
+                            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/20 shadow-glass group-hover:scale-110 group-hover:border-accent-400 transition-all duration-500">
                                 {entry.userImage ? (
                                     <img src={entry.userImage} alt={entry.userName} className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-2xl font-bold text-gray-500">
+                                    <div className="w-full h-full bg-linear-to-br from-primary-800 to-primary-600 flex items-center justify-center text-3xl font-bold text-white uppercase">
                                         {entry.userName.charAt(0)}
                                     </div>
                                 )}
                             </div>
-                            <div className="absolute -top-3 -right-3 text-2xl drop-shadow-md">
+                            <div className="absolute -top-4 -right-4 text-4xl drop-shadow-xl animate-float">
                                 {icon}
                             </div>
                         </div>
-                        <div className="text-primary-900 font-bold text-lg mb-1">{entry.userName}</div>
-                        <div className="text-secondary-600 text-sm font-bold mb-3">{entry.totalPoints} pts</div>
+                        <div className="text-white font-bold text-xl mb-1 drop-shadow-md text-center group-hover:text-accent-300 transition-colors">{entry.userName}</div>
+                        <div className="text-accent-400 text-lg font-bold mb-4 drop-shadow-sm">{entry.totalPoints} <span className="text-xs uppercase tracking-widest text-primary-300">pts</span></div>
                     </>
                 ) : (
-                    <div className="h-24 w-16 mb-2"></div>
+                    <div className="h-32 w-20 mb-4 bg-white/5 rounded-full blur-sm"></div>
                 )}
 
-                <div className={`w-24 ${height} ${color} rounded-t-2xl shadow-lg flex items-end justify-center pb-4`}>
-                    <span className="text-white/50 font-bold text-4xl">{entry?.rank}</span>
+                <div className={`w-28 ${height} ${color} rounded-t-3xl shadow-glass flex items-end justify-center pb-6 border-t border-x border-white/10 relative overflow-hidden group/podium`}>
+                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/podium:opacity-100 transition-opacity duration-700"></div>
+                    <span className="text-white/20 font-heading font-black text-6xl italic relative z-10 select-none">{entry?.rank}</span>
                 </div>
             </div>
         );
 
         return (
-            <div className="flex justify-center items-end gap-4 mb-12 min-h-[280px]">
-                <PodiumItem entry={second} color="bg-secondary/90" height="h-32" icon="🥈" />
-                <PodiumItem entry={first} color="bg-primary-600" height="h-44" icon="👑" />
-                <PodiumItem entry={third} color="bg-secondary-700/90" height="h-24" icon="🥉" />
+            <div className="flex justify-center items-end gap-2 md:gap-8 mb-16 min-h-[340px] px-2">
+                <PodiumItem entry={second} color="bg-linear-to-b from-primary-800 to-primary-900" height="h-36" icon="🥈" />
+                <PodiumItem entry={first} color="bg-linear-to-b from-accent-600 to-primary-900" height="h-52" icon="👑" />
+                <PodiumItem entry={third} color="bg-linear-to-b from-primary-700 to-primary-900" height="h-28" icon="🥉" />
             </div>
         );
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
             {/* Controls */}
-            <div className="bg-white/50 backdrop-blur-md rounded-2xl p-2 flex flex-col sm:flex-row justify-between gap-2 mb-8 border border-gray-200/50 shadow-sm">
-                <div className="flex bg-slate-100 rounded-xl p-1">
+            <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg p-2 flex flex-col lg:flex-row justify-between gap-4 mb-12 border border-white/10 shadow-glass">
+                <div className="flex bg-primary-950/60 rounded-xl p-1.5 flex-1">
                     {(['daily', 'weekly', 'overall'] as const).map((p) => (
                         <button
                             key={p}
                             onClick={() => setPeriod(p)}
-                            className={`flex-1 px-6 py-2 rounded-lg font-semibold transition-all ${period === p
-                                ? 'bg-white text-primary-900 shadow-md transform scale-[1.02]'
-                                : 'text-text-secondary hover:text-primary-900'
+                            className={`flex-1 px-8 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 ${period === p
+                                ? 'bg-white text-primary-900 shadow-gold-glow transform scale-[1.03]'
+                                : 'text-primary-300 hover:text-white'
                                 }`}
                         >
                             {p === 'daily' ? 'Today' : p === 'weekly' ? 'This Week' : 'All Time'}
@@ -119,25 +120,25 @@ export default function LeaderboardClient() {
                     ))}
                 </div>
 
-                <div className="flex bg-slate-100 rounded-xl p-1">
+                <div className="flex bg-primary-950/60 rounded-xl p-1.5 flex-1">
                     {(['global', 'division', 'district', 'district_ranking'] as const).map((s) => (
                         <button
                             key={s}
                             onClick={() => setScope(s)}
-                            className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all ${scope === s
-                                ? 'bg-white text-secondary-600 shadow-md transform scale-[1.02]'
-                                : 'text-text-secondary hover:text-primary-900'
+                            className={`flex-1 px-4 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 ${scope === s
+                                ? 'bg-accent-600 text-white shadow-gold-glow transform scale-[1.03]'
+                                : 'text-primary-300 hover:text-white'
                                 }`}
                         >
-                            {s === 'district_ranking' ? '🏙️, Top Districts' : s.charAt(0).toUpperCase() + s.slice(1)}
+                            {s === 'district_ranking' ? '🏙️ Districts' : s.charAt(0).toUpperCase() + s.slice(1)}
                         </button>
                     ))}
                 </div>
             </div>
 
             {loading && !data ? (
-                <div className="text-center py-20">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
+                <div className="text-center py-24">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent-500 border-t-transparent"></div>
                 </div>
             ) : (
                 <>
@@ -146,52 +147,63 @@ export default function LeaderboardClient() {
 
                     {/* User Rank Card */}
                     {data?.userRank && (
-                        <div className="sticky top-4 z-10 mb-6 bg-gradient-to-r from-accent to-secondary rounded-2xl p-4 shadow-xl border border-white/30 transform hover:scale-[1.02] transition-all">
-                            <div className="flex items-center gap-4">
-                                <div className="text-2xl font-bold text-white w-8">#{data.userRank.rank}</div>
-                                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xl overflow-hidden">
-                                    {data.userRank.userImage ? <img src={data.userRank.userImage} /> : (scope === 'district_ranking' ? '🏙️' : data.userRank.userName[0])}
+                        <div className="sticky top-[100px] z-20 mb-10 bg-linear-to-r from-accent-600 to-primary-700 rounded-app-lg p-6 shadow-gold-glow border border-white/30 transform hover:scale-[1.01] transition-all group overflow-hidden">
+                            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                            <div className="flex items-center gap-6 relative z-10">
+                                <div className="text-3xl font-heading font-black text-white/40 w-12">#{data.userRank.rank}</div>
+                                <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-white font-bold text-2xl overflow-hidden shadow-sm">
+                                    {data.userRank.userImage ? <img src={data.userRank.userImage} className="w-full h-full object-cover" /> : (scope === 'district_ranking' ? '🏙️' : data.userRank.userName[0])}
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-white font-bold text-lg">
+                                    <div className="text-white font-black text-2xl tracking-tight leading-none mb-1">
                                         {scope === 'district_ranking' ? 'Your District' : 'You'}
                                     </div>
-                                    <div className="text-white/80 text-sm">
+                                    <div className="text-white/80 text-sm font-medium uppercase tracking-widest opacity-80">
                                         {scope === 'district_ranking' ? data.userRank.userName : (data.userRank.location || 'Global')}
                                     </div>
                                 </div>
-                                <div className="text-white font-bold text-2xl">{data.userRank.totalPoints} pts</div>
+                                <div className="text-right">
+                                    <div className="text-white font-black text-3xl tabular-nums leading-none mb-1">{data.userRank.totalPoints}</div>
+                                    <div className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Points</div>
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {/* Leaderboard List */}
-                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass overflow-hidden divide-y divide-white/5 mb-20 animate-fade-in">
                         {data?.entries.slice(3).map((entry) => (
                             <div
                                 key={entry.userId}
-                                className="flex items-center gap-4 p-4 border-b border-gray-50 hover:bg-slate-50 transition-colors"
+                                className="flex items-center gap-5 p-5 hover:bg-white/5 transition-all duration-300 group"
                             >
-                                <div className="text-xl font-bold text-primary-400 w-8 text-center">{entry.rank}</div>
+                                <div className="text-2xl font-black text-primary-500/50 w-10 text-center tracking-tighter group-hover:text-accent-400 group-hover:scale-110 transition-all">{entry.rank}</div>
 
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary-600 font-bold overflow-hidden border border-gray-100">
-                                    {entry.userImage ? <img src={entry.userImage} className="w-full h-full object-cover" /> : entry.userName[0]}
+                                <div className="w-12 h-12 rounded-full bg-primary-800/40 flex items-center justify-center text-white font-bold overflow-hidden border border-white/10 shadow-inner group-hover:border-accent-500/30 transition-all">
+                                    {entry.userImage ? <img src={entry.userImage} className="w-full h-full object-cover" /> : (scope === 'district_ranking' ? '🏙️' : entry.userName[0])}
                                 </div>
 
                                 <div className="flex-1">
-                                    <div className="text-primary-900 font-semibold">
+                                    <div className="text-white font-bold text-lg leading-none mb-1 group-hover:text-accent-300 transition-colors tracking-tight">
                                         {entry.userName}
                                     </div>
-                                    {entry.location && <div className="text-text-muted text-xs">{entry.location}</div>}
+                                    {entry.location && <div className="text-primary-400 text-xs font-medium opacity-80 uppercase tracking-wider">{entry.location}</div>}
                                 </div>
 
-                                <div className="text-secondary-600 font-bold text-lg">{entry.totalPoints}</div>
+                                <div className="text-right">
+                                    <div className="text-white font-black text-xl tabular-nums group-hover:text-accent-400 transition-colors">{entry.totalPoints}</div>
+                                    <div className="text-[10px] text-primary-500 font-bold uppercase tracking-tighter">Points</div>
+                                </div>
                             </div>
                         ))}
 
                         {data?.entries.length === 0 && (
-                            <div className="text-center py-12 text-primary-300">
-                                No one has earned points in this period yet. Be the first! 🚀
+                            <div className="text-center py-20 px-4">
+                                <div className="text-6xl mb-6 opacity-20">🚀</div>
+                                <p className="text-primary-300 text-lg font-medium opacity-60">
+                                    No one has earned points in this period yet. <br />
+                                    <span className="text-accent-400 font-bold underline cursor-pointer hover:text-accent-300">Be the first to lead!</span>
+                                </p>
                             </div>
                         )}
                     </div>

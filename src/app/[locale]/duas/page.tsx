@@ -4,7 +4,9 @@ import { getLocale } from 'next-intl/server';
 import DuasClient from './DuasClient';
 import englishData from '@/app/api/json/hisnul_muslim-en.json';
 import bengaliData from '@/app/api/json/hisnul_muslim-bn.json';
-import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import { auth } from '@/lib/auth/config';
 
 // Type assertion since JSON import might not be fully typed
 const dataMap: Record<string, any> = {
@@ -18,32 +20,32 @@ export default async function DuasPage() {
     const locale = await getLocale();
     const t = await getTranslations('Duas');
     const tCommon = await getTranslations('Leaderboard'); // Reuse 'Back'
+    const session = await auth();
 
     // Select data based on locale, fallback to English
     const data = dataMap[locale] || dataMap.default;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background-default via-primary-50 to-primary-100">
-            {/* Header */}
-            <header className="bg-white/50 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <Link
-                            href="/"
-                            className="text-primary-700 hover:text-accent transition"
-                        >
-                            ← {tCommon('back')}
-                        </Link>
-                        <h1 className="text-2xl font-bold text-primary-900">{t('title')}</h1>
-                    </div>
-                    <LanguageSwitcher />
-                </div>
-            </header>
+        <div className="min-h-screen flex flex-col font-sans">
+            <Navbar session={session} locale={locale} />
 
             {/* Main Content */}
-            <main className="container mx-auto px-4 py-8">
-                <DuasClient language={locale} data={data} />
+            <main className="flex-grow container mx-auto px-4 py-8 mt-24">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-12 animate-fade-in">
+                        <div className="inline-block p-4 rounded-full bg-primary-800/20 border border-primary-500/30 mb-6 shadow-gold-glow">
+                            <span className="text-4xl">🤲</span>
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4 drop-shadow-md">
+                            {t('title')}
+                        </h1>
+                    </div>
+
+                    <DuasClient language={locale} data={data} />
+                </div>
             </main>
+
+            <Footer language={locale as any} />
         </div>
     );
 }
