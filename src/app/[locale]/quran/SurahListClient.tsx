@@ -41,15 +41,17 @@ export default function SurahListClient({ chapters }: { chapters: Chapter[] }) {
     const visibleChapters = filteredChapters.slice(0, displayCount);
 
     return (
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h3 className="text-2xl font-bold text-white">Browse Surahs</h3>
+        <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 md:p-8 animate-fade-in">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                    Start Reciting <span className="text-accent-400 text-lg">✨</span>
+                </h3>
                 <input
                     type="text"
                     placeholder="Search Surah (e.g. Yasin, 36)..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full md:w-64 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-accent"
+                    className="w-full md:w-72 bg-primary-950/50 border border-white/10 rounded-xl px-5 py-3 text-white placeholder-primary-500 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm"
                 />
             </div>
 
@@ -58,20 +60,21 @@ export default function SurahListClient({ chapters }: { chapters: Chapter[] }) {
                     <Link
                         key={chapter.id}
                         href={`/quran/${chapter.id}`}
-                        className="flex items-center p-4 bg-white/5 rounded-xl hover:bg-white/10 border border-white/5 hover:border-accent/30 transition group"
+                        className="flex items-center p-4 bg-primary-950/30 rounded-xl border border-white/5 hover:bg-primary-950/60 hover:border-accent-500/30 transition-all duration-300 group shadow-sm hover:shadow-glass"
                     >
-                        <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center text-accent font-bold text-lg mr-4 group-hover:bg-accent group-hover:text-white transition group-hover:scale-110">
-                            {chapter.id}
+                        <div className="w-12 h-12 bg-primary-900/80 rounded-lg flex items-center justify-center text-accent-400 font-bold text-lg mr-4 border border-white/5 group-hover:bg-accent-600 group-hover:text-white transition-all group-hover:scale-110 shadow-sm relative overflow-hidden">
+                            <span className="relative z-10">{chapter.id}</span>
+                            <div className="absolute inset-0 bg-accent-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </div>
                         <div className="flex-1">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h4 className="text-white font-bold group-hover:text-accent transition">{chapter.name_simple}</h4>
-                                    <p className="text-primary-200 text-xs">{chapter.translated_name.name}</p>
+                                    <h4 className="text-white font-bold group-hover:text-accent-300 transition">{chapter.name_simple}</h4>
+                                    <p className="text-primary-400 text-xs">{chapter.translated_name.name}</p>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-gray-400 font-arabic text-lg block leading-none mb-1">{chapter.name_arabic}</span>
-                                    <span className="text-xs text-gray-500 bg-black/20 px-2 py-0.5 rounded-full">{chapter.verses_count} ayahs</span>
+                                    <span className="text-primary-200 font-arabic text-xl block leading-none mb-1 group-hover:text-white transition">{chapter.name_arabic}</span>
+                                    <span className="text-[10px] text-primary-400 bg-white/5 border border-white/5 px-2 py-0.5 rounded-full">{chapter.verses_count} ayahs</span>
                                 </div>
                             </div>
                         </div>
@@ -82,13 +85,14 @@ export default function SurahListClient({ chapters }: { chapters: Chapter[] }) {
             {/* Loading Indicator / Observer Target */}
             {visibleChapters.length < filteredChapters.length && (
                 <div ref={observerTarget} className="py-8 flex justify-center">
-                    <div className="w-8 h-8 border-4 border-white/20 border-t-accent rounded-full animate-spin"></div>
+                    <div className="w-8 h-8 border-4 border-primary-800 border-t-accent-500 rounded-full animate-spin"></div>
                 </div>
             )}
 
             {filteredChapters.length === 0 && (
-                <div className="text-center py-12 text-gray-400">
-                    No surahs found matching "{searchQuery}"
+                <div className="text-center py-16 text-primary-400 bg-white/5 rounded-xl border border-white/5 mt-4">
+                    <div className="text-4xl mb-3 opacity-50">🔍</div>
+                    <p>No surahs found matching "{searchQuery}"</p>
                 </div>
             )}
         </div>

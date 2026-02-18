@@ -123,21 +123,21 @@ export default function ProfileClient({ user }: { user: any }) {
     if (loading) return <div className="text-white text-center py-20">{t('loading')}</div>;
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto animate-fade-in">
             <div className="flex items-center gap-4 mb-8">
                 <Link
                     href="/"
-                    className="p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-primary-100 hover:bg-white/10 hover:text-white transition-all shadow-sm"
                 >
-                    ← {t('back')}
+                    <span>←</span> {t('back')}
                 </Link>
-                <h1 className="text-3xl font-bold text-white flex-1">{t('title')}</h1>
+                <h1 className="text-3xl font-heading font-bold text-white flex-1 drop-shadow-md">{t('title')}</h1>
                 <LanguageSwitcher />
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8">
+            <div className="bg-primary-900/40 backdrop-blur-md border border-white/10 rounded-app-lg shadow-glass p-8">
                 {message && (
-                    <div className={`mb-6 p-4 rounded-xl text-center ${message.includes('✅') ? 'bg-green-500/20 text-green-200' : 'bg-red-500/20 text-red-200'}`}>
+                    <div className={`mb-6 p-4 rounded-xl text-center border ${message.includes('✅') ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-red-500/10 text-red-300 border-red-500/20'}`}>
                         {message}
                     </div>
                 )}
@@ -150,10 +150,10 @@ export default function ProfileClient({ user }: { user: any }) {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent"
+                            className="w-full px-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm placeholder-primary-600"
                             placeholder={t('placeholderName')}
                         />
-                        <p className="text-primary-300 text-sm mt-2">
+                        <p className="text-primary-400 text-sm mt-2">
                             🔒 {t('anonymousInfo', { name: anonymousName })}
                         </p>
                     </div>
@@ -168,32 +168,32 @@ export default function ProfileClient({ user }: { user: any }) {
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* Country */}
                             <div>
-                                <label className="block text-primary-200 mb-2">{t('country')}</label>
+                                <label className="block text-primary-300 mb-2">{t('country')}</label>
                                 <select
                                     value={selectedCountryCode}
                                     onChange={handleCountryChange}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent [&>option]:bg-primary-900"
+                                    className="w-full px-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm appearance-none cursor-pointer"
                                 >
-                                    <option value="">{t('selectCountry')}</option>
+                                    <option value="" className="bg-primary-900">{t('selectCountry')}</option>
                                     {allCountries.map((c) => (
-                                        <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
+                                        <option key={c.isoCode} value={c.isoCode} className="bg-primary-900 text-white">{c.name}</option>
                                     ))}
                                 </select>
                             </div>
 
                             {/* City */}
                             <div>
-                                <label className="block text-primary-200 mb-2">{t('city')}</label>
+                                <label className="block text-primary-300 mb-2">{t('city')}</label>
                                 {cities.length > 0 ? (
                                     <select
                                         value={cityName}
                                         onChange={(e) => setCityName(e.target.value)}
                                         disabled={!selectedCountryCode}
-                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent disabled:opacity-50 [&>option]:bg-primary-900"
+                                        className="w-full px-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm disabled:opacity-50 appearance-none cursor-pointer"
                                     >
-                                        <option value="">{t('selectCity')}</option>
+                                        <option value="" className="bg-primary-900">{t('selectCity')}</option>
                                         {cities.map((city) => (
-                                            <option key={city.name} value={city.name}>{city.name}</option>
+                                            <option key={city.name} value={city.name} className="bg-primary-900 text-white">{city.name}</option>
                                         ))}
                                     </select>
                                 ) : (
@@ -201,12 +201,12 @@ export default function ProfileClient({ user }: { user: any }) {
                                         type="text"
                                         value={cityName}
                                         onChange={(e) => setCityName(e.target.value)}
-                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent"
+                                        className="w-full px-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm placeholder-primary-600"
                                         placeholder={t('enterCity')}
                                     />
                                 )}
                                 {cities.length === 0 && selectedCountryCode && (
-                                    <p className="text-xs text-primary-300 mt-1">{t('noCities')}</p>
+                                    <p className="text-xs text-primary-400 mt-1">{t('noCities')}</p>
                                 )}
                             </div>
                         </div>
@@ -216,7 +216,7 @@ export default function ProfileClient({ user }: { user: any }) {
                         <button
                             type="submit"
                             disabled={saving}
-                            className="w-full bg-accent text-white py-4 rounded-xl font-bold text-lg hover:bg-accent/80 transition disabled:opacity-50"
+                            className="w-full bg-linear-to-r from-accent-600 to-accent-500 text-white py-4 rounded-xl font-bold text-lg hover:from-accent-500 hover:to-accent-400 transition disabled:opacity-50 shadow-gold-glow hover:shadow-lg hover:scale-[1.01]"
                         >
                             {saving ? t('saving') : t('save')}
                         </button>

@@ -163,23 +163,23 @@ export default function PrayerTimesClient() {
     return (
         <div className="max-w-4xl mx-auto">
             {/* Location Selector */}
-            <div className="mb-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 relative z-10">
+            <div className="mb-6 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 relative z-10">
                 <div className="flex justify-between items-center mb-3">
-                    <label className="block text-white font-semibold">
+                    <label className="block text-primary-900 font-semibold">
                         {t('yourLocation')}
                     </label>
 
                     {/* Time Format Toggle */}
-                    <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
+                    <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
                         <button
                             onClick={() => setIs24Hour(false)}
-                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${!is24Hour ? 'bg-accent text-white' : 'text-primary-200 hover:text-white'}`}
+                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${!is24Hour ? 'bg-white text-primary-900 shadow-sm' : 'text-text-secondary hover:text-primary-900'}`}
                         >
                             12H
                         </button>
                         <button
                             onClick={() => setIs24Hour(true)}
-                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${is24Hour ? 'bg-accent text-white' : 'text-primary-200 hover:text-white'}`}
+                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${is24Hour ? 'bg-white text-primary-900 shadow-sm' : 'text-text-secondary hover:text-primary-900'}`}
                         >
                             24H
                         </button>
@@ -196,7 +196,7 @@ export default function PrayerTimesClient() {
                             setLocation(prev => ({ ...prev, country: newCountry, city: newCity, useCoords: false }));
                             setCityInput(newCity);
                         }}
-                        className="flex-1 px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent [&>option]:bg-primary-900"
+                        className="flex-1 px-4 py-3 rounded-xl bg-slate-50 text-primary-900 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-accent"
                     >
                         {countries.map((c) => (
                             <option key={c} value={c}>{c}</option>
@@ -217,25 +217,25 @@ export default function PrayerTimesClient() {
                             }}
                             onFocus={() => setShowSuggestions(true)}
                             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent placeholder-white/50"
+                            className="w-full px-4 py-3 rounded-xl bg-slate-50 text-primary-900 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-accent placeholder-text-muted"
                             placeholder={t('enterCity')}
                         />
                         {/* Search Button (Visible on mobile or if needed, but Enter works) */}
                         <button
                             onClick={handleManualSubmit}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary-200 hover:text-white"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-text-muted hover:text-primary-900"
                         >
                             🔍
                         </button>
 
                         {showSuggestions && citySuggestions.length > 0 && (
-                            <div className="absolute z-50 w-full mt-1 bg-primary-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
                                 {citySuggestions.filter(c => c.toLowerCase().includes(cityInput.toLowerCase())).map((suggestion) => (
                                     <button
                                         key={suggestion}
                                         type="button"
                                         onClick={() => handleCitySelect(suggestion)}
-                                        className="w-full text-left px-4 py-2 text-white hover:bg-white/10 transition"
+                                        className="w-full text-left px-4 py-2 text-primary-900 hover:bg-slate-50 transition"
                                     >
                                         {suggestion}
                                     </button>
@@ -267,7 +267,7 @@ export default function PrayerTimesClient() {
                                 alert('Geolocation is not supported by this browser.');
                             }
                         }}
-                        className="px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition flex items-center gap-2 font-medium whitespace-nowrap justify-center"
+                        className="px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition flex items-center gap-2 font-medium whitespace-nowrap justify-center shadow-md"
                         title="Use My Exact Location"
                     >
                         {t('useMyLocation')}
@@ -276,12 +276,12 @@ export default function PrayerTimesClient() {
             </div>
 
             {/* Prayer Times Card */}
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 relative z-0">
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8 relative z-0">
                 <div className="text-center mb-6">
-                    <h2 className="text-3xl font-bold text-white mb-2">
+                    <h2 className="text-3xl font-bold text-primary-900 mb-2">
                         {t('title')}
                     </h2>
-                    <p className="text-primary-200">
+                    <p className="text-text-secondary">
                         {location.useCoords ? t('yourLocation') : `${location.city}, ${location.country}`}
                     </p>
                     {hijriDate && (
@@ -289,7 +289,7 @@ export default function PrayerTimesClient() {
                             {hijriDate} (Hijri)
                         </p>
                     )}
-                    <p className="text-primary-300 text-sm">
+                    <p className="text-text-muted text-sm">
                         {format.dateTime(new Date(), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                     </p>
                 </div>
@@ -297,13 +297,13 @@ export default function PrayerTimesClient() {
                 {loading && (
                     <div className="text-center py-12">
                         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
-                        <p className="text-white mt-4">{t('loading')}</p>
+                        <p className="text-primary-600 mt-4">{t('loading')}</p>
                     </div>
                 )}
 
                 {error && (
-                    <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 text-center">
-                        <p className="text-red-200">❌ {error}</p>
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                        <p className="text-red-600">❌ {error}</p>
                         <button
                             onClick={fetchPrayerTimes}
                             className="mt-3 px-6 py-2 bg-accent rounded-lg text-white hover:bg-accent/80 transition"
@@ -318,7 +318,7 @@ export default function PrayerTimesClient() {
                         {Object.entries(prayerTimes).map(([name, time]) => (
                             <div
                                 key={name}
-                                className="flex justify-between items-center p-5 bg-white/5 rounded-xl hover:bg-white/10 transition-all duration-200 group"
+                                className="flex justify-between items-center p-5 bg-slate-50/50 rounded-xl hover:bg-slate-100 transition-all duration-200 group border border-transparent hover:border-gray-100"
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="text-3xl">
@@ -329,7 +329,7 @@ export default function PrayerTimesClient() {
                                         {name === 'Maghrib' && '🌇'}
                                         {name === 'Isha' && '🌙'}
                                     </span>
-                                    <span className="text-xl font-semibold text-white">{name}</span>
+                                    <span className="text-xl font-semibold text-primary-900">{name}</span>
                                 </div>
                                 <span className="text-2xl font-bold text-accent group-hover:scale-110 transition-transform">
                                     {formatTime(time as string)}
@@ -340,8 +340,8 @@ export default function PrayerTimesClient() {
                 )}
 
                 {/* Info Footer */}
-                <div className="mt-6 pt-6 border-t border-white/10 text-center">
-                    <p className="text-primary-300 text-sm">
+                <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+                    <p className="text-text-muted text-sm">
                         {t('calculationMethod')}
                     </p>
                 </div>
@@ -349,17 +349,17 @@ export default function PrayerTimesClient() {
 
             {/* Quick Actions */}
             <div className="mt-6 grid md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-accent/20 to-secondary/20 backdrop-blur-md rounded-2xl border border-white/20 p-6 text-center">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 text-center hover:shadow-md transition">
                     <span className="text-4xl block mb-2">🌅</span>
-                    <h3 className="text-white font-semibold mb-1">{t('nextIftar')}</h3>
-                    <p className="text-primary-200 text-sm">
+                    <h3 className="text-primary-900 font-semibold mb-1">{t('nextIftar')}</h3>
+                    <p className="text-text-secondary text-sm">
                         {formatTime(prayerTimes?.Maghrib as string || '') || '--:--'}
                     </p>
                 </div>
-                <div className="bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-md rounded-2xl border border-white/20 p-6 text-center">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 text-center hover:shadow-md transition">
                     <span className="text-4xl block mb-2">🌙</span>
-                    <h3 className="text-white font-semibold mb-1">{t('sehriEnds')}</h3>
-                    <p className="text-primary-200 text-sm">
+                    <h3 className="text-primary-900 font-semibold mb-1">{t('sehriEnds')}</h3>
+                    <p className="text-text-secondary text-sm">
                         {formatTime(prayerTimes?.Fajr as string || '') || '--:--'}
                     </p>
                 </div>

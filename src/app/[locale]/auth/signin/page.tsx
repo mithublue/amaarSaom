@@ -11,27 +11,31 @@ export default async function SignInPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900 flex items-center justify-center px-4">
-            <div className="max-w-md w-full">
+        <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+            {/* Background Decorations */}
+            <div className="absolute top-0 left-0 w-64 h-64 bg-accent-500/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+            <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary-600/10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
+
+            <div className="max-w-md w-full relative z-10 animate-fade-in">
                 {/* Logo/Icon */}
-                <div className="text-center mb-8">
-                    <div className="inline-block w-24 h-24 rounded-3xl bg-gradient-to-br from-accent to-secondary shadow-2xl flex items-center justify-center mb-6">
-                        <span className="text-6xl">🌙</span>
+                <div className="text-center mb-10">
+                    <div className="inline-block w-24 h-24 rounded-3xl bg-linear-to-br from-accent-500 to-accent-600 shadow-gold-glow flex items-center justify-center mb-6 ring-4 ring-white/10 group hover:scale-105 transition duration-500">
+                        <span className="text-6xl group-hover:rotate-12 transition duration-500 inline-block">🌙</span>
                     </div>
-                    <h1 className="text-4xl font-bold text-white mb-2">
+                    <h1 className="text-4xl font-heading font-bold text-white mb-2 drop-shadow-md">
                         Ramadan Companion
                     </h1>
-                    <p className="text-primary-200">
-                        Your spiritual journey partner this Ramadan
+                    <p className="text-primary-200 text-lg">
+                        Your spiritual journey partner
                     </p>
                 </div>
 
                 {/* Sign In Card */}
-                <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8">
+                <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-8">
                     <h2 className="text-2xl font-bold text-white mb-6 text-center">
                         Welcome Back! 🤲
                     </h2>
-                    <p className="text-primary-200 text-center mb-8">
+                    <p className="text-primary-200 text-center mb-8 font-light">
                         Sign in to track your prayers, good deeds, and compete with your community
                     </p>
 
@@ -44,7 +48,7 @@ export default async function SignInPage() {
                     >
                         <button
                             type="submit"
-                            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white text-gray-800 font-semibold rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-2xl shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
                         >
                             <svg className="w-6 h-6" viewBox="0 0 24 24">
                                 <path
@@ -70,17 +74,17 @@ export default async function SignInPage() {
 
                     {/* Divider */}
                     <div className="mt-8 pt-6 border-t border-white/10">
-                        <p className="text-center text-primary-300 text-sm">
+                        <p className="text-center text-primary-400 text-xs md:text-sm">
                             By signing in, you agree to track your spiritual journey and compete with your community in good deeds 🌟
                         </p>
                     </div>
                 </div>
 
                 {/* Back to Home */}
-                <div className="text-center mt-6">
+                <div className="text-center mt-8">
                     <Link
                         href="/"
-                        className="text-primary-200 hover:text-white transition"
+                        className="text-primary-300 hover:text-white font-semibold transition px-4 py-2 rounded-lg hover:bg-white/5 inline-block"
                     >
                         ← Back to Home
                     </Link>

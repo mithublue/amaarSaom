@@ -131,10 +131,10 @@ export default function GoodDeedsClient() {
 
     const getTierColor = (tier: string) => {
         switch (tier) {
-            case 'easy': return 'text-green-400 bg-green-500/20 border-green-500/30';
-            case 'medium': return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
-            case 'hard': return 'text-red-400 bg-red-500/20 border-red-500/30';
-            default: return 'text-primary-300';
+            case 'easy': return 'text-green-600 bg-green-50 border-green-200';
+            case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+            case 'hard': return 'text-red-600 bg-red-50 border-red-200';
+            default: return 'text-primary-600';
         }
     };
 
@@ -169,22 +169,22 @@ export default function GoodDeedsClient() {
 
             {/* Stats Cards */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-accent/20 to-secondary/20 backdrop-blur-md rounded-3xl border border-white/20 p-6 text-center">
+                <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 text-center hover:shadow-md transition-shadow">
                     <span className="text-5xl mb-3 block">🌟</span>
                     <h3 className="text-4xl font-bold text-accent mb-1">{totalPoints}</h3>
-                    <p className="text-primary-200">{t('totalPoints')}</p>
+                    <p className="text-text-secondary">{t('totalPoints')}</p>
                 </div>
-                <div className="bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-md rounded-3xl border border-white/20 p-6 text-center">
+                <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 text-center hover:shadow-md transition-shadow">
                     <span className="text-5xl mb-3 block">✅</span>
-                    <h3 className="text-4xl font-bold text-white mb-1">{completedDeeds.length}</h3>
-                    <p className="text-primary-200">{t('deedsCompleted')}</p>
+                    <h3 className="text-4xl font-bold text-primary-900 mb-1">{completedDeeds.length}</h3>
+                    <p className="text-text-secondary">{t('deedsCompleted')}</p>
                 </div>
-                <div className="bg-gradient-to-br from-secondary/20 to-primary/20 backdrop-blur-md rounded-3xl border border-white/20 p-6 text-center">
+                <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 text-center hover:shadow-md transition-shadow">
                     <span className="text-5xl mb-3 block">🔥</span>
                     <h3 className="text-4xl font-bold text-secondary mb-1">
                         {period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')}
                     </h3>
-                    <p className="text-primary-200">{t('period')}</p>
+                    <p className="text-text-secondary">{t('period')}</p>
                 </div>
             </div>
 
@@ -196,7 +196,7 @@ export default function GoodDeedsClient() {
                         onClick={() => setPeriod(p)}
                         className={`px-6 py-2 rounded-xl font-semibold transition-all ${period === p
                             ? 'bg-accent text-white shadow-lg scale-105'
-                            : 'bg-white/10 text-primary-200 hover:bg-white/20'
+                            : 'bg-white border border-gray-200 text-primary-600 hover:bg-slate-50'
                             }`}
                     >
                         {p === 'today' ? t('today') : p === 'week' ? t('week') : p === 'month' ? t('month') : t('allTime')}
@@ -208,10 +208,10 @@ export default function GoodDeedsClient() {
                 {/* Available Deeds */}
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-white">{t('availableDeeds')}</h2>
+                        <h2 className="text-2xl font-bold text-primary-900">{t('availableDeeds')}</h2>
                         <button
                             onClick={() => setShowCustomForm(!showCustomForm)}
-                            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/80 transition"
+                            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/80 transition shadow-sm"
                         >
                             {showCustomForm ? t('cancel') : t('customDeed')}
                         </button>
@@ -219,31 +219,31 @@ export default function GoodDeedsClient() {
 
                     {/* Search Bar */}
                     <div className="relative mb-4">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-300">🔍</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">🔍</span>
                         <input
                             type="text"
                             placeholder={t('searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-primary-400 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition"
+                            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-primary-900 placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition shadow-sm"
                         />
                     </div>
 
                     {/* Custom Deed Form */}
                     {showCustomForm && (
-                        <div className="mb-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6">
-                            <h3 className="text-white font-semibold mb-3">{t('logCustomDeed')}</h3>
+                        <div className="mb-4 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                            <h3 className="text-primary-900 font-semibold mb-3">{t('logCustomDeed')}</h3>
                             <input
                                 type="text"
                                 value={customDeedName}
                                 onChange={(e) => setCustomDeedName(e.target.value)}
                                 placeholder={t('customDeedPlaceholder')}
-                                className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent mb-3"
+                                className="w-full px-4 py-3 rounded-xl bg-slate-50 text-primary-900 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-accent mb-3"
                             />
                             <button
                                 onClick={() => completeDeed(undefined, customDeedName)}
                                 disabled={!customDeedName || submitting}
-                                className="w-full px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition disabled:opacity-50"
+                                className="w-full px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/80 transition disabled:opacity-50 font-semibold shadow-md"
                             >
                                 {submitting ? t('logging') : t('logButton')}
                             </button>
@@ -257,8 +257,8 @@ export default function GoodDeedsClient() {
                                 key={tier}
                                 onClick={() => setSelectedTier(tier)}
                                 className={`px-4 py-2 rounded-lg font-semibold transition ${selectedTier === tier
-                                    ? 'bg-accent text-white'
-                                    : 'bg-white/10 text-primary-200 hover:bg-white/15'
+                                    ? 'bg-accent text-white shadow-md'
+                                    : 'bg-white border border-gray-200 text-primary-600 hover:bg-slate-50'
                                     }`}
                             >
                                 {getTierEmoji(tier)} {tier.charAt(0).toUpperCase() + tier.slice(1)}
@@ -273,18 +273,18 @@ export default function GoodDeedsClient() {
                                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
                             </div>
                         ) : filteredDeeds.length === 0 ? (
-                            <p className="text-center text-primary-300 py-8">{t('noDeeds')}</p>
+                            <p className="text-center text-text-muted py-8">{t('noDeeds')}</p>
                         ) : (
                             filteredDeeds.map((deed) => (
                                 <div
                                     key={deed.id}
-                                    className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 hover:bg-white/10 transition group"
+                                    className="bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-md transition group shadow-sm"
                                 >
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex-1">
-                                            <h3 className="text-white font-semibold text-lg">{deed.name}</h3>
+                                            <h3 className="text-primary-900 font-semibold text-lg">{deed.name}</h3>
                                             {deed.description && (
-                                                <p className="text-primary-300 text-sm mt-1">{deed.description}</p>
+                                                <p className="text-text-secondary text-sm mt-1">{deed.description}</p>
                                             )}
                                         </div>
                                         <span className={`px-3 py-1 rounded-lg text-sm font-semibold border ${getTierColor(deed.tier)}`}>
@@ -294,7 +294,7 @@ export default function GoodDeedsClient() {
                                     <button
                                         onClick={() => completeDeed(deed.id)}
                                         disabled={submitting}
-                                        className="w-full mt-3 px-4 py-2 bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-white transition disabled:opacity-50 font-semibold"
+                                        className="w-full mt-3 px-4 py-2 bg-accent/10 text-accent rounded-lg hover:bg-accent hover:text-white transition disabled:opacity-50 font-semibold border border-accent/20"
                                     >
                                         {submitting ? t('logging') : t('completeButton')}
                                     </button>
@@ -306,26 +306,26 @@ export default function GoodDeedsClient() {
 
                 {/* Completed Deeds History */}
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">{t('history')} ({period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')})</h2>
+                    <h2 className="text-2xl font-bold text-primary-900 mb-4">{t('history')} ({period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')})</h2>
                     <div className="space-y-3 max-h-[600px] overflow-y-auto">
                         {completedDeeds.length === 0 ? (
-                            <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
+                            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 shadow-sm">
                                 <span className="text-6xl mb-4 block">📝</span>
-                                <p className="text-primary-300">{t('noHistory')}</p>
-                                <p className="text-primary-400 text-sm mt-2">{t('startCompleting')}</p>
+                                <p className="text-text-secondary">{t('noHistory')}</p>
+                                <p className="text-text-muted text-sm mt-2">{t('startCompleting')}</p>
                             </div>
                         ) : (
                             completedDeeds.map((deed) => (
                                 <div
                                     key={deed.id}
-                                    className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4"
+                                    className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition"
                                 >
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h4 className="text-white font-semibold">
+                                            <h4 className="text-primary-900 font-semibold">
                                                 {deed.predefinedGoodDeed?.name || deed.customDeedName}
                                             </h4>
-                                            <p className="text-primary-400 text-sm mt-1">
+                                            <p className="text-text-muted text-sm mt-1">
                                                 {new Date(deed.completedAt).toLocaleDateString('en-US', {
                                                     month: 'short',
                                                     day: 'numeric',
@@ -334,7 +334,7 @@ export default function GoodDeedsClient() {
                                                 })}
                                             </p>
                                             {deed.notes && (
-                                                <p className="text-primary-300 text-sm mt-2 italic">{deed.notes}</p>
+                                                <p className="text-text-secondary text-sm mt-2 italic">{deed.notes}</p>
                                             )}
                                         </div>
                                         <span className="text-accent font-bold text-lg">+{deed.totalPoints}</span>

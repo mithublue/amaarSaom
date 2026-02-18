@@ -20,20 +20,22 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
         if (stored) {
             try {
                 setBookmarks(JSON.parse(stored));
-            } catch (e) {
+            } catch (e: any) {
                 // Fallback for corrupted/legacy data (comma-separated strings)
                 setBookmarks(stored.split(',').filter(Boolean));
             }
         }
 
         // Save "Continue Reading"
-        localStorage.setItem('lastRead', JSON.stringify({
-            surahId: surah.id,
-            surahName: surah.name_simple,
-            surahArabic: surah.name_arabic,
-            verseCount: surah.verses_count,
-            timestamp: Date.now()
-        }));
+        if (surah) {
+            localStorage.setItem('lastRead', JSON.stringify({
+                surahId: surah.id,
+                surahName: surah.name_simple,
+                surahArabic: surah.name_arabic,
+                verseCount: surah.verses_count,
+                timestamp: Date.now()
+            }));
+        }
     }, [surah]);
 
     const playAudio = (verse: Verse) => {
@@ -77,26 +79,25 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
         alert('Verse link copied to clipboard!');
     };
 
-    // Bismillah Handling:
-    // API returns verses. If Surah is not Tawbah (9), it typically doesn't include Bismillah as verse 1 
-    // unless it's Al-Fatihah. Most APIs provide a "bismillah_pre" flag in chapter info.
-
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto animate-fade-in">
             {/* Surah Header */}
-            <div className="text-center mb-10 pt-4">
-                <div className="inline-block bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1 mb-4 text-primary-200 text-sm">
+            <div className="text-center mb-12 pt-6">
+                <div className="inline-block bg-primary-900/60 backdrop-blur-sm border border-white/10 shadow-sm rounded-full px-5 py-1.5 mb-6 text-accent-300 text-sm font-medium tracking-wide">
                     {surah.revelation_place} • {surah.verses_count} Verses
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">{surah.name_simple}</h1>
-                <p className="text-xl text-primary-200 mb-4">{surah.translated_name.name}</p>
-                <div className="font-arabic text-4xl text-accent/80">{surah.name_arabic}</div>
+                <h1 className="text-5xl md:text-6xl font-heading font-bold text-white mb-3 drop-shadow-md">{surah.name_simple}</h1>
+                <p className="text-xl text-primary-200 mb-6 font-light">{surah.translated_name.name}</p>
+                <div className="font-arabic text-5xl text-accent-400 drop-shadow-sm">{surah.name_arabic}</div>
             </div>
 
             {/* Bismillah */}
             {surah.bismillah_pre && (
-                <div className="text-center mb-12">
-                    <div className="font-arabic text-3xl md:text-4xl text-white leading-[2.0] md:leading-[2.2]">
+                <div className="text-center mb-16 relative">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                        <div className="w-64 h-64 bg-accent-500 rounded-full blur-3xl"></div>
+                    </div>
+                    <div className="font-arabic text-3xl md:text-4xl text-white leading-[2.0] md:leading-[2.2] relative z-10 drop-shadow-md">
                         بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                     </div>
                 </div>
@@ -108,29 +109,29 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                     <div
                         key={verse.id}
                         id={`ayah-${verse.verse_key}`}
-                        className={`bg-white/5 backdrop-blur-md rounded-3xl border ${playingVerse === verse.id ? 'border-accent/50 bg-white/10' : 'border-white/10'} p-6 transition-all`}
+                        className={`bg-primary-900/40 backdrop-blur-md rounded-app-lg border ${playingVerse === verse.id ? 'border-accent-500 ring-1 ring-accent-500/50 shadow-gold-glow' : 'border-white/5 hover:border-white/10 shadow-glass'} p-6 md:p-8 transition-all duration-300`}
                     >
                         {/* Actions Toolbar */}
-                        <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
-                            <span className="bg-white/10 text-white px-3 py-1 rounded-lg text-sm font-mono">
+                        <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/5">
+                            <span className="bg-primary-950/50 text-accent-400 px-3 py-1.5 rounded-lg text-sm font-mono border border-white/5 tracking-wider">
                                 {verse.verse_key}
                             </span>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => playAudio(verse)}
-                                    className={`w-8 h-8 flex items-center justify-center rounded-full transition ${playingVerse === verse.id ? 'bg-accent text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                    className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${playingVerse === verse.id ? 'bg-accent-600 text-white shadow-gold-glow scale-110' : 'bg-primary-950/50 text-primary-200 hover:bg-white/10 hover:text-white'}`}
                                 >
                                     {playingVerse === verse.id ? '⏸' : '▶'}
                                 </button>
                                 <button
                                     onClick={() => toggleBookmark(verse.verse_key)}
-                                    className={`w-8 h-8 flex items-center justify-center rounded-full transition ${bookmarks.includes(verse.verse_key) ? 'bg-red-500/20 text-red-500' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                    className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${bookmarks.includes(verse.verse_key) ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-primary-950/50 text-primary-200 hover:bg-white/10 hover:text-white'}`}
                                 >
                                     🔖
                                 </button>
                                 <button
                                     onClick={() => shareVerse(verse.verse_key)}
-                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-primary-200 hover:bg-white/10 hover:text-white transition-all"
                                 >
                                     🔗
                                 </button>
@@ -138,20 +139,20 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                         </div>
 
                         {/* Arabic Text */}
-                        <div className="text-right mb-6">
-                            <p className="font-arabic text-3xl md:text-4xl text-white leading-[2.2] md:leading-[2.5]">
+                        <div className="text-right mb-8">
+                            <p className="font-arabic text-3xl md:text-4xl text-white leading-[2.2] md:leading-[2.5] drop-shadow-sm">
                                 {verse.text_uthmani}
                             </p>
                         </div>
 
                         {/* Translations */}
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {verse.translations?.map((translation) => (
-                                <div key={translation.id} className="text-gray-300">
-                                    <p className={`text-lg leading-relaxed ${translation.resource_id === 161 ? 'font-bengali' : ''}`}>
+                                <div key={translation.id} className="text-primary-100 border-l-2 border-accent-500/30 pl-4">
+                                    <p className={`text-lg leading-relaxed ${translation.resource_id === 161 ? 'font-bengali' : 'font-sans'}`}>
                                         {translation.text.replace(/<sup.*?<\/sup>/g, '')}
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider">
+                                    <p className="text-xs text-primary-400 mt-2 uppercase tracking-wider font-semibold">
                                         {translation.resource_id === 131 ? 'English - The Clear Quran' : 'Bengali - Taisirul Quran'}
                                     </p>
                                 </div>
@@ -162,15 +163,15 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
             </div>
 
             {/* Navigation */}
-            <div className="flex justify-between mt-12 pt-8 border-t border-white/10">
+            <div className="flex justify-between mt-16 pt-8 border-t border-white/10">
                 {surah.id > 1 ? (
-                    <Link href={`/quran/${surah.id - 1}`} className="flex items-center gap-2 text-white hover:text-accent transition">
+                    <Link href={`/quran/${surah.id - 1}`} className="flex items-center gap-2 text-primary-300 hover:text-white transition font-semibold px-4 py-2 hover:bg-white/5 rounded-lg">
                         ← Previous Surah
                     </Link>
                 ) : <div></div>}
 
                 {surah.id < 114 && (
-                    <Link href={`/quran/${surah.id + 1}`} className="flex items-center gap-2 text-white hover:text-accent transition">
+                    <Link href={`/quran/${surah.id + 1}`} className="flex items-center gap-2 text-primary-300 hover:text-white transition font-semibold px-4 py-2 hover:bg-white/5 rounded-lg">
                         Next Surah →
                     </Link>
                 )}

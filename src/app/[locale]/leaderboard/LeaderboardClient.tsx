@@ -78,8 +78,8 @@ export default function LeaderboardClient() {
                                 {icon}
                             </div>
                         </div>
-                        <div className="text-white font-bold text-lg mb-1">{entry.userName}</div>
-                        <div className="text-accent-200 text-sm font-semibold mb-3">{entry.totalPoints} pts</div>
+                        <div className="text-primary-900 font-bold text-lg mb-1">{entry.userName}</div>
+                        <div className="text-secondary-600 text-sm font-bold mb-3">{entry.totalPoints} pts</div>
                     </>
                 ) : (
                     <div className="h-24 w-16 mb-2"></div>
@@ -93,9 +93,9 @@ export default function LeaderboardClient() {
 
         return (
             <div className="flex justify-center items-end gap-4 mb-12 min-h-[280px]">
-                <PodiumItem entry={second} color="bg-secondary/80" height="h-32" icon="🥈" />
-                <PodiumItem entry={first} color="bg-accent" height="h-44" icon="👑" />
-                <PodiumItem entry={third} color="bg-secondary-700/80" height="h-24" icon="🥉" />
+                <PodiumItem entry={second} color="bg-secondary/90" height="h-32" icon="🥈" />
+                <PodiumItem entry={first} color="bg-primary-600" height="h-44" icon="👑" />
+                <PodiumItem entry={third} color="bg-secondary-700/90" height="h-24" icon="🥉" />
             </div>
         );
     };
@@ -103,15 +103,15 @@ export default function LeaderboardClient() {
     return (
         <div className="max-w-4xl mx-auto">
             {/* Controls */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 flex flex-col sm:flex-row justify-between gap-2 mb-8 border border-white/10">
-                <div className="flex bg-black/20 rounded-xl p-1">
+            <div className="bg-white/50 backdrop-blur-md rounded-2xl p-2 flex flex-col sm:flex-row justify-between gap-2 mb-8 border border-gray-200/50 shadow-sm">
+                <div className="flex bg-slate-100 rounded-xl p-1">
                     {(['daily', 'weekly', 'overall'] as const).map((p) => (
                         <button
                             key={p}
                             onClick={() => setPeriod(p)}
                             className={`flex-1 px-6 py-2 rounded-lg font-semibold transition-all ${period === p
-                                ? 'bg-accent text-white shadow-lg'
-                                : 'text-primary-200 hover:text-white'
+                                ? 'bg-white text-primary-900 shadow-md transform scale-[1.02]'
+                                : 'text-text-secondary hover:text-primary-900'
                                 }`}
                         >
                             {p === 'daily' ? 'Today' : p === 'weekly' ? 'This Week' : 'All Time'}
@@ -119,17 +119,17 @@ export default function LeaderboardClient() {
                     ))}
                 </div>
 
-                <div className="flex bg-black/20 rounded-xl p-1">
+                <div className="flex bg-slate-100 rounded-xl p-1">
                     {(['global', 'division', 'district', 'district_ranking'] as const).map((s) => (
                         <button
                             key={s}
                             onClick={() => setScope(s)}
                             className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all ${scope === s
-                                ? 'bg-secondary text-white shadow-lg'
-                                : 'text-primary-200 hover:text-white'
+                                ? 'bg-white text-secondary-600 shadow-md transform scale-[1.02]'
+                                : 'text-text-secondary hover:text-primary-900'
                                 }`}
                         >
-                            {s === 'district_ranking' ? '🏙️ Top Districts' : s.charAt(0).toUpperCase() + s.slice(1)}
+                            {s === 'district_ranking' ? '🏙️, Top Districts' : s.charAt(0).toUpperCase() + s.slice(1)}
                         </button>
                     ))}
                 </div>
@@ -166,26 +166,26 @@ export default function LeaderboardClient() {
                     )}
 
                     {/* Leaderboard List */}
-                    <div className="bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 overflow-hidden">
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                         {data?.entries.slice(3).map((entry) => (
                             <div
                                 key={entry.userId}
-                                className="flex items-center gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors"
+                                className="flex items-center gap-4 p-4 border-b border-gray-50 hover:bg-slate-50 transition-colors"
                             >
-                                <div className="text-xl font-bold text-primary-300 w-8 text-center">{entry.rank}</div>
+                                <div className="text-xl font-bold text-primary-400 w-8 text-center">{entry.rank}</div>
 
-                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-primary-200 font-bold overflow-hidden">
+                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary-600 font-bold overflow-hidden border border-gray-100">
                                     {entry.userImage ? <img src={entry.userImage} className="w-full h-full object-cover" /> : entry.userName[0]}
                                 </div>
 
                                 <div className="flex-1">
-                                    <div className="text-white font-semibold">
+                                    <div className="text-primary-900 font-semibold">
                                         {entry.userName}
                                     </div>
-                                    {entry.location && <div className="text-primary-400 text-xs">{entry.location}</div>}
+                                    {entry.location && <div className="text-text-muted text-xs">{entry.location}</div>}
                                 </div>
 
-                                <div className="text-accent font-bold text-lg">{entry.totalPoints}</div>
+                                <div className="text-secondary-600 font-bold text-lg">{entry.totalPoints}</div>
                             </div>
                         ))}
 

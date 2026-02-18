@@ -172,10 +172,13 @@ export default function IftarSehriClient() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="mb-8 bg-white/5 p-6 rounded-xl border border-white/10">
-                <div className="flex flex-col md:flex-row items-center gap-4 justify-between mb-4">
-                    <p className="text-primary-200 text-sm">{t('locationSet')} <span className="text-white font-bold">{getDisplayLocation()}</span></p>
+        <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+            {/* Location Selection Card */}
+            <div className="bg-primary-900/40 backdrop-blur-md border border-white/10 rounded-app-lg p-6 md:p-8 shadow-glass">
+                <div className="flex flex-col md:flex-row items-center gap-4 justify-between mb-6">
+                    <p className="text-primary-200 text-sm font-medium">
+                        {t('locationSet')} <span className="text-accent-400 font-bold ml-1">{getDisplayLocation()}</span>
+                    </p>
 
                     <button
                         onClick={() => {
@@ -199,40 +202,41 @@ export default function IftarSehriClient() {
                                 alert('Geolocation is not supported.');
                             }
                         }}
-                        className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/80 transition text-sm flex items-center gap-2"
+                        className="px-5 py-2.5 bg-accent-600 text-white rounded-xl hover:bg-accent-500 transition-all font-semibold text-sm flex items-center gap-2 shadow-gold-glow"
                     >
-                        {t('findMyLocation')}
+                        📍 {t('findMyLocation')}
                     </button>
                 </div>
 
                 {/* Dropdowns */}
-                <div className="grid md:grid-cols-2 gap-4">
-                    <div className="relative">
-                        <label className="text-xs text-primary-300 mb-1 block ml-1">{t('country')}</label>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="relative group">
+                        <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">{t('country')}</label>
                         <select
                             value={selectedCountryCode}
                             onChange={handleCountryChange}
-                            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent [&>option]:bg-primary-900 appearance-none cursor-pointer"
+                            className="w-full px-4 py-3 rounded-xl bg-primary-950/50 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
                         >
-                            <option value="">{t('selectCountry')}</option>
+                            <option value="" className="bg-primary-900 text-gray-400">{t('selectCountry')}</option>
                             {allCountries.map((c) => (
-                                <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
+                                <option key={c.isoCode} value={c.isoCode} className="bg-primary-900">{c.name}</option>
                             ))}
                         </select>
+                        <div className="absolute right-4 bottom-3.5 pointer-events-none text-primary-400 text-xs">▼</div>
                     </div>
 
-                    <div className="relative">
-                        <label className="text-xs text-primary-300 mb-1 block ml-1">{t('city')}</label>
+                    <div className="relative group">
+                        <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">{t('city')}</label>
                         {cities.length > 0 ? (
                             <select
                                 value={location.city}
                                 onChange={(e) => setLocation({ ...location, city: e.target.value, useCoords: false })}
                                 disabled={!selectedCountryCode}
-                                className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent [&>option]:bg-primary-900 disabled:opacity-50 appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 rounded-xl bg-primary-950/50 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 disabled:opacity-50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
                             >
-                                <option value="">{t('selectCity')}</option>
+                                <option value="" className="bg-primary-900 text-gray-400">{t('selectCity')}</option>
                                 {cities.map((city) => (
-                                    <option key={city.name} value={city.name}>{city.name}</option>
+                                    <option key={city.name} value={city.name} className="bg-primary-900">{city.name}</option>
                                 ))}
                             </select>
                         ) : (
@@ -240,45 +244,48 @@ export default function IftarSehriClient() {
                                 type="text"
                                 value={location.city}
                                 onChange={(e) => setLocation({ ...location, city: e.target.value, useCoords: false })}
-                                className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent placeholder-white/50"
+                                className="w-full px-4 py-3 rounded-xl bg-primary-950/50 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 placeholder-primary-500 transition-colors hover:bg-primary-950/70"
                                 placeholder={selectedCountryCode ? t('enterCityName') : t('selectCountryFirst')}
                                 disabled={!selectedCountryCode}
                             />
                         )}
+                        {cities.length > 0 && <div className="absolute right-4 bottom-3.5 pointer-events-none text-primary-400 text-xs">▼</div>}
                     </div>
                 </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
                 {/* Iftar Countdown */}
-                <div className="bg-gradient-to-br from-secondary/20 to-accent/20 backdrop-blur-md rounded-3xl border border-white/20 p-8 transform hover:scale-105 transition duration-300">
-                    <div className="text-center">
-                        <span className="text-6xl mb-4 block">🌙</span>
+                <div className="relative overflow-hidden bg-gradient-to-br from-primary-900/60 to-primary-800/60 backdrop-blur-md rounded-app-lg border border-accent-500/20 p-8 shadow-glass group hover:border-accent-500/40 transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-32 bg-accent-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                    <div className="text-center relative z-10">
+                        <span className="text-6xl mb-6 block drop-shadow-lg filter brightness-110">🌙</span>
                         <h2 className="text-2xl font-bold text-white mb-2">{t('timeUntilIftar')}</h2>
-                        <div className="text-5xl font-bold text-accent my-6 font-mono tracking-wider">
+                        <div className="text-5xl md:text-6xl font-bold text-accent-400 my-6 font-mono tracking-wider drop-shadow-md">
                             {timeLeftIftar}
                         </div>
-                        <div className="inline-block px-4 py-2 bg-black/20 rounded-lg">
-                            <p className="text-primary-100 flex items-center gap-2">
-                                <span>{t('iftarTime')}</span>
-                                <span className="font-bold text-white text-xl">{prayerTimes?.Maghrib || '--:--'}</span>
+                        <div className="inline-block px-6 py-3 bg-primary-950/50 rounded-xl border border-white/5">
+                            <p className="text-primary-200 flex items-center gap-3">
+                                <span className="uppercase text-xs font-bold tracking-widest">{t('iftarTime')}</span>
+                                <span className="font-heading font-bold text-white text-2xl">{prayerTimes?.Maghrib || '--:--'}</span>
                             </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Sehri Countdown */}
-                <div className="bg-gradient-to-br from-primary/20 to-secondary/20 backdrop-blur-md rounded-3xl border border-white/20 p-8 transform hover:scale-105 transition duration-300">
-                    <div className="text-center">
-                        <span className="text-6xl mb-4 block">☀️</span>
+                <div className="relative overflow-hidden bg-gradient-to-br from-primary-900/60 to-primary-800/60 backdrop-blur-md rounded-app-lg border border-primary-400/20 p-8 shadow-glass group hover:border-primary-400/40 transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-32 bg-primary-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                    <div className="text-center relative z-10">
+                        <span className="text-6xl mb-6 block drop-shadow-lg filter brightness-110">☀️</span>
                         <h2 className="text-2xl font-bold text-white mb-2">{t('timeUntilSehri')}</h2>
-                        <div className="text-5xl font-bold text-white my-6 font-mono tracking-wider">
+                        <div className="text-5xl md:text-6xl font-bold text-primary-200 my-6 font-mono tracking-wider drop-shadow-md">
                             {timeLeftSehri}
                         </div>
-                        <div className="inline-block px-4 py-2 bg-black/20 rounded-lg">
-                            <p className="text-primary-100 flex items-center gap-2">
-                                <span>{t('sehriTime')}</span>
-                                <span className="font-bold text-white text-xl">{prayerTimes?.Fajr || '--:--'}</span>
+                        <div className="inline-block px-6 py-3 bg-primary-950/50 rounded-xl border border-white/5">
+                            <p className="text-primary-200 flex items-center gap-3">
+                                <span className="uppercase text-xs font-bold tracking-widest">{t('sehriTime')}</span>
+                                <span className="font-heading font-bold text-white text-2xl">{prayerTimes?.Fajr || '--:--'}</span>
                             </p>
                         </div>
                     </div>

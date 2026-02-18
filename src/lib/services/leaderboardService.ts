@@ -106,33 +106,37 @@ export async function getLeaderboard(params: {
         const rawResults = await prisma.$queryRawUnsafe<any[]>(rankingQuery);
 
         // Step 2: Hydrate with user details
-        if (rawResults.length > 0) {
-            const userIds = rawResults.map((r: any) => Number(r.userId));
-            const users = await prisma.user.findMany({
-                where: { id: { in: userIds } },
-                include: { district: true, division: true }
-            });
+        const userIds = rawResults.map((r: any) => Number(r.userId));
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            include: { district: true, division: true }
+        });
 
-            const userMap = new Map(users.map(u => [u.id, u]));
+        // Create a typed map
+        const userMap = new Map(users.map((u: any) => [u.id, u]));
 
-            entries = rawResults.map((r: any, index: number) => {
-                const uid = Number(r.userId);
-                const user = userMap.get(uid);
-                const score = Number(r.totalPoints || 0);
+        entries = rawResults.map((r: any, index: number) => {
+            const uid = Number(r.userId);
+            const user = userMap.get(uid);
+            const score = Number(r.totalPoints || 0);
 
-                const isCurrentUser = currentUserId && uid === currentUserId;
-                const anonymousName = `Servant of Allah ${uid.toString().slice(-4)}`;
+            const isCurrentUser = currentUserId && uid === currentUserId;
+            const anonymousName = `Servant of Allah ${uid.toString().slice(-4)}`;
 
-                return {
-                    rank: offset + index + 1,
-                    userId: uid,
-                    userName: isCurrentUser ? (user?.name || 'Unknown') : anonymousName,
-                    userImage: isCurrentUser ? (user?.image || undefined) : undefined,
-                    totalPoints: score,
-                    location: user?.district?.nameEn || user?.division?.nameEn || 'Unknown',
-                };
-            });
-        }
+            // Safe access with optional chaining and nullish coalescing
+            const userObj = user as any;
+            const displayImage = userObj?.image;
+            const locationName = userObj ? (userObj.district?.nameEn || userObj.division?.nameEn || 'Unknown') : 'Unknown';
+
+            return {
+                rank: offset + index + 1,
+                userId: uid,
+                userName: isCurrentUser ? (user?.name || 'Unknown') : anonymousName,
+                userImage: isCurrentUser ? displayImage : undefined,
+                totalPoints: score,
+                location: locationName,
+            };
+        });
 
         // Count total users
         const countQuery = `

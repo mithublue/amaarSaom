@@ -179,11 +179,11 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
     return (
         <div className="space-y-8">
             {/* Daily Hadith Card */}
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8">
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8">
                 <div className="text-center mb-6">
                     <span className="text-5xl block mb-4">📖</span>
-                    <h2 className="text-2xl font-bold text-white mb-2">{t('title')}</h2>
-                    <p className="text-primary-200 text-sm">
+                    <h2 className="text-2xl font-bold text-primary-900 mb-2">{t('title')}</h2>
+                    <p className="text-text-secondary text-sm">
                         {isRamadan
                             ? `Day ${diffDays} of Ramadan`
                             : new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -193,26 +193,26 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
 
                 <div
                     ref={cardRef}
-                    className="bg-white/5 rounded-2xl p-8 mb-8 group relative overflow-hidden transition-all hover:bg-white/10 border border-white/5"
+                    className="bg-slate-50 rounded-2xl p-8 mb-8 group relative overflow-hidden transition-all hover:shadow-md border border-gray-100"
                 >
                     {/* Branding for Screenshot */}
-                    <div className="absolute top-4 left-4 text-xs text-white/20 font-bold uppercase tracking-widest pointer-events-none">
+                    <div className="absolute top-4 left-4 text-xs text-primary-300 font-bold uppercase tracking-widest pointer-events-none">
                         Ramadan Companion
                     </div>
 
-                    <div className="absolute -right-10 -top-10 text-9xl opacity-5 text-white">❝</div>
-                    <p className="text-white text-xl md:text-2xl italic leading-relaxed text-center mb-6 font-serif relative z-10 pt-4">
+                    <div className="absolute -right-10 -top-10 text-9xl opacity-5 text-primary-900">❝</div>
+                    <p className="text-primary-900 text-xl md:text-2xl italic leading-relaxed text-center mb-6 font-serif relative z-10 pt-4">
                         "{currentHadithText}"
                     </p>
                     <div className="w-16 h-1 bg-accent/50 mx-auto mb-4 rounded-full"></div>
-                    <p className="text-primary-200 text-sm md:text-base text-center font-semibold tracking-wide uppercase">
+                    <p className="text-text-secondary text-sm md:text-base text-center font-semibold tracking-wide uppercase">
                         — {currentHadithSource}
                     </p>
                 </div>
 
                 <div className="flex flex-col items-center gap-4">
                     <div className="text-center">
-                        <p className="text-primary-300 text-sm mb-2">Share this beautiful message:</p>
+                        <p className="text-text-muted text-sm mb-2">Share this beautiful message:</p>
                         <p className="text-accent text-xs font-semibold mb-4 bg-accent/10 px-3 py-1 rounded-full inline-block">
                             🎁 Reward: 10 Points (once per platform)
                         </p>
@@ -220,21 +220,21 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                     <div className="flex gap-4">
                         <button
                             onClick={handleDownloadImage}
-                            className="p-3 rounded-full transition-all text-white border border-white/10 bg-black/30 hover:bg-accent hover:scale-110"
+                            className="p-3 rounded-full transition-all text-primary-600 border border-gray-200 bg-slate-100 hover:bg-accent hover:text-white hover:border-accent hover:scale-110 shadow-sm"
                             title="Download Image"
                         >
                             <span className="text-xl">⬇️</span>
                         </button>
                         <button
                             onClick={() => handleShare('native')}
-                            className="p-3 rounded-full transition-all text-white border border-white/10 bg-accent/20 hover:bg-accent hover:scale-110"
+                            className="p-3 rounded-full transition-all text-primary-600 border border-gray-200 bg-slate-100 hover:bg-accent hover:text-white hover:border-accent hover:scale-110 shadow-sm"
                             title="Share Highlight"
                         >
                             <span className="text-xl">✨</span> Share
                         </button>
                         <button
                             onClick={() => handleShare('twitter')}
-                            className={`p-3 rounded-full transition-all text-white border border-white/10 ${sharedPlatforms.has('twitter') ? 'bg-green-600/50' : 'bg-black/30 hover:bg-[#1DA1F2] hover:scale-110'}`}
+                            className={`p-3 rounded-full transition-all border shadow-sm ${sharedPlatforms.has('twitter') ? 'bg-green-100 text-green-600 border-green-200' : 'bg-slate-100 text-primary-600 border-gray-200 hover:bg-[#1DA1F2] hover:text-white hover:scale-110'}`}
                             title="Share on Twitter"
                             disabled={sharedPlatforms.has('twitter')}
                         >
@@ -242,7 +242,7 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                         </button>
                         <button
                             onClick={() => handleShare('facebook')}
-                            className={`p-3 rounded-full transition-all text-white border border-white/10 ${sharedPlatforms.has('facebook') ? 'bg-green-600/50' : 'bg-black/30 hover:bg-[#4267B2] hover:scale-110'}`}
+                            className={`p-3 rounded-full transition-all border shadow-sm ${sharedPlatforms.has('facebook') ? 'bg-green-100 text-green-600 border-green-200' : 'bg-slate-100 text-primary-600 border-gray-200 hover:bg-[#4267B2] hover:text-white hover:scale-110'}`}
                             title="Share on Facebook"
                             disabled={sharedPlatforms.has('facebook')}
                         >
@@ -250,7 +250,7 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                         </button>
                         <button
                             onClick={() => handleShare('email')}
-                            className={`p-3 rounded-full transition-all text-white border border-white/10 ${sharedPlatforms.has('email') ? 'bg-green-600/50' : 'bg-black/30 hover:bg-green-600 hover:scale-110'}`}
+                            className={`p-3 rounded-full transition-all border shadow-sm ${sharedPlatforms.has('email') ? 'bg-green-100 text-green-600 border-green-200' : 'bg-slate-100 text-primary-600 border-gray-200 hover:bg-green-600 hover:text-white hover:scale-110'}`}
                             title="Share via Email"
                             disabled={sharedPlatforms.has('email')}
                         >
@@ -261,19 +261,19 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
             </div>
 
             {/* Browse Section */}
-            <div className="bg-white/5 backdrop-blur-md rounded-3xl border border-white/20 p-6">
-                <h3 className="text-2xl font-bold text-white mb-6">{t('browseMore')}</h3>
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+                <h3 className="text-2xl font-bold text-primary-900 mb-6">{t('browseMore')}</h3>
 
                 {/* Filters */}
                 <div className="flex flex-col md:flex-row gap-4 mb-8">
                     <div className="relative flex-1">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-300">🔍</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">🔍</span>
                         <input
                             type="text"
                             placeholder="Search Hadiths..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-primary-400 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition"
+                            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-primary-900 placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition shadow-sm"
                         />
                     </div>
                     <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
@@ -281,7 +281,7 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                             <button
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-accent text-white font-bold shadow-lg' : 'bg-white/5 text-primary-200 hover:bg-white/10'}`}
+                                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-accent text-white font-bold shadow-md' : 'bg-slate-50 text-primary-600 hover:bg-slate-100 border border-gray-200'}`}
                             >
                                 {cat}
                             </button>
@@ -292,12 +292,12 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                 {/* Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredHadiths.slice(0, visibleCount).map((h) => (
-                        <div key={h.id} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition group">
+                        <div key={h.id} className="bg-slate-50 border border-gray-200 rounded-2xl p-6 hover:bg-white hover:shadow-md transition group">
                             <span className="text-xs font-bold text-accent px-2 py-1 bg-accent/10 rounded mb-3 inline-block">
                                 {h.category}
                             </span>
-                            <p className="text-white text-lg italic mb-4 font-serif leading-relaxed">"{getLocalizedText(h as Hadith)}"</p>
-                            <p className="text-primary-300 text-xs font-semibold uppercase tracking-wide border-t border-white/10 pt-3">
+                            <p className="text-primary-900 text-lg italic mb-4 font-serif leading-relaxed">"{getLocalizedText(h as Hadith)}"</p>
+                            <p className="text-text-secondary text-xs font-semibold uppercase tracking-wide border-t border-gray-200 pt-3">
                                 {h.source}
                             </p>
                         </div>
@@ -309,7 +309,7 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                     <div className="text-center mt-8">
                         <button
                             onClick={() => setVisibleCount(prev => prev + 6)}
-                            className="px-6 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20 transition"
+                            className="px-6 py-2 bg-white border border-gray-200 text-primary-600 rounded-xl hover:bg-slate-50 transition shadow-sm"
                         >
                             Load More
                         </button>
@@ -317,7 +317,7 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                 )}
 
                 {filteredHadiths.length === 0 && (
-                    <div className="text-center py-12 text-primary-400">
+                    <div className="text-center py-12 text-text-muted">
                         No Hadiths found matching your criteria.
                     </div>
                 )}

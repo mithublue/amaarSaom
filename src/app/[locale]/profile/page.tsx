@@ -18,7 +18,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
     }
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900 pb-20">
+        <main className="min-h-screen bg-gradient-to-b from-background-default via-primary-50 to-primary-100 pb-20">
             <div className="container mx-auto px-4 py-8">
                 <ProfileClient user={session.user} />
             </div>

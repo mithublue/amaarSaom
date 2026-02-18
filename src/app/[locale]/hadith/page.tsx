@@ -9,17 +9,17 @@ export default async function HadithPage() {
     const tCommon = await getTranslations('Leaderboard'); // Reuse 'Back'
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900">
+        <div className="min-h-screen bg-gradient-to-b from-background-default via-primary-50 to-primary-100">
             {/* Header */}
-            <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
+            <header className="bg-white/50 backdrop-blur-md border-b border-gray-200/50">
                 <div className="container mx-auto px-4 py-4 flex items-center gap-4">
                     <Link
                         href="/"
-                        className="text-white hover:text-accent transition"
+                        className="text-primary-700 hover:text-accent transition"
                     >
                         ← {tCommon('back')}
                     </Link>
-                    <h1 className="text-2xl font-bold text-white flex-1">{t('title')}</h1>
+                    <h1 className="text-2xl font-bold text-primary-900 flex-1">{t('title')}</h1>
                     <LanguageSwitcher />
                 </div>
             </header>

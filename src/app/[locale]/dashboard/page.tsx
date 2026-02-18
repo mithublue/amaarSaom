@@ -62,22 +62,22 @@ export default async function DashboardPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background-dark via-primary-900 to-primary-800">
+        <div className="min-h-screen bg-gradient-to-b from-background-default via-primary-50 to-primary-100">
             {/* Header */}
-            <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
+            <header className="bg-white/50 backdrop-blur-md border-b border-gray-200/50">
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <span className="text-4xl">🌙</span>
-                        <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+                        <h1 className="text-2xl font-bold text-primary-900">{t('title')}</h1>
                     </div>
                     <div className="flex items-center gap-4">
-                        <span className="text-primary-100">
+                        <span className="text-primary-700 font-medium">
                             {session?.user?.name || t('guest')}
                         </span>
                         {session && (
                             <a
                                 href="/api/auth/signout"
-                                className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition"
+                                className="px-4 py-2 bg-primary-100 text-primary-800 rounded-lg hover:bg-primary-200 transition"
                             >
                                 {t('signOut')}
                             </a>
@@ -91,10 +91,10 @@ export default async function DashboardPage() {
                 <div className="max-w-6xl mx-auto">
                     {/* Welcome Section */}
                     <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold text-white mb-3">
+                        <h2 className="text-4xl font-bold text-primary-900 mb-3">
                             {t('greeting')}, {session?.user?.name?.split(' ')[0] || t('greetingSuffix')}! 👋
                         </h2>
-                        <p className="text-xl text-primary-100">
+                        <p className="text-xl text-primary-600">
                             {t('welcomeMessage')}
                         </p>
                     </div>
@@ -105,7 +105,7 @@ export default async function DashboardPage() {
                             <Link
                                 key={index}
                                 href={feature.href}
-                                className="group relative p-8 bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 hover:bg-white/10 hover:border-accent/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+                                className="group relative p-8 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 hover:scale-[1.02] transition-all duration-300 cursor-pointer"
                             >
                                 {/* Icon */}
                                 <div className="text-6xl mb-4 text-accent group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(245,158,11,0.5)] transition-all duration-300">
@@ -113,12 +113,12 @@ export default async function DashboardPage() {
                                 </div>
 
                                 {/* Title */}
-                                <h3 className="text-2xl font-bold text-white mb-2">
+                                <h3 className="text-2xl font-bold text-primary-800 mb-2">
                                     {feature.title}
                                 </h3>
 
                                 {/* Description */}
-                                <p className="text-primary-200 mb-4">{feature.description}</p>
+                                <p className="text-text-secondary mb-4">{feature.description}</p>
 
                                 {/* Arrow Indicator */}
                                 <div className="absolute bottom-4 right-4 text-accent opacity-0 group-hover:opacity-100 transition-opacity">

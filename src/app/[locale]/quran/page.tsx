@@ -12,18 +12,18 @@ export default async function QuranPage() {
     const chapters = await getAllChapters();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900 pb-20">
+        <div className="min-h-screen flex flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-primary-900/80 backdrop-blur-md border-b border-white/10">
-                <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+            <header className="pt-6 pb-2">
+                <div className="container mx-auto px-4 flex items-center gap-4">
                     <Link
                         href="/"
-                        className="p-2 bg-white/5 rounded-xl text-white hover:bg-white/10 transition"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-primary-100 hover:bg-white/10 hover:text-white transition-all shadow-sm"
                     >
-                        ← Back
+                        <span>←</span> Back
                     </Link>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                        Holy Quran <span className="text-accent">📖</span>
+                    <h1 className="text-2xl md:text-3xl font-heading font-bold text-white drop-shadow-md flex items-center gap-3">
+                        Holy Quran <span className="text-accent-400 text-2xl">📖</span>
                     </h1>
                 </div>
             </header>
