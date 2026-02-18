@@ -2,3 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 @import "flag-icons/css/flag-icons.min.css";
+
+:root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 2, 44, 34;
+    /* deep emerald */
+    --background-end-rgb: 6, 78, 59;
+    /* emerald 900 */
+}
+
+body {
+    color: rgb(var(--foreground-rgb));
+    background: linear-gradient(to bottom,
+            transparent,
+            rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+    background-attachment: fixed;
+
+    /* Subtle Islamic Geometric Pattern Overlay */
+    background-image:
+        linear-gradient(30deg, #047857 12%, transparent 12.5%, transparent 87%, #047857 87.5%, #047857),
+        linear-gradient(150deg, #047857 12%, transparent 12.5%, transparent 87%, #047857 87.5%, #047857),
+        linear-gradient(30deg, #047857 12%, transparent 12.5%, transparent 87%, #047857 87.5%, #047857),
+        linear-gradient(150deg, #047857 12%, transparent 12.5%, transparent 87%, #047857 87.5%, #047857),
+        linear-gradient(60deg, #065f46 25%, transparent 25.5%, transparent 75%, #065f46 75%, #065f46),
+        linear-gradient(60deg, #065f46 25%, transparent 25.5%, transparent 75%, #065f46 75%, #065f46);
+    background-size: 80px 140px;
+    background-blend-mode: soft-light;
+}
+
+/* Custom Scrollbar for Serene Theme */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #022c22;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #059669;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #10b981;
+}

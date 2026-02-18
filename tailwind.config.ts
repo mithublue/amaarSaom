@@ -9,23 +9,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Ramadan Theme Colors
+        // Serene Islamic Theme
         primary: {
-          DEFAULT: '#6366F1',
-          900: '#312E81',
-          800: '#3730A3',
-          700: '#4338CA',
-          600: '#4F46E5',
-          500: '#6366F1',
-          400: '#818CF8',
-          300: '#A5B4FC',
-          200: '#C7D2FE',
-          100: '#E0E7FF',
+          DEFAULT: '#10B981', // Emerald 500
+          900: '#064E3B', // Emerald 900
+          800: '#065F46', // Emerald 800
+          700: '#047857', // Emerald 700
+          600: '#059669', // Emerald 600
+          500: '#10B981', // Emerald 500
+          400: '#34D399', // Emerald 400
+          300: '#6EE7B7', // Emerald 300
+          200: '#A7F3D0', // Emerald 200
+          100: '#D1FAE5', // Emerald 100
+          50: '#ECFDF5',  // Emerald 50
         },
         secondary: {
-          DEFAULT: '#F59E0B',
-          900: '#78350F',
-          800: '#92400E',
+          DEFAULT: '#F59E0B', // Amber 500
+          900: '#78350F', // Amber 900
+          800: '#92400E', // Amber 800
+          700: '#B45309', // Amber 700
+          600: '#D97706', // Amber 600
+          500: '#F59E0B', // Amber 500
+          400: '#FBBF24', // Amber 400
+          300: '#FCD34D', // Amber 300
+          200: '#FDE68A', // Amber 200
+          100: '#FEF3C7', // Amber 100
+          50: '#FFFBEB',  // Amber 50
+        },
+        accent: {
+          DEFAULT: '#D97706', // Gold (Secondary 600)
           700: '#B45309',
           600: '#D97706',
           500: '#F59E0B',
@@ -34,20 +46,11 @@ export default {
           200: '#FDE68A',
           100: '#FEF3C7',
         },
-        accent: {
-          DEFAULT: '#14B8A6',
-          700: '#0F766E',
-          600: '#0D9488',
-          500: '#14B8A6',
-          400: '#2DD4BF',
-          300: '#5EEAD4',
-          200: '#99F6E4',
-          100: '#CCFBF1',
-        },
         background: {
-          dark: '#0F172A',
-          darker: '#020617',
-          card: '#1E293B',
+          dark: '#022C22',   // Deep Forest Green
+          darker: '#064E3B', // Dark Emerald
+          card: '#065F46',   // Emerald 800
+          light: '#F0FDF4',  // Light Green Tint
         },
         text: {
           primary: '#F1F5F9',

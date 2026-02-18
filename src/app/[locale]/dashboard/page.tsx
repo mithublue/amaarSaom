@@ -62,7 +62,7 @@ export default async function DashboardPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900">
+        <div className="min-h-screen bg-gradient-to-b from-background-dark via-primary-900 to-primary-800">
             {/* Header */}
             <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -105,10 +105,10 @@ export default async function DashboardPage() {
                             <Link
                                 key={index}
                                 href={feature.href}
-                                className="group relative p-8 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 hover:bg-white/15 hover:scale-105 transition-all duration-300 cursor-pointer"
+                                className="group relative p-8 bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 hover:bg-white/10 hover:border-accent/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:scale-[1.02] transition-all duration-300 cursor-pointer"
                             >
                                 {/* Icon */}
-                                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">
+                                <div className="text-6xl mb-4 text-accent group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(245,158,11,0.5)] transition-all duration-300">
                                     {feature.icon}
                                 </div>
 

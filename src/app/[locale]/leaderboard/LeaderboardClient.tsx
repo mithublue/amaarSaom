@@ -95,7 +95,7 @@ export default function LeaderboardClient() {
             <div className="flex justify-center items-end gap-4 mb-12 min-h-[280px]">
                 <PodiumItem entry={second} color="bg-secondary/80" height="h-32" icon="🥈" />
                 <PodiumItem entry={first} color="bg-accent" height="h-44" icon="👑" />
-                <PodiumItem entry={third} color="bg-primary-600/80" height="h-24" icon="🥉" />
+                <PodiumItem entry={third} color="bg-secondary-700/80" height="h-24" icon="🥉" />
             </div>
         );
     };
