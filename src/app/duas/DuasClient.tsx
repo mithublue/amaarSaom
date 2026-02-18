@@ -1,221 +1,208 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Search, Grid, List as ListIcon, Play, Pause, Volume2, ChevronRight } from 'lucide-react';
 
-type Dua = {
-    title: string;
-    arabic: string;
-    transliteration?: string;
-    translation: string;
-    reference?: string;
-};
+interface Dua {
+    ID: number;
+    ARABIC_TEXT: string;
+    LANGUAGE_ARABIC_TRANSLATED_TEXT: string;
+    TRANSLATED_TEXT: string;
+    REPEAT: number;
+    AUDIO: string;
+}
 
-type DuaCategory = {
-    id: string;
-    name: string;
-    icon: string;
-    duas: Dua[];
-};
+interface Category {
+    ID: number;
+    TITLE: string;
+    AUDIO_URL: string;
+    TEXT: Dua[];
+}
 
-const duaCollections: DuaCategory[] = [
-    {
-        id: 'fasting',
-        name: 'Ramadan & Fasting',
-        icon: '🌙',
-        duas: [
-            {
-                title: 'Dua for Iftar (Breaking Fast)',
-                arabic: 'ذَهَبَ الظَّمَأُ وَابْتَلَّتِ الْعُرُوقُ وَثَبَتَ الأَجْرُ إِنْ شَاءَ اللَّهُ',
-                transliteration: 'Zhahabadh-dhama\'u wabtallatil-\'urooqu wa thabetal-ajru in shaa\'Allah.',
-                translation: 'The thirst has gone, the veins are moistened, and the reward is confirmed, if Allah wills.',
-                reference: 'Abu Dawud'
-            },
-            {
-                title: 'Dua for Sehri (Intention)',
-                arabic: 'وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ',
-                transliteration: 'Wa bisawmi ghadin nawaitu min shahri ramadan.',
-                translation: 'I intend to keep the fast for tomorrow in the month of Ramadan.',
-            },
-            {
-                title: 'When breaking fast at someone\'s home',
-                arabic: 'أَفْطَرَ عِنْدَكُمُ الصَّائِمُونَ وَأَكَلَ طَعَامَكُمُ الأَبْرَارُ وَصَلَّتْ عَلَيْكُمُ الْمَلاَئِكَةُ',
-                translation: 'May the fasting people break fasting at your place, and may the pious eat from your food, and may the angels pray for you.',
-                reference: 'Ibn Majah'
-            }
-        ]
-    },
-    {
-        id: 'laylatul-qadr',
-        name: 'Laylatul Qadr',
-        icon: '✨',
-        duas: [
-            {
-                title: 'Dua for Laylatul Qadr',
-                arabic: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ كَرِيمٌ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
-                transliteration: 'Allahumma innaka \'afuwwun tuhibbul-\'afwa fa\'fu \'anni.',
-                translation: 'O Allah, You are Forgiving and love forgiveness, so forgive me.',
-                reference: 'Tirmidhi'
-            }
-        ]
-    },
-    {
-        id: 'daily',
-        name: 'Daily Life',
-        icon: '🏠',
-        duas: [
-            {
-                title: 'Before Sleeping',
-                arabic: 'بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا',
-                translation: 'In Your Name, O Allah, I die and I live.',
-                reference: 'Bukhari'
-            },
-            {
-                title: 'Upon Waking Up',
-                arabic: 'الْحَمْدُ للهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ',
-                translation: 'All praise is due to Allah who gave us life after He had caused us to die and unto Him is the resurrection.',
-                reference: 'Bukhari'
-            },
-            {
-                title: 'Before Eating',
-                arabic: 'بِسْمِ اللَّهِ',
-                translation: 'In the name of Allah.',
-            },
-            {
-                title: 'After Eating',
-                arabic: 'الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنَا وَسَقَانَا وَجَعَلَنَا مُسْلِمِينَ',
-                translation: 'All praise is due to Allah who fed us and gave us drink and made us Muslims.',
-            },
-            {
-                title: 'Leaving the House',
-                arabic: 'بِسْمِ اللهِ ، تَوَكَّلْتُ عَلَى اللهِ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ',
-                translation: 'In the name of Allah, I place my trust in Allah, and there is no might nor power except with Allah.',
-                reference: 'Tirmidhi'
-            }
-        ]
-    },
-    {
-        id: 'prayer',
-        name: 'Prayer (Salah)',
-        icon: '🕌',
-        duas: [
-            {
-                title: 'Dua Qunut (Witr)',
-                arabic: 'اللَّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ وَعَافِنِي فِيمَنْ عَافَيْتَ...',
-                translation: 'O Allah, guide me among those Thou hast guided, grant me security among those Thou hast granted security...',
-                reference: 'Abu Dawud'
-            },
-            {
-                title: 'After Prayer',
-                arabic: 'اللَّهُمَّ أَنْتَ السَّلاَمُ وَمِنْكَ السَّلاَمُ تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَالإِكْرَامِ',
-                translation: 'O Allah, You are Peace and from You is peace. Blessed are You, O Owner of Majesty and Honor.',
-                reference: 'Muslim'
-            }
-        ]
-    },
-    {
-        id: 'forgiveness',
-        name: 'Forgiveness',
-        icon: '🤲',
-        duas: [
-            {
-                title: 'Sayyidul Istighfar',
-                arabic: 'اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَهَ إِلاَّ أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوبَ إِلاَّ أَنْتَ',
-                translation: 'O Allah, You are my Lord, there is no god but You. You created me and I am Your servant, and I consider it my duty to keep my word and promise to You as much as I can. I seek refuge in You from the evil of what I have done. I acknowledge Your gratitude for the favors You have bestowed upon me, and I acknowledge my sins, so forgive me, for no one forgives sins but You.',
-                reference: 'Bukhari'
-            },
-            {
-                title: 'Rabbana Atina',
-                arabic: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
-                translation: 'Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire.',
-                reference: 'Quran 2:201'
-            }
-        ]
-    }
-];
+interface DuasClientProps {
+    language: string;
+    data: { [key: string]: Category[] }; // Assuming structure { "English": [...] } based on JSON
+}
 
-export default function DuasClient() {
-    const [selectedCategory, setSelectedCategory] = useState<string>('fasting');
-    const [expandedDua, setExpandedDua] = useState<number | null>(null);
+export default function DuasClient({ language, data }: DuasClientProps) {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+    const [isSidebarGrid, setIsSidebarGrid] = useState(false);
+    const [playingAudio, setPlayingAudio] = useState<string | null>(null);
 
-    const activeCollection = duaCollections.find(c => c.id === selectedCategory) || duaCollections[0];
+    // Normalize data access
+    const categories = useMemo(() => {
+        // Adjust key based on language map if needed, defaulting to English for the structure provided
+        // The JSON has "English" key. We'll use Object.values(data)[0] or specific key if we know it.
+        // For now, assuming the passed data prop is the array of categories directly or the full object.
+        // Let's assume data is the full JSON object.
+        const keys = Object.keys(data);
+        if (keys.length > 0) {
+            return data[keys[0]];
+        }
+        return [];
+    }, [data]);
 
-    const toggleExpand = (index: number) => {
-        setExpandedDua(expandedDua === index ? null : index);
+    // Initialize selected category
+    useMemo(() => {
+        if (!selectedCategory && categories.length > 0) {
+            setSelectedCategory(categories[0]);
+        }
+    }, [categories, selectedCategory]);
+
+
+    const filteredCategories = useMemo(() => {
+        if (!searchQuery) return categories;
+        return categories.filter(cat =>
+            cat.TITLE.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [categories, searchQuery]);
+
+    const toggleAudio = (url: string) => {
+        const audio = document.getElementById('dua-audio-player') as HTMLAudioElement;
+        if (playingAudio === url) {
+            audio.pause();
+            setPlayingAudio(null);
+        } else {
+            audio.src = url;
+            audio.play();
+            setPlayingAudio(url);
+        }
     };
 
     return (
-        <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">
-                Spiritual Armour 🛡️
-            </h2>
-
-            <div className="flex flex-col md:flex-row gap-6">
-                {/* Sidebar Navigation */}
-                <div className="w-full md:w-64 flex-shrink-0">
-                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 overflow-x-auto md:overflow-visible flex md:flex-col gap-2 border border-white/10 scrollbar-hide">
-                        {duaCollections.map((cat) => (
+        <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
+            {/* Sidebar */}
+            <div className={`lg:w-1/3 flex flex-col bg-white/5 rounded-2xl border border-white/10 overflow-hidden`}>
+                <div className="p-4 border-b border-white/10 space-y-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Search duas..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white placeholder-white/40 focus:outline-none focus:border-accent transition"
+                        />
+                    </div>
+                    <div className="flex justify-between items-center text-white/60">
+                        <span className="text-sm">{filteredCategories.length} Categories</span>
+                        <div className="flex gap-2">
                             <button
-                                key={cat.id}
-                                onClick={() => { setSelectedCategory(cat.id); setExpandedDua(null); }}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all whitespace-nowrap md:whitespace-normal text-left ${selectedCategory === cat.id
-                                        ? 'bg-accent text-white shadow-lg'
-                                        : 'text-primary-200 hover:bg-white/5 hover:text-white'
+                                onClick={() => setIsSidebarGrid(false)}
+                                className={`p-1.5 rounded-lg transition ${!isSidebarGrid ? 'bg-white/10 text-accent' : 'hover:bg-white/5'}`}
+                            >
+                                <ListIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setIsSidebarGrid(true)}
+                                className={`p-1.5 rounded-lg transition ${isSidebarGrid ? 'bg-white/10 text-accent' : 'hover:bg-white/5'}`}
+                            >
+                                <Grid className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+                    <div className={`${isSidebarGrid ? 'grid grid-cols-2 gap-3' : 'space-y-2'}`}>
+                        {filteredCategories.map((cat) => (
+                            <button
+                                key={cat.ID}
+                                onClick={() => setSelectedCategory(cat)}
+                                className={`text-left p-3 rounded-xl transition group relative overflow-hidden ${selectedCategory?.ID === cat.ID
+                                        ? 'bg-accent text-primary-900 font-medium'
+                                        : 'bg-white/5 text-white hover:bg-white/10'
                                     }`}
                             >
-                                <span className="text-2xl">{cat.icon}</span>
-                                <span className="font-semibold">{cat.name}</span>
+                                <div className="flex items-start justify-between gap-2">
+                                    <span className="line-clamp-2 text-sm">{cat.TITLE}</span>
+                                    {!isSidebarGrid && selectedCategory?.ID === cat.ID && (
+                                        <ChevronRight className="w-4 h-4 shrink-0" />
+                                    )}
+                                </div>
                             </button>
                         ))}
                     </div>
                 </div>
+            </div>
 
-                {/* Main Content Area */}
-                <div className="flex-1">
-                    <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6 md:p-8 min-h-[500px]">
-                        <div className="flex items-center gap-3 mb-6 pb-6 border-b border-white/10">
-                            <span className="text-4xl">{activeCollection.icon}</span>
-                            <h3 className="text-2xl font-bold text-white">{activeCollection.name}</h3>
+            {/* Main Content */}
+            <div className="lg:w-2/3 flex flex-col bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+                {selectedCategory ? (
+                    <>
+                        <div className="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-white">{selectedCategory.TITLE}</h2>
+                            {selectedCategory.AUDIO_URL && (
+                                <button
+                                    onClick={() => toggleAudio(selectedCategory.AUDIO_URL)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent rounded-full text-sm font-medium transition"
+                                >
+                                    {playingAudio === selectedCategory.AUDIO_URL ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                                    {playingAudio === selectedCategory.AUDIO_URL ? 'Pause Audio' : 'Play Audio'}
+                                </button>
+                            )}
                         </div>
 
-                        <div className="grid gap-6">
-                            {activeCollection.duas.map((dua, index) => (
-                                <div
-                                    key={index}
-                                    onClick={() => toggleExpand(index)}
-                                    className={`bg-black/20 rounded-2xl p-6 transition-all border border-white/5 cursor-pointer ${expandedDua === index ? 'bg-black/40 scale-[1.01] shadow-xl' : 'hover:bg-black/30'
-                                        }`}
-                                >
-                                    <h4 className="text-accent font-bold text-lg mb-4 flex items-start justify-between">
-                                        <span>{dua.title}</span>
-                                        <div className="flex items-center gap-2">
-                                            {dua.reference && (
-                                                <span className="text-xs bg-white/10 text-white/60 px-2 py-1 rounded">
-                                                    {dua.reference}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                            {selectedCategory.TEXT.map((dua) => (
+                                <div key={dua.ID} className="bg-black/20 rounded-2xl p-6 border border-white/5 space-y-6">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="w-8 h-8 flex items-center justify-center bg-white/10 rounded-full text-xs font-mono text-white/60 shrink-0">
+                                            {dua.ID}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {dua.REPEAT > 1 && (
+                                                <span className="px-3 py-1 bg-white/10 rounded-full text-xs text-white/60">
+                                                    Repeat {dua.REPEAT}x
                                                 </span>
                                             )}
-                                            <span className="text-white/40 text-xs">{expandedDua === index ? 'Collapse' : 'Expand'}</span>
+                                            {dua.AUDIO && (
+                                                <button
+                                                    onClick={() => toggleAudio(dua.AUDIO)}
+                                                    className={`p-2 rounded-full transition ${playingAudio === dua.AUDIO
+                                                            ? 'bg-accent text-primary-900'
+                                                            : 'bg-white/10 text-white hover:bg-white/20'
+                                                        }`}
+                                                >
+                                                    {playingAudio === dua.AUDIO ? <Pause className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                                                </button>
+                                            )}
                                         </div>
-                                    </h4>
+                                    </div>
 
-                                    <p className={`text-white text-2xl md:text-3xl font-serif leading-loose text-right mb-4 ${expandedDua === index ? '' : 'line-clamp-3'}`} dir="rtl">
-                                        {dua.arabic}
-                                    </p>
-
-                                    {dua.transliteration && (
-                                        <p className="text-primary-200 text-sm mb-2 italic">
-                                            "{dua.transliteration}"
+                                    <div className="space-y-6 text-center">
+                                        <p className="text-2xl md:text-3xl leading-loose font-arabic text-white" dir="rtl">
+                                            {dua.ARABIC_TEXT}
                                         </p>
-                                    )}
 
-                                    <p className={`text-white/90 ${expandedDua === index ? '' : 'line-clamp-2'}`}>
-                                        {dua.translation}
-                                    </p>
+                                        {dua.LANGUAGE_ARABIC_TRANSLATED_TEXT && (
+                                            <p className="text-white/60 italic text-sm md:text-base">
+                                                {dua.LANGUAGE_ARABIC_TRANSLATED_TEXT}
+                                            </p>
+                                        )}
+
+                                        <p className="text-white/90 leading-relaxed">
+                                            {dua.TRANSLATED_TEXT}
+                                        </p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
+                    </>
+                ) : (
+                    <div className="flex-1 flex items-center justify-center text-white/40">
+                        Select a category to view duas
                     </div>
-                </div>
+                )}
             </div>
+
+            {/* Hidden Audio Player */}
+            <audio
+                id="dua-audio-player"
+                className="hidden"
+                onEnded={() => setPlayingAudio(null)}
+            />
         </div>
     );
 }

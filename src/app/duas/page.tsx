@@ -1,7 +1,20 @@
+import { auth } from '@/lib/auth/config';
 import Link from 'next/link';
 import DuasClient from './DuasClient';
+import englishData from '@/app/api/json/hisnul_muslim-en.json';
+// Import other languages if available, or handle dynamic loading if strict requirement.
+// For now, loading English to match the user's explicit json file mention.
 
-export default function DuasPage() {
+export default async function DuasPage() {
+    const session = await auth();
+    const language = (session?.user?.language as 'en' | 'bn' | 'ar') || 'en';
+
+    // Map language to data source if multiple files exist.
+    // Assuming for now we use the english one as base or the one specified.
+    // The user showed 'hisnul_muslim-en.json', implying 'en'.
+    // If 'bn' or 'ar' are needed, we would import them too.
+    const data = englishData;
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900">
             {/* Header */}
@@ -19,7 +32,7 @@ export default function DuasPage() {
 
             {/* Main Content */}
             <main className="container mx-auto px-4 py-8">
-                <DuasClient />
+                <DuasClient language={language} data={data as any} />
             </main>
         </div>
     );

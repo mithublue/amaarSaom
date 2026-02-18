@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
 
 interface HadithClientProps {
     initialHadith?: {
@@ -14,10 +15,34 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
     // Track which platforms have been used to share to prevent duplicate points
     const [sharedPlatforms, setSharedPlatforms] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
 
     const hadith = initialHadith || {
         text: "The best of you are those who learn the Quran and teach it.",
         source: "Prophet Muhammad ﷺ (Sahih Bukhari)"
+    };
+
+    const handleDownloadImage = async () => {
+        if (!cardRef.current) return;
+
+        try {
+            setLoading(true);
+            const canvas = await html2canvas(cardRef.current, {
+                backgroundColor: '#1a1c2e', // Match theme dark background
+                scale: 2, // Higher resolution
+            });
+
+            const link = document.createElement('a');
+            link.download = `hadith-ramadan-companion.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            toast.success('Hadith image downloaded! 📸');
+        } catch (error) {
+            console.error('Error generating image:', error);
+            toast.error('Failed to generate image.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleShare = async (platform: 'twitter' | 'facebook' | 'email') => {
@@ -75,9 +100,17 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                 <p className="text-primary-200 text-sm">Day {new Date().getDate()} of Ramadan</p>
             </div>
 
-            <div className="bg-white/5 rounded-2xl p-6 mb-8 group relative overflow-hidden transition-all hover:bg-white/10">
+            <div
+                ref={cardRef}
+                className="bg-white/5 rounded-2xl p-8 mb-8 group relative overflow-hidden transition-all hover:bg-white/10 border border-white/5"
+            >
+                {/* Branding for Screenshot */}
+                <div className="absolute top-4 left-4 text-xs text-white/20 font-bold uppercase tracking-widest pointer-events-none">
+                    Ramadan Companion
+                </div>
+
                 <div className="absolute -right-10 -top-10 text-9xl opacity-5 text-white">❝</div>
-                <p className="text-white text-xl md:text-2xl italic leading-relaxed text-center mb-6 font-serif relative z-10">
+                <p className="text-white text-xl md:text-2xl italic leading-relaxed text-center mb-6 font-serif relative z-10 pt-4">
                     "{hadith.text}"
                 </p>
                 <div className="w-16 h-1 bg-accent/50 mx-auto mb-4 rounded-full"></div>
@@ -94,6 +127,13 @@ export default function HadithClient({ initialHadith }: HadithClientProps) {
                     </p>
                 </div>
                 <div className="flex gap-4">
+                    <button
+                        onClick={handleDownloadImage}
+                        className="p-3 rounded-full transition-all text-white border border-white/10 bg-black/30 hover:bg-accent hover:scale-110"
+                        title="Download Image"
+                    >
+                        📸
+                    </button>
                     <button
                         onClick={() => handleShare('twitter')}
                         className={`p-3 rounded-full transition-all text-white border border-white/10 ${sharedPlatforms.has('twitter') ? 'bg-green-600/50' : 'bg-black/30 hover:bg-[#1DA1F2] hover:scale-110'}`}
