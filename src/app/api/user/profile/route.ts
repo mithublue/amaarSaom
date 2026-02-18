@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, districtId, divisionId, countryId, language } = body;
+        const { name, districtId, divisionId, countryId, language, countryName, cityName } = body;
 
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(session.user.id) },
@@ -75,7 +75,9 @@ export async function PUT(request: NextRequest) {
                 ...(districtId && { districtId: parseInt(districtId) }),
                 ...(divisionId && { divisionId: parseInt(divisionId) }),
                 ...(countryId && { countryId: parseInt(countryId) }),
-                ...(language && { language }),
+                ...(language && { preferredLanguage: language }),
+                ...(countryName && { countryName }),
+                ...(cityName && { cityName }),
             },
             include: {
                 district: true,

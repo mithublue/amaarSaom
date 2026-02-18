@@ -64,6 +64,8 @@ model User {
   name              String           @db.VarChar(100)
   phone             String?          @db.VarChar(20)
   image             String?          @db.Text
+  countryName       String?          @default("Bangladesh") @map("country_name") @db.VarChar(100)
+  cityName          String?          @default("Dhaka") @map("city_name") @db.VarChar(100)
   countryId         Int?             @map("country_id")
   divisionId        Int?             @map("division_id")
   districtId        Int?             @map("district_id")

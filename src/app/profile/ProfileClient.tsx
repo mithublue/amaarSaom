@@ -1,18 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-interface Division {
-    id: number;
-    nameEn: string;
-}
-
-interface District {
-    id: number;
-    nameEn: string;
-}
+import { getAllCountries, getCitiesOfCountry } from '@/lib/locations-package';
 
 export default function ProfileClient({ user }: { user: any }) {
     const router = useRouter();
@@ -23,34 +14,49 @@ export default function ProfileClient({ user }: { user: any }) {
     // Form State
     const [name, setName] = useState(user.name || '');
     const [anonymousName, setAnonymousName] = useState('');
-    const [divisions, setDivisions] = useState<Division[]>([]);
-    const [districts, setDistricts] = useState<District[]>([]);
 
-    const [selectedDivision, setSelectedDivision] = useState<string>('');
-    const [selectedDistrict, setSelectedDistrict] = useState<string>('');
+    // Location Data
+    const allCountries = useMemo(() => getAllCountries(), []);
+    const [cities, setCities] = useState<{ name: string }[]>([]);
 
-    // Fetch initial data
+    // Selection State
+    const [selectedCountryCode, setSelectedCountryCode] = useState('');
+    const [countryName, setCountryName] = useState(user.countryName || 'Bangladesh');
+    const [cityName, setCityName] = useState(user.cityName || 'Dhaka');
+
+    // Initialize
     useEffect(() => {
         const init = async () => {
             try {
                 // Fetch User Profile (to get current location)
                 const profileRes = await fetch('/api/user/profile');
+                if (!profileRes.ok) {
+                    console.error('Profile API failed:', profileRes.status);
+                    return;
+                }
                 const profileData = await profileRes.json();
 
                 if (profileData.success) {
                     const u = profileData.data;
                     setName(u.name);
                     setAnonymousName(u.anonymousName || '');
-                    if (u.divisionId) setSelectedDivision(u.divisionId.toString());
-                    if (u.districtId) setSelectedDistrict(u.districtId.toString());
+
+                    const uCountry = u.countryName || 'Bangladesh';
+                    const uCity = u.cityName || 'Dhaka';
+
+                    setCountryName(uCountry);
+                    setCityName(uCity);
+
+                    // Find code for the saved country name
+                    const foundCountry = allCountries.find(c => c.name === uCountry);
+                    if (foundCountry) {
+                        setSelectedCountryCode(foundCountry.isoCode);
+                    } else {
+                        // Fallback to Bangladesh if not found or empty
+                        const bd = allCountries.find(c => c.name === 'Bangladesh');
+                        if (bd) setSelectedCountryCode(bd.isoCode);
+                    }
                 }
-
-                // Fetch Divisions (Bangladesh ID is likely 1, or just fetch all for now)
-                // Assuming we default to Bangladesh for now as per requirements
-                const divRes = await fetch('/api/locations/divisions');
-                const divData = await divRes.json();
-                setDivisions(divData.data || []);
-
             } catch (error) {
                 console.error('Error initializing profile:', error);
             } finally {
@@ -58,26 +64,34 @@ export default function ProfileClient({ user }: { user: any }) {
             }
         };
         init();
-    }, []);
+    }, [allCountries]);
 
-    // Fetch districts when division changes
+    // Update cities when country code changes
     useEffect(() => {
-        if (!selectedDivision) {
-            setDistricts([]);
-            return;
-        }
+        if (selectedCountryCode) {
+            const countryCities = getCitiesOfCountry(selectedCountryCode);
+            setCities(countryCities);
 
-        const fetchDistricts = async () => {
-            try {
-                const res = await fetch(`/api/locations/districts?divisionId=${selectedDivision}`);
-                const data = await res.json();
-                setDistricts(data.data || []);
-            } catch (error) {
-                console.error('Error fetching districts:', error);
-            }
-        };
-        fetchDistricts();
-    }, [selectedDivision]);
+            // Check if current cityName exists in new list, if not, reset (unless it's initial load)
+            // But for initial load, we want to keep it. 
+            // Better logic: If the list is not empty and current cityName is not in it, reset?
+            // Actually, if we just switched country, we should reset.
+            // But this effect runs on mount too after setting code.
+            // We can check if `cities` was already populated? No.
+            // Let's rely on user interaction to reset.
+        } else {
+            setCities([]);
+        }
+    }, [selectedCountryCode]);
+
+    const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newCode = e.target.value;
+        const countryObj = allCountries.find(c => c.isoCode === newCode);
+
+        setSelectedCountryCode(newCode);
+        setCountryName(countryObj ? countryObj.name : '');
+        setCityName(''); // Reset city on country change
+    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,9 +104,9 @@ export default function ProfileClient({ user }: { user: any }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name,
-                    divisionId: selectedDivision,
-                    districtId: selectedDistrict,
-                    countryId: 1 // Default to Bangladesh
+                    countryName,
+                    cityName,
+                    language: user.preferredLanguage
                 }),
             });
 
@@ -151,41 +165,53 @@ export default function ProfileClient({ user }: { user: any }) {
                     {/* Location Section */}
                     <div className="border-t border-white/10 pt-6">
                         <h3 className="text-xl font-bold text-white mb-4">📍 Location Settings</h3>
-                        <p className="text-primary-300 text-sm mb-6">Set your location to see accurate prayer times and join local leaderboards.</p>
+                        <p className="text-primary-300 text-sm mb-6">
+                            Select your country and city to customize your experience.
+                        </p>
 
                         <div className="grid md:grid-cols-2 gap-6">
-                            {/* Division */}
+                            {/* Country */}
                             <div>
-                                <label className="block text-primary-200 mb-2">Division</label>
+                                <label className="block text-primary-200 mb-2">Country</label>
                                 <select
-                                    value={selectedDivision}
-                                    onChange={(e) => {
-                                        setSelectedDivision(e.target.value);
-                                        setSelectedDistrict(''); // Reset district
-                                    }}
+                                    value={selectedCountryCode}
+                                    onChange={handleCountryChange}
                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent [&>option]:bg-primary-900"
                                 >
-                                    <option value="">Select Division</option>
-                                    {divisions.map((div) => (
-                                        <option key={div.id} value={div.id}>{div.nameEn}</option>
+                                    <option value="">Select Country</option>
+                                    {allCountries.map((c) => (
+                                        <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
                                     ))}
                                 </select>
                             </div>
 
-                            {/* District */}
+                            {/* City */}
                             <div>
-                                <label className="block text-primary-200 mb-2">District</label>
-                                <select
-                                    value={selectedDistrict}
-                                    onChange={(e) => setSelectedDistrict(e.target.value)}
-                                    disabled={!selectedDivision}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent disabled:opacity-50 [&>option]:bg-primary-900"
-                                >
-                                    <option value="">Select District</option>
-                                    {districts.map((dist) => (
-                                        <option key={dist.id} value={dist.id}>{dist.nameEn}</option>
-                                    ))}
-                                </select>
+                                <label className="block text-primary-200 mb-2">City</label>
+                                {cities.length > 0 ? (
+                                    <select
+                                        value={cityName}
+                                        onChange={(e) => setCityName(e.target.value)}
+                                        disabled={!selectedCountryCode}
+                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent disabled:opacity-50 [&>option]:bg-primary-900"
+                                    >
+                                        <option value="">Select City</option>
+                                        {cities.map((city) => (
+                                            <option key={city.name} value={city.name}>{city.name}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        value={cityName}
+                                        onChange={(e) => setCityName(e.target.value)}
+                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent"
+                                        placeholder="Enter City Name"
+                                    />
+                                )}
+                                {cities.length === 0 && selectedCountryCode && (
+                                    <p className="text-xs text-primary-300 mt-1">No cities found for this country, please type manually.</p>
+                                )}
                             </div>
                         </div>
                     </div>
