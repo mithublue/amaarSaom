@@ -257,14 +257,14 @@ export default function HadithClient({ initialHadithData }: HadithClientProps) {
 
                 {/* Filters Row */}
                 <div className="flex flex-col xl:flex-row gap-6 mb-10">
-                    <div className="relative flex-1 group">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400 group-focus-within:text-accent-400 transition-colors">🔍</span>
+                    <div className="relative flex-1 group min-w-[300px]">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent-600 transition-colors">🔍</span>
                         <input
                             type="text"
                             placeholder="Search by keywords, source, or text..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 bg-primary-950/60 border border-white/10 rounded-2xl text-white placeholder:text-primary-500/70 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all shadow-inner"
+                            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-black placeholder:text-gray-400 focus:outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20 transition-all shadow-lg"
                         />
                     </div>
                     <div className="flex gap-2 overflow-x-auto pb-4 xl:pb-0 scrollbar-hide no-scrollbar">
