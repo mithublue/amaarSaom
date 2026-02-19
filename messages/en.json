@@ -84,10 +84,10 @@
     },
     "PrayerTimes": {
         "title": "Today's Prayer Times",
-        "yourLocation": "📍 Your Location:",
+        "yourLocation": "Your Location",
         "country": "Country",
         "city": "City",
-        "useMyLocation": "📍 Use My Location",
+        "useMyLocation": "Use My Location",
         "loading": "Loading prayer times...",
         "error": "Failed to fetch prayer times. Check city/country.",
         "retry": "Retry",

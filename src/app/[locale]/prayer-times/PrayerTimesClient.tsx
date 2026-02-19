@@ -290,7 +290,7 @@ export default function PrayerTimesClient() {
                             <span className="animate-spin">⏳</span>
                         ) : (
                             <>
-                                📍 <span>{t('useMyLocation')}</span>
+                                📍<span>{t('useMyLocation')}</span>
                             </>
                         )}
                     </button>
