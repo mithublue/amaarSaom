@@ -115,7 +115,10 @@ model PredefinedGoodDeed {
   nameEn              String          @map("name_en") @db.VarChar(100)
   nameBn              String?         @map("name_bn") @db.VarChar(100)
   nameAr              String?         @map("name_ar") @db.VarChar(100)
-  category            String          @default("other") @db.VarChar(20)
+  category            String          @default("other") @db.VarChar(50) // Internal key or fallback
+  categoryEn          String?         @map("category_en") @db.VarChar(100)
+  categoryBn          String?         @map("category_bn") @db.VarChar(100)
+  categoryAr          String?         @map("category_ar") @db.VarChar(100)
   tier                String          @default("easy") @db.VarChar(20)
   points              Int             @default(10)
   timeEstimateMinutes Int?            @map("time_estimate_minutes")

@@ -1,18 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 
 interface PredefinedDeed {
     id: number;
     name: string;
     nameEn?: string;
+    nameBn?: string | null;
+    nameAr?: string | null;
     description: string | null;
     descriptionEn?: string | null;
+    descriptionBn?: string | null;
+    descriptionAr?: string | null;
     points: number;
     tier: 'easy' | 'medium' | 'hard';
     category: string | null;
+    categoryEn?: string | null;
+    categoryBn?: string | null;
+    categoryAr?: string | null;
 }
 
 interface CompletedDeed {
@@ -20,7 +27,15 @@ interface CompletedDeed {
     completedAt: Date;
     totalPoints: number;
     predefinedGoodDeed?: {
-        name: string;
+        name: string; // nameEn is mapped to name in DB? No, in DB it's nameEn.
+        // Wait, schema has nameEn. 
+        // The service returns the raw DB object.
+        // So it has nameEn, nameBn, nameAr.
+        // But the type definition here was likely simplified or based on previous assumption.
+        // I should add the potential fields.
+        nameEn: string;
+        nameBn?: string | null;
+        nameAr?: string | null;
         points: number;
     };
     customDeedName?: string | null;
@@ -29,6 +44,7 @@ interface CompletedDeed {
 
 export default function GoodDeedsClient() {
     const t = useTranslations('GoodDeeds');
+    const locale = useLocale();
     const [predefinedDeeds, setPredefinedDeeds] = useState<PredefinedDeed[]>([]);
     const [completedDeeds, setCompletedDeeds] = useState<CompletedDeed[]>([]);
     const [totalPoints, setTotalPoints] = useState(0);
@@ -55,11 +71,26 @@ export default function GoodDeedsClient() {
             const response = await fetch('/api/deeds/predefined');
             const data = await response.json();
             if (data.success) {
-                const mappedDeeds = data.data.map((deed: any) => ({
-                    ...deed,
-                    name: deed.name || deed.nameEn || '',
-                    description: deed.description || deed.descriptionEn || '',
-                }));
+                const mappedDeeds = data.data.map((deed: any) => {
+                    // Logic to pick correct language
+                    // Assuming 'locale' is available in the component via useLocale()
+                    // But wait, I need to get locale hook first.
+                    const name = locale === 'bn' ? (deed.nameBn || deed.nameEn) :
+                        locale === 'ar' ? (deed.nameAr || deed.nameEn) : deed.nameEn;
+
+                    const description = locale === 'bn' ? (deed.descriptionBn || deed.descriptionEn) :
+                        locale === 'ar' ? (deed.descriptionAr || deed.descriptionEn) : deed.descriptionEn;
+
+                    const category = locale === 'bn' ? (deed.categoryBn || deed.categoryEn) :
+                        locale === 'ar' ? (deed.categoryAr || deed.categoryEn) : deed.categoryEn;
+
+                    return {
+                        ...deed,
+                        name: name || '',
+                        description: description || '',
+                        category: category || deed.category || '',
+                    };
+                });
                 setPredefinedDeeds(mappedDeeds);
             }
         } catch (error) {
@@ -286,6 +317,11 @@ export default function GoodDeedsClient() {
                                             {deed.description && (
                                                 <p className="text-primary-300 text-sm mt-1">{deed.description}</p>
                                             )}
+                                            {deed.category && (
+                                                <span className="inline-block mt-2 px-2 py-0.5 bg-white/5 rounded text-[10px] text-primary-400 uppercase tracking-wider border border-white/5">
+                                                    {deed.category}
+                                                </span>
+                                            )}
                                         </div>
                                         <span className={`px-3 py-1 rounded-lg text-xs font-bold border ml-3 whitespace-nowrap ${getTierColor(deed.tier)}`}>
                                             {getTierEmoji(deed.tier)} +{deed.points}
@@ -328,7 +364,11 @@ export default function GoodDeedsClient() {
                                 >
                                     <div>
                                         <h4 className="text-white font-semibold flex items-center gap-2">
-                                            {deed.predefinedGoodDeed?.name || deed.customDeedName}
+                                            {deed.predefinedGoodDeed ? (
+                                                locale === 'bn' ? (deed.predefinedGoodDeed.nameBn || deed.predefinedGoodDeed.nameEn) :
+                                                    locale === 'ar' ? (deed.predefinedGoodDeed.nameAr || deed.predefinedGoodDeed.nameEn) :
+                                                        deed.predefinedGoodDeed.nameEn
+                                            ) : deed.customDeedName}
                                         </h4>
                                         <p className="text-primary-400 text-xs mt-1">
                                             {new Date(deed.completedAt).toLocaleDateString('en-US', {

@@ -78,136 +78,65 @@ async function main() {
     }
 
     // Seed Predefined Good Deeds
-    console.log('✨ Seeding predefined good deeds...');
 
-    const goodDeeds = [
-        // TIER 1: EASY (10-20 points)
-        {
-            nameEn: 'Smiling at someone',
-            nameBn: 'কারো সাথে হাসিমুখে কথা বলা',
-            nameAr: 'ابتسامة في وجه شخص ما',
-            category: 'etiquette',
-            tier: 'easy',
-            points: 10,
-            timeEstimateMinutes: 1,
-            icon: '😊',
-            descriptionEn: 'Your smile is charity',
-        },
-        {
-            nameEn: 'Bedtime dua',
-            nameBn: 'ঘুমানোর আগের দোয়া',
-            nameAr: 'دعاء النوم',
-            category: 'dhikr',
-            tier: 'easy',
-            points: 10,
-            timeEstimateMinutes: 1,
-            icon: '🤲',
-            descriptionEn: 'Recite dua before sleeping',
-        },
-        {
-            nameEn: 'Using miswak',
-            nameBn: 'মিসওয়াক করা',
-            nameAr: 'استخدام السواك',
-            category: 'etiquette',
-            tier: 'easy',
-            points: 15,
-            timeEstimateMinutes: 2,
-            icon: '🪥',
-            descriptionEn: 'Sunnah of the Prophet (SAW)',
-        },
-        {
-            nameEn: 'Responding to adhan',
-            nameBn: 'আজান শুনে উত্তর দেওয়া',
-            nameAr: 'إجابة الأذان',
-            category: 'dhikr',
-            tier: 'easy',
-            points: 20,
-            timeEstimateMinutes: 1,
-            icon: '🕌',
-            descriptionEn: 'Repeat after the muezzin',
-        },
-        // TIER 2: MED IUM (50-80 points)
-        {
-            nameEn: 'Fajr prayer',
-            nameBn: 'ফजরের নামাজ',
-            nameAr: 'صلاة الفجر',
-            category: 'prayer',
-            tier: 'medium',
-            points: 50,
-            timeEstimateMinutes: 10,
-            icon: '🌅',
-            descriptionEn: 'Dawn prayer',
-        },
-        {
-            nameEn: 'Dhuhr prayer',
-            nameBn: 'জোহরের নামাজ',
-            nameAr: 'صلاة الظهر',
-            category: 'prayer',
-            tier: 'medium',
-            points: 50,
-            timeEstimateMinutes: 10,
-            icon: '☀️',
-            descriptionEn: 'Noon prayer',
-        },
-        {
-            nameEn: 'Taraweeh prayer',
-            nameBn: 'তারাবিহ পড়া',
-            nameAr: 'صلاة التراويح',
-            category: 'prayer',
-            tier: 'medium',
-            points: 80,
-            timeEstimateMinutes: 60,
-            icon: '🕌',
-            descriptionEn: 'Ramadan night prayer',
-        },
-        // TIER 3: HARD (100-500 points)
-        {
-            nameEn: 'Reciting 1 Juz Quran',
-            nameBn: 'এক পারা কুরআন তিলাওয়াত',
-            nameAr: 'تلاوة جزء من القرآن',
-            category: 'quran',
-            tier: 'hard',
-            points: 100,
-            timeEstimateMinutes: 60,
-            icon: '📖',
-            descriptionEn: 'Complete one Juz',
-        },
-        {
-            nameEn: 'Tahajjud prayer',
-            nameBn: 'তাহাজ্জুদ পড়া',
-            nameAr: 'صلاة التهجد',
-            category: 'prayer',
-            tier: 'hard',
-            points: 150,
-            timeEstimateMinutes: 30,
-            icon: '🌙',
-            descriptionEn: 'Night vigil prayer',
-        },
-        {
-            nameEn: 'Providing Iftar to someone',
-            nameBn: 'কাউকে ইফतार করানো',
-            nameAr: 'إطعام الصائم',
-            category: 'charity',
-            tier: 'hard',
-            points: 200,
-            timeEstimateMinutes: 30,
-            icon: '🍽️',
-            descriptionEn: 'Feed a fasting person',
-        },
-    ];
+    // Seed Predefined Good Deeds from JSON
+    console.log('✨ Seeding predefined good deeds from JSON...');
 
-    for (const deed of goodDeeds) {
-        await prisma.predefinedGoodDeed.create({
-            data: deed,
+    const amalsPath = require('path').join(__dirname, '../src/app/api/json/amals.json');
+    const amalsData = require(amalsPath);
+
+    for (const deed of amalsData) {
+        // Map JSON fields to Prisma schema fields
+        // JSON has: nameEn, nameBn, nameAr, categoryEn, categoryBn, categoryAr, etc.
+        // Schema has: nameEn, nameBn, nameAr, category, categoryEn, categoryBn, categoryAr, etc.
+
+        await prisma.predefinedGoodDeed.upsert({
+            where: { id: deed.id },
+            update: {
+                nameEn: deed.nameEn,
+                nameBn: deed.nameBn,
+                nameAr: deed.nameAr,
+                category: deed.categoryEn?.toLowerCase() || 'other', // Internal key
+                categoryEn: deed.categoryEn,
+                categoryBn: deed.categoryBn,
+                categoryAr: deed.categoryAr,
+                tier: deed.tier,
+                points: deed.points,
+                timeEstimateMinutes: deed.timeEstimateMinutes,
+                icon: deed.icon,
+                descriptionEn: deed.descriptionEn,
+                // Add descriptions if available in JSON, otherwise null
+                descriptionBn: deed.descriptionBn || null,
+                descriptionAr: deed.descriptionAr || null,
+            },
+            create: {
+                id: deed.id, // Ensure ID is preserved
+                nameEn: deed.nameEn,
+                nameBn: deed.nameBn,
+                nameAr: deed.nameAr,
+                category: deed.categoryEn?.toLowerCase() || 'other',
+                categoryEn: deed.categoryEn,
+                categoryBn: deed.categoryBn,
+                categoryAr: deed.categoryAr,
+                tier: deed.tier,
+                points: deed.points,
+                timeEstimateMinutes: deed.timeEstimateMinutes,
+                icon: deed.icon,
+                descriptionEn: deed.descriptionEn,
+                descriptionBn: deed.descriptionBn || null,
+                descriptionAr: deed.descriptionAr || null,
+            },
         });
     }
+
+    console.log(`   - ${amalsData.length} Predefined Good Deeds (from JSON)`);
 
     console.log('✅ Database seeding completed!');
     console.log(`📊 Created:`);
     console.log(`   - 1 Country (Bangladesh)`);
     console.log(`   - 8 Divisions`);
     console.log(`   - 5 Sample Districts (Dhaka division)`);
-    console.log(`   - ${goodDeeds.length} Predefined Good Deeds`);
+    console.log(`   - ${amalsData.length} Predefined Good Deeds`);
 }
 
 main()
