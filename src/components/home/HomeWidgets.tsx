@@ -141,9 +141,9 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     useEffect(() => {
         (async () => {
             try {
-                const r = await fetch('/api/deeds/history?period=today&limit=100');
+                const r = await fetch('/api/deeds?period=today');
                 const d = await r.json();
-                if (d.success) setTodayDeeds(d.data?.length ?? 0);
+                if (d.success) setTodayDeeds(d.data?.deeds?.length ?? 0);
             } catch { }
         })();
     }, []);
