@@ -62,14 +62,16 @@ export default function HadithClient({ initialHadiths, session, locale, highligh
     // Handle Share
     const handleShare = async () => {
         if (navigator.share && dailyHadith) {
+            // 2. Prepare Data
+            const shareData = {
+                title: 'Daily Hadith',
+                text: `${dailyHadith.textBn}\n\n— ${dailyHadith.source}\n\n#Amaalnama #yaqeen`,
+                url: window.location.href,
+            };
             try {
-                await navigator.share({
-                    title: 'Daily Hadith',
-                    text: `${dailyHadith.textAr}\n\n${dailyHadith.textBn}\n\n${dailyHadith.source}`,
-                    url: window.location.href,
-                });
+                await navigator.share(shareData);
             } catch (err) {
-                console.log('Share cancelled');
+                console.log('Share cancelled', err);
             }
         } else {
             // Fallback: Copy link
@@ -180,7 +182,8 @@ export default function HadithClient({ initialHadiths, session, locale, highligh
                                             onClick={() => {
                                                 if (!dailyHadith) return;
                                                 const url = `${window.location.origin}/${locale}/hadith/${dailyHadith.id}`;
-                                                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+                                                const text = `"${dailyHadith.textBn}"\n— ${dailyHadith.source}\n\n#Amaalnama #yaqeen`;
+                                                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
                                             }}
                                             className="p-2 bg-[#1877F2] hover:bg-[#166fe5] text-white rounded-lg transition-all shadow-sm hover:scale-105"
                                             title="Share on Facebook"
@@ -191,7 +194,7 @@ export default function HadithClient({ initialHadiths, session, locale, highligh
                                             onClick={() => {
                                                 if (!dailyHadith) return;
                                                 const url = `${window.location.origin}/${locale}/hadith/${dailyHadith.id}`;
-                                                const text = `Daily Hadith: ${dailyHadith.textBn.substring(0, 100)}...`;
+                                                const text = `"${dailyHadith.textBn}"\n— ${dailyHadith.source}\n\n#Amaalnama #yaqeen`;
                                                 window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
                                             }}
                                             className="p-2 bg-[#1DA1F2] hover:bg-[#1a91da] text-white rounded-lg transition-all shadow-sm hover:scale-105"
@@ -203,7 +206,8 @@ export default function HadithClient({ initialHadiths, session, locale, highligh
                                             onClick={() => {
                                                 if (!dailyHadith) return;
                                                 const url = `${window.location.origin}/${locale}/hadith/${dailyHadith.id}`;
-                                                navigator.clipboard.writeText(url);
+                                                const text = `"${dailyHadith.textBn}"\n— ${dailyHadith.source}\n\n#Amaalnama #yaqeen`;
+                                                navigator.clipboard.writeText(text);
                                                 setCopied(true);
                                                 setTimeout(() => setCopied(false), 2000);
                                             }}
