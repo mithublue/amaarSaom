@@ -12,20 +12,21 @@ interface HadithClientProps {
     initialHadiths: Hadith[];
     session: any;
     locale: string;
+    highlightedHadith?: Hadith;
 }
 
-export default function HadithClient({ initialHadiths, session, locale }: HadithClientProps) {
+export default function HadithClient({ initialHadiths, session, locale, highlightedHadith }: HadithClientProps) {
     const t = useTranslations('HadithPage');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
-    const [dailyHadith, setDailyHadith] = useState<Hadith | null>(null);
+    const [dailyHadith, setDailyHadith] = useState<Hadith | null>(highlightedHadith || null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [downloading, setDownloading] = useState(false);
     const [copied, setCopied] = useState(false);
 
     // Set Daily Hadith (Random for now, could be based on date)
     useEffect(() => {
-        if (initialHadiths.length > 0) {
+        if (!highlightedHadith && initialHadiths.length > 0) {
             // Pick a deterministic hadith based on the day of the year
             const today = new Date();
             const start = new Date(today.getFullYear(), 0, 0);
@@ -35,7 +36,7 @@ export default function HadithClient({ initialHadiths, session, locale }: Hadith
             const index = dayOfYear % initialHadiths.length;
             setDailyHadith(initialHadiths[index]);
         }
-    }, [initialHadiths]);
+    }, [initialHadiths, highlightedHadith]);
 
     // Handle Download Image
     const handleDownload = async () => {
@@ -108,7 +109,7 @@ export default function HadithClient({ initialHadiths, session, locale }: Hadith
                         <span className="text-3xl">📖</span>
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-200 to-primary-400 font-heading">
-                        {t('title')} 📖
+                        {t('title')}
                     </h1>
                     <p className="text-primary-300 max-w-2xl mx-auto">
                         {t('subtitle')}
@@ -171,12 +172,47 @@ export default function HadithClient({ initialHadiths, session, locale }: Hadith
                                         {t('saveImage') || 'Save Image'}
                                     </button>
 
-                                    <button
-                                        onClick={handleShare}
-                                        className="p-2 bg-accent-600 hover:bg-accent-500 text-white rounded-xl transition-all shadow-lg hover:shadow-accent-500/25"
-                                    >
-                                        <Share2 className="w-4 h-4" />
-                                    </button>
+                                    <div className="h-8 w-[1px] bg-white/10 mx-1"></div>
+
+                                    {/* Social Share Buttons */}
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={() => {
+                                                if (!dailyHadith) return;
+                                                const url = `${window.location.origin}/${locale}/hadith/${dailyHadith.id}`;
+                                                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+                                            }}
+                                            className="p-2 bg-[#1877F2] hover:bg-[#166fe5] text-white rounded-lg transition-all shadow-sm hover:scale-105"
+                                            title="Share on Facebook"
+                                        >
+                                            <Facebook className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (!dailyHadith) return;
+                                                const url = `${window.location.origin}/${locale}/hadith/${dailyHadith.id}`;
+                                                const text = `Daily Hadith: ${dailyHadith.textBn.substring(0, 100)}...`;
+                                                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                                            }}
+                                            className="p-2 bg-[#1DA1F2] hover:bg-[#1a91da] text-white rounded-lg transition-all shadow-sm hover:scale-105"
+                                            title="Share on Twitter"
+                                        >
+                                            <Twitter className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (!dailyHadith) return;
+                                                const url = `${window.location.origin}/${locale}/hadith/${dailyHadith.id}`;
+                                                navigator.clipboard.writeText(url);
+                                                setCopied(true);
+                                                setTimeout(() => setCopied(false), 2000);
+                                            }}
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all shadow-sm hover:scale-105"
+                                            title="Copy Link"
+                                        >
+                                            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -217,8 +253,8 @@ export default function HadithClient({ initialHadiths, session, locale }: Hadith
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}
                                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === cat
-                                        ? 'bg-accent-600 text-white shadow-lg shadow-accent-600/20'
-                                        : 'bg-primary-800 text-primary-300 hover:bg-primary-700 hover:text-white'
+                                    ? 'bg-accent-600 text-white shadow-lg shadow-accent-600/20'
+                                    : 'bg-primary-800 text-primary-300 hover:bg-primary-700 hover:text-white'
                                     }`}
                             >
                                 {cat === 'All' ? t('allCategories') : cat}

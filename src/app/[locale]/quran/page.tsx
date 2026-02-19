@@ -17,7 +17,7 @@ export default async function QuranPage({ params }: { params: Promise<{ locale: 
     const session = await auth();
 
     return (
-        <div className="min-h-screen flex flex-col font-sans">
+        <div className="min-h-screen flex flex-col font-sans bg-primary-950 text-white">
             <Navbar session={session} locale={locale} />
 
             <main className="flex-grow container mx-auto px-4 py-8 mt-24">

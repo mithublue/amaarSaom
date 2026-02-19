@@ -1,9 +1,12 @@
 import { getChapterDetails, getChapterVerses } from '@/lib/services/quranService';
 import SurahReader from '../SurahReader';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import { auth } from '@/lib/auth/config';
 
 type Props = {
-    params: Promise<{ surahId: string }>;
+    params: Promise<{ surahId: string; locale: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -17,7 +20,9 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function SurahPage({ params }: Props) {
     const resolvedParams = await params;
+    const { locale } = resolvedParams;
     const surahId = parseInt(resolvedParams.surahId);
+    const session = await auth();
 
     // Parallel fetch for speed
     const [surah, verses] = await Promise.all([
@@ -27,34 +32,34 @@ export default async function SurahPage({ params }: Props) {
 
     if (!surah) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-white">
-                Surah not found.
-                <Link href="/quran" className="ml-4 underline text-accent">Go Back</Link>
+            <div className="min-h-screen flex items-center justify-center text-white bg-primary-950">
+                <div className="text-center">
+                    <p className="mb-4">Surah not found.</p>
+                    <Link href="/quran" className="underline text-accent-400">Go Back</Link>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900 pb-20">
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-primary-900/90 backdrop-blur-md border-b border-white/10 shadow-lg">
-                <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-                    <Link
-                        href="/quran"
-                        className="p-2 bg-white/5 rounded-xl text-white hover:bg-white/10 transition"
-                    >
-                        ← Back
-                    </Link>
-                    <h1 className="text-xl font-bold text-white flex-1 text-center pr-12">
-                        {surah.name_simple} <span className="font-normal text-primary-200 ml-2">({surah.translated_name.name})</span>
-                    </h1>
-                </div>
-            </header>
+        <div className="min-h-screen flex flex-col font-sans bg-primary-950 text-white">
+            <Navbar session={session} locale={locale} />
 
             {/* Content */}
-            <main className="container mx-auto px-4 py-8">
-                <SurahReader surah={surah} verses={verses} />
+            <main className="flex-grow container mx-auto px-4 py-8 mt-24">
+                <div className="max-w-4xl mx-auto">
+                    <Link
+                        href="/quran"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-primary-200 hover:bg-white/10 hover:text-white transition-all shadow-sm mb-6"
+                    >
+                        <span>←</span> Back to List
+                    </Link>
+
+                    <SurahReader surah={surah} verses={verses} />
+                </div>
             </main>
+
+            <Footer language={locale as any} />
         </div>
     );
 }

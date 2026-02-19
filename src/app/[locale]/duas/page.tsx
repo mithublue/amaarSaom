@@ -26,7 +26,7 @@ export default async function DuasPage() {
     const data = dataMap[locale] || dataMap.default;
 
     return (
-        <div className="min-h-screen flex flex-col font-sans">
+        <div className="min-h-screen flex flex-col font-sans bg-primary-950 text-white">
             <Navbar session={session} locale={locale} />
 
             {/* Main Content */}
