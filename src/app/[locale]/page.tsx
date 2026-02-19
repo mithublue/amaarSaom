@@ -47,7 +47,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                             </Link>
                         ) : (
                             <Link href="/api/auth/signin" className="px-8 py-4 bg-accent-600 hover:bg-accent-500 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-accent-500/25 flex items-center justify-center gap-2 transform hover:scale-105">
-                                <span>🚀</span> {t('signInButton')}
+                                {t('signInButton')}
                             </Link>
                         )}
                         <Link href="/iftar-sehri" className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-full font-semibold transition-all backdrop-blur-sm border border-white/10 flex items-center justify-center gap-2 hover:border-white/20">

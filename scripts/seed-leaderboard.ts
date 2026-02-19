@@ -133,7 +133,7 @@ async function main() {
     }
 
     console.log(`✅ Generated ${deedsCount} completed deeds.`);
-    console.log('🚀 Leaderboard seeding finished!');
+    console.log('Leaderboard seeding finished!');
 }
 
 main()

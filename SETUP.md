@@ -130,4 +130,4 @@ Redis is optional for development. The app will work without it, but without cac
 
 ---
 
-**Status**: Ready for database setup! 🚀
+**Status**: Ready for database setup! 

@@ -199,7 +199,7 @@ export default function LeaderboardClient() {
 
                         {data?.entries.length === 0 && (
                             <div className="text-center py-20 px-4">
-                                <div className="text-6xl mb-6 opacity-20">🚀</div>
+                                <div className="text-6xl mb-6 opacity-20"></div>
                                 <p className="text-primary-300 text-lg font-medium opacity-60">
                                     No one has earned points in this period yet. <br />
                                     <span className="text-accent-400 font-bold underline cursor-pointer hover:text-accent-300">Be the first to lead!</span>
