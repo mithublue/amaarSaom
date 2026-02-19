@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 
 interface PrayerTimes {
     Fajr: string;
@@ -109,11 +109,13 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     const [iftarSehri, setIftarSehri] = useState({ label: '', countdown: '' });
     const [todayDeeds, setTodayDeeds] = useState(0);
     const [nearbyUser, setNearbyUser] = useState<NearbyUser | null>(null);
-    const [deeds, setDeeds] = useState<DeedSuggestion[]>(() => {
-        // Pick 4 random from DEED_SUGGESTIONS (cycling)
+    const [deeds, setDeeds] = useState<DeedSuggestion[]>(DEED_SUGGESTIONS.slice(0, 4));
+
+    // Pick random deeds only on client to avoid hydration mismatch
+    useEffect(() => {
         const shuffled = [...DEED_SUGGESTIONS].sort(() => Math.random() - 0.5);
-        return shuffled.slice(0, 4);
-    });
+        setDeeds(shuffled.slice(0, 4));
+    }, []);
 
     // Fetch prayer times from profile/default
     useEffect(() => {
