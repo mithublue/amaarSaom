@@ -18,9 +18,9 @@ export default async function SignInPage() {
 
             <div className="max-w-md w-full relative z-10 animate-fade-in">
                 {/* Logo/Icon */}
-                <div className="text-center mb-10">
-                    <div className="inline-block w-24 h-24 rounded-3xl bg-linear-to-br from-accent-500 to-accent-600 shadow-gold-glow flex items-center justify-center mb-6 ring-4 ring-white/10 group hover:scale-105 transition duration-500">
-                        <span className="text-6xl group-hover:rotate-12 transition duration-500 inline-block">🌙</span>
+                <div className="flex flex-col items-center text-center mb-10 mt-10">
+                    <div className="inline-flex w-24 h-24 rounded-3xl bg-linear-to-br from-accent-500 to-accent-600 shadow-gold-glow items-center justify-center mb-6 ring-4 ring-white/10 group hover:scale-105 transition duration-500">
+                        <span className="text-6xl group-hover:rotate-12 transition duration-500">🌙</span>
                     </div>
                     <h1 className="text-4xl font-heading font-bold text-white mb-2 drop-shadow-md">
                         Ramadan Companion
