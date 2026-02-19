@@ -223,7 +223,7 @@ export default function GoodDeedsClient() {
                             placeholder={t('searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-primary-950/50 border border-white/10 rounded-xl text-white placeholder-primary-500 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition shadow-inner"
+                            className="w-full pl-11 pr-4 py-3 bg-primary-800 text-white border border-white/10 rounded-xl focus:outline-none focus:border-accent-500 placeholder-primary-500 transition shadow-inner"
                         />
                     </div>
 

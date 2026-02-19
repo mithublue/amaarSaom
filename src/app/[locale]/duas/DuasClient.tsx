@@ -82,7 +82,7 @@ export default function DuasClient({ language, data }: DuasClientProps) {
                             placeholder="Search categories..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-primary-950/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-primary-500 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all shadow-inner"
+                            className="w-full bg-primary-800 text-white border border-white/10 rounded-xl pl-11 pr-4 py-3 placeholder-primary-500 focus:outline-none focus:border-accent-500 transition-all shadow-inner"
                         />
                     </div>
                     <div className="flex justify-between items-center text-primary-300">

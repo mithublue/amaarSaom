@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from '@/i18n/routing';
 import { Chapter } from '@/lib/services/quranService';
+import { Search } from 'lucide-react';
 
 export default function SurahListClient({ chapters }: { chapters: Chapter[] }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -46,13 +47,16 @@ export default function SurahListClient({ chapters }: { chapters: Chapter[] }) {
                 <h3 className="text-2xl font-bold text-white flex items-center gap-2">
                     Start Reciting <span className="text-accent-400 text-lg">✨</span>
                 </h3>
-                <input
-                    type="text"
-                    placeholder="Search Surah (e.g. Yasin, 36)..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full md:w-72 bg-primary-950/50 border border-white/10 rounded-xl px-5 py-3 text-white placeholder-primary-500 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition shadow-sm"
-                />
+                <div className="relative w-full md:w-72">
+                    <input
+                        type="text"
+                        placeholder="Search Surah (e.g. Yasin, 36)..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-primary-800 text-white border border-white/10 rounded-xl focus:outline-none focus:border-accent-500 placeholder-primary-500 transition shadow-inner"
+                    />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-500 w-4 h-4" />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

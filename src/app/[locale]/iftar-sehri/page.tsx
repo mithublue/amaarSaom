@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { auth } from '@/lib/auth/config';
 import IftarSehriClient from './IftarSehriClient';
 
