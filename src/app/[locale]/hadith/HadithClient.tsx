@@ -22,7 +22,7 @@ export default function HadithClient({ initialHadiths, session, locale, highligh
     const [dailyHadith, setDailyHadith] = useState<Hadith | null>(highlightedHadith || null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [downloading, setDownloading] = useState(false);
-    const [copied, setCopied] = useState(false);
+    const [copiedId, setCopiedId] = useState<number | null>(null);
 
     // Set Daily Hadith (Random for now, could be based on date)
     useEffect(() => {
@@ -208,13 +208,13 @@ export default function HadithClient({ initialHadiths, session, locale, highligh
                                                 const url = `${window.location.origin}/${locale}/hadith/${dailyHadith.id}`;
                                                 const text = `"${dailyHadith.textBn}"\n— ${dailyHadith.source}\n\n#Amaalnama #yaqeen`;
                                                 navigator.clipboard.writeText(text);
-                                                setCopied(true);
-                                                setTimeout(() => setCopied(false), 2000);
+                                                setCopiedId(-1); // Use -1 for main card
+                                                setTimeout(() => setCopiedId(null), 2000);
                                             }}
                                             className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all shadow-sm hover:scale-105"
                                             title="Copy Link"
                                         >
-                                            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                                            {copiedId === -1 ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
                                         </button>
                                     </div>
                                 </div>
@@ -287,12 +287,12 @@ export default function HadithClient({ initialHadiths, session, locale, highligh
                                     <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(`${hadith.textAr}\n\n${hadith.textBn}\n\n${hadith.source}`);
-                                            setCopied(true);
-                                            setTimeout(() => setCopied(false), 2000);
+                                            setCopiedId(hadith.id);
+                                            setTimeout(() => setCopiedId(null), 2000);
                                         }}
                                         className="text-primary-500 hover:text-white transition-colors"
                                     >
-                                        {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                                        {copiedId === hadith.id ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
                                     </button>
                                 </div>
 
