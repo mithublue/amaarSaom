@@ -163,87 +163,103 @@ export default function PrayerTimesClient() {
     return (
         <div className="w-full">
             {/* Location Selector */}
-            <div className="mb-8 bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 relative z-20">
-                <div className="flex justify-between items-center mb-4">
-                    <label className="block text-white font-semibold text-lg">
-                        📍 {t('yourLocation')}
-                    </label>
+            {/* Location Selection Section */}
+            <div className="bg-primary-900/40 backdrop-blur-md border border-white/10 rounded-app-lg p-6 md:p-8 shadow-glass mb-12">
+                <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+                    <h3 className="text-primary-200 text-sm font-medium flex items-center gap-2">
+                        <span className="text-accent-400 text-lg">📍</span>
+                        {t('yourLocation')}: <span className="text-white font-bold ml-1">{location.city}, {location.country}</span>
+                    </h3>
 
-                    {/* Time Format Toggle */}
-                    <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1 border border-white/5">
+                    <div className="flex bg-primary-950/50 rounded-lg p-1 border border-white/5">
                         <button
                             onClick={() => setIs24Hour(false)}
-                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${!is24Hour ? 'bg-accent-600 text-white shadow-sm' : 'text-primary-300 hover:text-white'}`}
+                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${!is24Hour
+                                ? 'bg-accent-600 text-white shadow-sm'
+                                : 'text-primary-400 hover:text-white'
+                                }`}
                         >
                             12H
                         </button>
                         <button
                             onClick={() => setIs24Hour(true)}
-                            className={`px-3 py-1 rounded-md text-sm font-medium transition ${is24Hour ? 'bg-accent-600 text-white shadow-sm' : 'text-primary-300 hover:text-white'}`}
+                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${is24Hour
+                                ? 'bg-accent-600 text-white shadow-sm'
+                                : 'text-primary-400 hover:text-white'
+                                }`}
                         >
                             24H
                         </button>
                     </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-4">
+                <div className="grid md:grid-cols-2 gap-6 items-end">
                     {/* Country Selector */}
-                    <select
-                        value={location.country}
-                        onChange={(e) => {
-                            const newCountry = e.target.value;
-                            const newCity = commonCities[newCountry] ? commonCities[newCountry][0] : '';
-                            setLocation(prev => ({ ...prev, country: newCountry, city: newCity, useCoords: false }));
-                            setCityInput(newCity);
-                        }}
-                        className="flex-1 px-4 py-3 rounded-xl bg-primary-950/50 text-white border border-white/10 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
-                    >
-                        {countries.map((c) => (
-                            <option key={c} value={c} className="bg-primary-900">{c}</option>
-                        ))}
-                    </select>
-
-                    {/* City Input/Selector */}
-                    <div className="relative flex-1">
-                        <input
-                            type="text"
-                            value={cityInput}
+                    <div className="relative group w-full">
+                        <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">{t('country')}</label>
+                        <select
+                            value={location.country}
                             onChange={(e) => {
-                                setCityInput(e.target.value);
-                                setShowSuggestions(true);
+                                const newCountry = e.target.value;
+                                const newCity = commonCities[newCountry] ? commonCities[newCountry][0] : '';
+                                setLocation(prev => ({ ...prev, country: newCountry, city: newCity, useCoords: false }));
+                                setCityInput(newCity);
                             }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleManualSubmit();
-                            }}
-                            onFocus={() => setShowSuggestions(true)}
-                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                            className="w-full px-4 py-3 rounded-xl bg-primary-950/50 text-white border border-white/10 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 placeholder-primary-400"
-                            placeholder={t('enterCity')}
-                        />
-                        {/* Search Button */}
-                        <button
-                            onClick={handleManualSubmit}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-primary-400 hover:text-white"
+                            className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
                         >
-                            🔍
-                        </button>
-
-                        {showSuggestions && citySuggestions.length > 0 && (
-                            <div className="absolute z-50 w-full mt-1 bg-primary-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto backdrop-blur-xl">
-                                {citySuggestions.filter(c => c.toLowerCase().includes(cityInput.toLowerCase())).map((suggestion) => (
-                                    <button
-                                        key={suggestion}
-                                        type="button"
-                                        onClick={() => handleCitySelect(suggestion)}
-                                        className="w-full text-left px-4 py-3 text-primary-100 hover:bg-white/5 transition border-b border-white/5 last:border-0"
-                                    >
-                                        {suggestion}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                            {countries.map((c) => (
+                                <option key={c} value={c} className="bg-primary-900 text-white">{c}</option>
+                            ))}
+                        </select>
+                        <div className="absolute right-4 bottom-3.5 pointer-events-none text-primary-400 text-xs">▼</div>
                     </div>
 
+                    {/* City Input/Selector */}
+                    <div className="relative group w-full">
+                        <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">{t('city')}</label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={cityInput}
+                                onChange={(e) => {
+                                    setCityInput(e.target.value);
+                                    setShowSuggestions(true);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleManualSubmit();
+                                }}
+                                onFocus={() => setShowSuggestions(true)}
+                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 placeholder:text-primary-400 transition-colors hover:bg-primary-950/70"
+                                placeholder={t('enterCity')}
+                            />
+                            {/* Search Button */}
+                            <button
+                                onClick={handleManualSubmit}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-primary-400 hover:text-white"
+                            >
+                                🔍
+                            </button>
+
+                            {showSuggestions && citySuggestions.length > 0 && (
+                                <div className="absolute z-50 w-full mt-1 bg-primary-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto backdrop-blur-xl">
+                                    {citySuggestions.filter(c => c.toLowerCase().includes(cityInput.toLowerCase())).map((suggestion) => (
+                                        <button
+                                            key={suggestion}
+                                            type="button"
+                                            onClick={() => handleCitySelect(suggestion)}
+                                            className="w-full text-left px-4 py-3 text-primary-100 hover:bg-white/5 transition border-b border-white/5 last:border-0"
+                                        >
+                                            {suggestion}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end mt-6">
                     <button
                         onClick={() => {
                             if (navigator.geolocation) {
@@ -267,10 +283,16 @@ export default function PrayerTimesClient() {
                                 alert('Geolocation is not supported by this browser.');
                             }
                         }}
-                        className="px-6 py-3 bg-gradient-to-r from-accent-600 to-accent-500 text-white rounded-xl hover:from-accent-500 hover:to-accent-400 transition flex items-center gap-2 font-bold whitespace-nowrap justify-center shadow-gold-glow"
-                        title="Use My Exact Location"
+                        disabled={loading}
+                        className="w-full md:w-auto px-6 py-3 bg-accent-600 text-white rounded-xl hover:bg-accent-500 transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-gold-glow disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        📍 {t('useMyLocation')}
+                        {loading ? (
+                            <span className="animate-spin">⏳</span>
+                        ) : (
+                            <>
+                                📍 <span>{t('useMyLocation')}</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

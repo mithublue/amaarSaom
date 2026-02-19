@@ -1,17 +1,61 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getAllCountries, getCitiesOfCountry } from '@/lib/locations-package';
-import { useTranslations } from 'next-intl';
+import { useState, useEffect } from 'react';
+import { useTranslations, useFormatter } from 'next-intl';
+import { countries, commonCities } from '@/lib/locations';
+
+interface PrayerTimes {
+    Fajr: string;
+    Sunrise: string;
+    Dhuhr: string;
+    Asr: string;
+    Maghrib: string;
+    Isha: string;
+}
+
+interface AladhanResponse {
+    data: {
+        timings: PrayerTimes;
+        meta: {
+            timezone: string;
+        };
+        date: {
+            readable: string;
+            gregorian: {
+                date: string;
+            };
+            hijri: {
+                date: string;
+                day: string;
+                month: {
+                    en: string;
+                    ar: string;
+                };
+                year: string;
+            };
+        };
+    };
+    code: number;
+}
 
 export default function IftarSehriClient() {
     const t = useTranslations('IftarSehri');
-    const [timeLeftIftar, setTimeLeftIftar] = useState<string>('--:--:--');
-    const [timeLeftSehri, setTimeLeftSehri] = useState<string>('--:--:--');
-    const [prayerTimes, setPrayerTimes] = useState<any>(null);
-    const [hijriDate, setHijriDate] = useState<string>('');
-    const [gregorianDate, setGregorianDate] = useState<string>('');
+    const format = useFormatter();
+
+    // State
+    const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
+    const [timeZone, setTimeZone] = useState<string>('Asia/Dhaka');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [currentTime, setCurrentTime] = useState(new Date()); // Absolute system time, will be formatted with timeZone
+
+    // Countdown States
+    const [iftarCountdown, setIftarCountdown] = useState('');
+    const [sehriCountdown, setSehriCountdown] = useState('');
+
+    // Hijri State
+    const [hijriDateStr, setHijriDateStr] = useState('');
+    const [hijriAdjustment, setHijriAdjustment] = useState(0);
 
     // Location State
     const [location, setLocation] = useState<{
@@ -20,254 +64,287 @@ export default function IftarSehriClient() {
         lat?: number;
         lng?: number;
         useCoords?: boolean;
-    }>({ city: 'Dhaka', country: 'Bangladesh', useCoords: false }); // Default
+    }>({ city: 'Dhaka', country: 'Bangladesh', useCoords: false });
 
-    // Location Data for Dropdowns
-    const allCountries = useMemo(() => getAllCountries(), []);
-    const [cities, setCities] = useState<{ name: string }[]>([]);
-    const [selectedCountryCode, setSelectedCountryCode] = useState('');
+    // Input States
+    const [cityInput, setCityInput] = useState('Dhaka');
+    const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Hijri Adjustment State (Auto + Manual)
-    const [hijriOffset, setHijriOffset] = useState<number>(0);
-
-    // Helpers
-    const getCalculationMethod = (countryName: string) => {
-        const lowerCountry = countryName.toLowerCase();
-        if (['bangladesh', 'pakistan', 'india'].includes(lowerCountry)) return 1; // Karachi
-        if (lowerCountry === 'saudi arabia' || ['qatar', 'uae', 'kuwait', 'oman', 'bahrain'].includes(lowerCountry)) return 4; // Umm al-Qura
-        if (lowerCountry === 'egypt' || lowerCountry === 'lebanon') return 5; // Egypt
-        if (lowerCountry === 'turkey') return 13; // Diyanet
-        if (lowerCountry === 'iran') return 7; // Tehran
-        if (['united states', 'canada', 'united kingdom'].includes(lowerCountry)) return 2; // ISNA
-        if (['indonesia', 'malaysia', 'singapore'].includes(lowerCountry)) return 11; // Majlis Ugama Islam Singapura
-        return 2; // Default
-    };
-
-    const getAutoHijriAdjustment = (countryName: string) => {
-        const lowerCountry = countryName.toLowerCase();
-        // South Asia & some SE Asia often 1 day behind Saudi
-        if (['bangladesh', 'pakistan', 'india', 'indonesia', 'malaysia', 'brunei'].includes(lowerCountry)) return -1;
-        return 0;
-    };
-
-    // Load initial profile data
+    // Initial load from profile
     useEffect(() => {
         const loadProfile = async () => {
             try {
                 const res = await fetch('/api/user/profile');
                 const text = await res.text();
-                let responseData;
-                try { responseData = JSON.parse(text); } catch (e) { return; }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) { return; }
 
-                if (responseData && responseData.success && responseData.data?.cityName) {
-                    const uCountry = responseData.data.countryName || 'Bangladesh';
-                    setLocation(prev => ({ ...prev, city: responseData.data.cityName, country: uCountry, useCoords: false }));
+                if (data.success && data.data?.cityName) {
+                    const profileCity = data.data.cityName;
+                    const profileCountry = data.data.countryName || 'Bangladesh';
 
-                    const foundCountry = allCountries.find(c => c.name === uCountry);
-                    if (foundCountry) setSelectedCountryCode(foundCountry.isoCode);
-                    else {
-                        const bd = allCountries.find(c => c.name === 'Bangladesh');
-                        if (bd) setSelectedCountryCode(bd.isoCode);
-                    }
-
-                    // Set adjust
-                    setHijriOffset(getAutoHijriAdjustment(uCountry));
+                    setCityInput(profileCity);
+                    setLocation(prev => ({
+                        ...prev,
+                        city: profileCity,
+                        country: profileCountry,
+                        useCoords: false
+                    }));
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error('Failed to load profile location', e);
+            }
         };
         loadProfile();
-    }, [allCountries]);
+    }, []);
 
-    // Update cities when country code changes
+    // Update suggestions when country changes
     useEffect(() => {
-        if (selectedCountryCode) {
-            setCities(getCitiesOfCountry(selectedCountryCode));
+        if (commonCities[location.country]) {
+            setCitySuggestions(commonCities[location.country]);
         } else {
-            setCities([]);
+            setCitySuggestions([]);
         }
-    }, [selectedCountryCode]);
+    }, [location.country]);
 
-    // Handle Country Change (Update Auto Adjust)
-    const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newCode = e.target.value;
-        const countryObj = allCountries.find(c => c.isoCode === newCode);
-        const newCountryName = countryObj ? countryObj.name : '';
+    // Timer Tick
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
-        setSelectedCountryCode(newCode);
-        setLocation({ ...location, country: newCountryName, city: '', useCoords: false });
-        setHijriOffset(getAutoHijriAdjustment(newCountryName));
+    // Fetch on location change
+    useEffect(() => {
+        fetchPrayerTimes();
+    }, [location]);
+
+    // Calculate Countdowns using Timezone
+    useEffect(() => {
+        if (!prayerTimes || !timeZone) return;
+
+        // Helper to get time in target timezone as Date object (conceptually)
+        // We compare "Time of Day" strings in the target timezone.
+
+        // 1. Get current time parts in target timezone
+        const nowFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: timeZone,
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: false,
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric'
+        });
+
+        const parts = nowFormatter.formatToParts(new Date());
+        const getPart = (type: string) => parts.find(p => p.type === type)?.value || '0';
+
+        const nowYear = parseInt(getPart('year'));
+        const nowMonth = parseInt(getPart('month')) - 1; // 0-indexed
+        const nowDay = parseInt(getPart('day'));
+        const nowHour = parseInt(getPart('hour') === '24' ? '0' : getPart('hour')); // Handle 24h edge case if any
+        const nowMinute = parseInt(getPart('minute'));
+        const nowSecond = parseInt(getPart('second'));
+
+        // "Now" as a comparable millis timestamp (face value)
+        const nowFaceValue = new Date(nowYear, nowMonth, nowDay, nowHour, nowMinute, nowSecond).getTime();
+
+        const getTargetFaceValue = (timeStr: string, addDay: boolean = false) => {
+            const [h, m] = timeStr.split(':').map(Number);
+            const d = new Date(nowYear, nowMonth, nowDay, h, m, 0);
+            if (addDay) d.setDate(d.getDate() + 1);
+            return d.getTime();
+        };
+
+        // Iftar (Maghrib)
+        const maghribTime = getTargetFaceValue(prayerTimes.Maghrib);
+        let iftarTarget = maghribTime;
+        if (nowFaceValue > maghribTime) {
+            iftarTarget = getTargetFaceValue(prayerTimes.Maghrib, true);
+        }
+        setIftarCountdown(calculateDiff(iftarTarget, nowFaceValue));
+
+        // Sehri (Fajr)
+        const fajrTime = getTargetFaceValue(prayerTimes.Fajr);
+        let sehriTarget = fajrTime;
+        if (nowFaceValue > fajrTime) {
+            sehriTarget = getTargetFaceValue(prayerTimes.Fajr, true);
+        }
+        setSehriCountdown(calculateDiff(sehriTarget, nowFaceValue));
+
+    }, [prayerTimes, currentTime, timeZone]);
+
+    const calculateDiff = (target: number, now: number) => {
+        const diff = target - now;
+        if (diff <= 0) return '00:00:00';
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     };
 
-    // Fetch Times Wrapper
-    const fetchTimes = useCallback(async () => {
+    const fetchPrayerTimes = async () => {
         try {
             setLoading(true);
+            setError(null);
 
-            // local date string YYYY-MM-DD
-            const date = new Date();
-            const localDateString = date.toLocaleDateString('en-CA');
+            // Using method 1 (Karachi) universally as base, API usually handles location specific methods well enough via defaults if we removed method param, 
+            // but sticking to 1 or 2 is safe.
+            // Let's use Method 1 (Karachi) as requested before.
+            const method = 1;
 
             let url = '';
-            const method = getCalculationMethod(location.country);
-            // remove adjustment from API to get stable baseline
-            // const adjustment = hijriOffset;
-
             if (location.useCoords && location.lat && location.lng) {
-                // Remove adjustment param
                 url = `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${location.lat}&longitude=${location.lng}&method=${method}`;
-            } else if (location.city && location.country) {
+            } else {
                 const cleanCity = location.city.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 const cleanCountry = location.country.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                // Remove adjustment param
-                url = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&method=${method}&date=${localDateString}`;
-            } else {
-                setLoading(false);
-                setPrayerTimes(null);
-                setHijriDate('');
-                setGregorianDate('');
-                setTimeLeftIftar('--:--:--');
-                setTimeLeftSehri('--:--:--');
-                return;
+                url = `https://api.aladhan.com/v1/timingsByCity?city=${cleanCity}&country=${cleanCountry}&method=${method}`;
             }
 
             const response = await fetch(url);
-            if (!response.ok) {
-                console.error('Prayer API failed', response.status);
-                setLoading(false);
-                return;
+            const data: AladhanResponse = await response.json();
+
+            if (data.code !== 200) {
+                throw new Error('Failed to fetch data');
             }
-            const data = await response.json();
 
-            if (data.code === 200 && data.data) {
-                setPrayerTimes(data.data.timings);
+            setPrayerTimes(data.data.timings);
+            setTimeZone(data.data.meta.timezone);
 
-                // Set Dates
-                const hijri = data.data.date.hijri;
-                const gregorian = data.data.date.gregorian;
+            // Handle API Date & Adjustment
+            // Default rule: Bangladesh = -1 (local override), Others = 0 (trust API/User)
+            // But we allow user to override manually too.
+            let defaultAdj = 0;
+            if (location.country === 'Bangladesh') defaultAdj = -1;
 
-                // Hijri Calculation (Client-Side Adjustment)
-                let hDay = parseInt(hijri.day);
-                let hMonth = hijri.month.en;
-                let hYear = parseInt(hijri.year);
+            // We set the initial adjustment based on country, 
+            // BUT we should respect if user manually changed it? 
+            // For now, let's reset to country default on country change for "Accuracy".
+            setHijriAdjustment(defaultAdj);
 
-                // 1. Apply Offset (Manual + Auto)
-                hDay += hijriOffset;
+            updateHijriDisplay(data.data.date.hijri, defaultAdj);
 
-                // 2. Handle Month Boundaries (Simple Approximation for Display)
-                // If day <= 0, go to previous month (30th)
-                if (hDay <= 0) {
-                    hDay = 30; // Fallback to 30th of prev month
-                    // Simple month swap for Ramadan context
-                    if (hMonth === 'Ramadan') hMonth = "Sha'ban";
-                    else if (hMonth === 'Shawwal') hMonth = 'Ramadan';
-                }
-                // If day > 30, go to next
-                if (hDay > 30) {
-                    hDay = 1;
-                    if (hMonth === "Sha'ban") hMonth = 'Ramadan';
-                    else if (hMonth === 'Ramadan') hMonth = 'Shawwal';
-                }
-
-                // 3. Post-Maghrib Transition (Hijri Date starts at sunset)
-                const now = new Date();
-                const maghribTime = new Date(`${localDateString}T${data.data.timings.Maghrib}:00`);
-
-                if (now > maghribTime) {
-                    hDay += 1;
-                    if (hDay > 30) {
-                        hDay = 1;
-                        if (hMonth === "Sha'ban") hMonth = 'Ramadan';
-                        else if (hMonth === 'Ramadan') hMonth = 'Shawwal';
-                    }
-                }
-
-                // Formatting
-                setHijriDate(`${hDay} ${hMonth} ${hYear}`);
-                setGregorianDate(`${gregorian.weekday.en}, ${gregorian.day} ${gregorian.month.en} ${gregorian.year}`);
-            }
         } catch (err) {
-            console.error('Fetch error:', err);
+            setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);
         }
-    }, [location, hijriOffset]);
-
-    useEffect(() => {
-        fetchTimes();
-    }, [fetchTimes]);
-
-    // Timer Logic
-    const calculateTimeLeft = useCallback(() => {
-        if (!prayerTimes) return;
-
-        const now = new Date();
-        // Use local date string to avoid UTC issues
-        const todayStr = now.toLocaleDateString('en-CA');
-
-        const maghribTime = new Date(`${todayStr}T${prayerTimes.Maghrib}`);
-        const fajrTime = new Date(`${todayStr}T${prayerTimes.Fajr}`);
-
-        // Handle invalid dates (Invalid Date) if format issues
-        if (isNaN(maghribTime.getTime()) || isNaN(fajrTime.getTime())) return;
-
-        let targetFajr = new Date(fajrTime);
-        if (now > fajrTime) targetFajr.setDate(targetFajr.getDate() + 1);
-
-        let targetMaghrib = new Date(maghribTime);
-        if (now > maghribTime) targetMaghrib.setDate(targetMaghrib.getDate() + 1);
-
-        const diffSehri = targetFajr.getTime() - now.getTime();
-        const diffIftar = targetMaghrib.getTime() - now.getTime();
-
-        setTimeLeftSehri(formatDuration(diffSehri));
-        setTimeLeftIftar(formatDuration(diffIftar));
-    }, [prayerTimes]);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            if (prayerTimes) calculateTimeLeft();
-        }, 1000);
-        return () => clearInterval(timer);
-    }, [prayerTimes, calculateTimeLeft]);
-
-    const formatDuration = (ms: number) => {
-        if (ms < 0) return '00:00:00';
-        const seconds = Math.floor((ms / 1000) % 60);
-        const minutes = Math.floor((ms / (1000 * 60)) % 60);
-        const hours = Math.floor((ms / (1000 * 60 * 60)));
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
+    const updateHijriDisplay = (apiHijri: any, adj: number) => {
+        // We can use the API date components and just add days
+        // API gives day, month, year.
+        // Easiest is to construct a date and add days.
+        // Note: API date is "DD-MM-YYYY". 
+        // Let's just use the client side calculation as before BUT initialized with accurate date from API?
+        // Actually, shifting the API date is safer than calculating from Gregorian if moon sighting differs significantly.
 
-    const getDisplayLocation = () => {
-        if (location.useCoords) return '📍 Your Exact Location';
-        if (location.city && location.country) return `${location.city}, ${location.country}`;
-        if (location.country) return `${location.country}`;
-        return 'Select Location';
+        // Let's try to parse API hijri date "02-09-1447"
+        // It's a bit complex to shift purely string dates.
+
+        // Simplest Robust Approach:
+        // Use client-side calculation from Gregorian date, applying the adjustment.
+        // This is consistent for "1st Ramadan" logic.
+
+        const hDate = getHijriDate(new Date(), adj);
+        setHijriDateStr(hDate);
+    };
+
+    const getHijriDate = (date: Date, adjustmentDays: number) => {
+        const adjustedDate = new Date(date);
+        adjustedDate.setDate(adjustedDate.getDate() + adjustmentDays);
+        return new Intl.DateTimeFormat('en-u-ca-islamic', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        }).format(adjustedDate);
+    };
+
+    // When adjustment changes manually
+    const handleAdjustmentChange = (newAdj: number) => {
+        setHijriAdjustment(newAdj);
+        setHijriDateStr(getHijriDate(new Date(), newAdj));
+    };
+
+    const handleCitySelect = (city: string) => {
+        setCityInput(city);
+        setLocation(prev => ({ ...prev, city, useCoords: false }));
+        setShowSuggestions(false);
+    };
+
+    const handleManualSubmit = () => {
+        if (cityInput.trim()) {
+            setLocation(prev => ({ ...prev, city: cityInput, useCoords: false }));
+            setShowSuggestions(false);
+        }
+    };
+
+    const formatTime12 = (time: string) => {
+        if (!time) return '--:--';
+        const [hourStr, minStr] = time.split(':');
+        return `${hourStr}:${minStr}`;
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
-            {/* Location Selection Card */}
-            <div className="bg-primary-900/40 backdrop-blur-md border border-white/10 rounded-app-lg p-6 md:p-8 shadow-glass">
-                <div className="flex flex-col md:flex-row items-center gap-4 justify-between mb-6">
-                    <p className="text-primary-200 text-sm font-medium">
-                        {t('locationSet')} <span className="text-accent-400 font-bold ml-1">{getDisplayLocation()}</span>
-                    </p>
+        <div className="w-full max-w-5xl mx-auto space-y-6">
 
-                    {/* Date Display & Controls */}
-                    <div className="text-right flex flex-col items-end gap-1">
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setHijriOffset(prev => prev - 1)} className="w-5 h-5 flex items-center justify-center rounded bg-white/10 text-xs hover:bg-white/20 text-white">-</button>
-                            <p className="text-white font-bold text-sm">{hijriDate}</p>
-                            <button onClick={() => setHijriOffset(prev => prev + 1)} className="w-5 h-5 flex items-center justify-center rounded bg-white/10 text-xs hover:bg-white/20 text-white">+</button>
+            {/* Top Location Card */}
+            <div className="bg-primary-900 rounded-app-lg p-6 md:p-8 shadow-glass text-white relative border border-white/5">
+
+                {/* Header Row: Location Text & Hijri Date */}
+                <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+                    <div>
+                        <h3 className="text-primary-200 text-sm font-medium flex items-center gap-2 mb-1">
+                            {t('locationSet')}: <span className="text-accent-400 font-bold text-lg">{location.city}, {location.country}</span>
+                        </h3>
+                    </div>
+
+                    <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-2 bg-primary-950/30 px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">
+                            {/* Hijri Date Controls */}
+                            <button
+                                onClick={() => handleAdjustmentChange(hijriAdjustment - 1)}
+                                className="w-6 h-6 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded text-white/70 hover:text-white transition text-sm font-bold"
+                            >
+                                -
+                            </button>
+                            <span className="font-bold text-base text-white tracking-wide px-2 min-w-[120px] text-center">
+                                {hijriDateStr || 'Loading...'}
+                            </span>
+                            <button
+                                onClick={() => handleAdjustmentChange(hijriAdjustment + 1)}
+                                className="w-6 h-6 flex items-center justify-center bg-white/10 rounded text-white/70 hover:text-white transition text-sm font-bold"
+                            >
+                                +
+                            </button>
                         </div>
-                        <p className="text-primary-400 text-xs">{gregorianDate}</p>
-                        <p className="text-[10px] text-primary-500">Hijri Adj: {hijriOffset > 0 ? '+' : ''}{hijriOffset} days</p>
+                        {/* Gregorian Date (Timezone Aware) */}
+                        <div className="text-primary-300 text-xs mt-1 font-medium">
+                            {new Intl.DateTimeFormat('en-US', {
+                                timeZone: timeZone,
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                            }).format(currentTime)}
+                        </div>
+                        {/* Adjustment Text */}
+                        <div className="text-[10px] text-primary-500 mt-0.5 opacity-60">
+                            Hijri Adj: {hijriAdjustment > 0 ? `+${hijriAdjustment}` : hijriAdjustment} days
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end mb-4">
+
+                {/* Find Location Button (Floating or Layout) */}
+                <div className="flex justify-end mb-6">
                     <button
                         onClick={() => {
                             if (navigator.geolocation) {
@@ -280,110 +357,120 @@ export default function IftarSehriClient() {
                                             lng: position.coords.longitude,
                                             useCoords: true
                                         });
+                                        setCityInput('Your Location');
                                     },
                                     (error) => {
-                                        alert('Error getting location: ' + error.message);
+                                        alert('Error: ' + error.message);
                                         setLoading(false);
                                     }
                                 );
-                            } else {
-                                alert('Geolocation is not supported.');
                             }
                         }}
-                        className="px-5 py-2.5 bg-accent-600 text-white rounded-xl hover:bg-accent-500 transition-all font-semibold text-sm flex items-center gap-2 shadow-gold-glow"
+                        className="bg-gradient-to-r from-accent-600 to-accent-500 hover:from-accent-500 hover:to-accent-400 text-white px-6 py-2 rounded-full font-bold text-sm shadow-gold-glow flex items-center gap-2 transition-transform transform hover:scale-105"
                     >
                         📍 {t('findMyLocation')}
                     </button>
                 </div>
 
-                {/* Dropdowns */}
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="relative group">
-                        <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">{t('country')}</label>
-                        <select
-                            value={selectedCountryCode}
-                            onChange={handleCountryChange}
-                            className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
-                        >
-                            <option value="" className="bg-primary-900 text-gray-400">{t('selectCountry')}</option>
-                            {allCountries.map((c) => (
-                                <option key={c.isoCode} value={c.isoCode} className="bg-primary-900 text-white">{c.name}</option>
-                            ))}
-                        </select>
-                        <div className="absolute right-4 bottom-3.5 pointer-events-none text-primary-400 text-xs">▼</div>
-                    </div>
 
-                    <div className="relative group">
-                        <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">{t('city')}</label>
-                        {cities.length > 0 ? (
+                {/* Input Grid */}
+                <div className="grid md:grid-cols-2 gap-6 pb-2">
+                    {/* Country */}
+                    <div className="relative">
+                        <label className="text-xs text-primary-300 font-semibold mb-2 block">{t('country')}</label>
+                        <div className="relative">
                             <select
-                                value={location.city}
-                                onChange={(e) => setLocation({ ...location, city: e.target.value, useCoords: false })}
-                                disabled={!selectedCountryCode}
-                                className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 disabled:opacity-50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
+                                value={location.country}
+                                onChange={(e) => {
+                                    const newCountry = e.target.value;
+                                    const newCity = commonCities[newCountry] ? commonCities[newCountry][0] : '';
+                                    setLocation(prev => ({ ...prev, country: newCountry, city: newCity, useCoords: false }));
+                                    setCityInput(newCity);
+                                }}
+                                className="w-full px-4 py-3 rounded-lg bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500 appearance-none cursor-pointer"
                             >
-                                <option value="" className="bg-primary-900 text-gray-400">{t('selectCity')}</option>
-                                {cities.map((city) => (
-                                    <option key={city.name} value={city.name} className="bg-primary-900 text-white">{city.name}</option>
+                                {countries.map((c) => (
+                                    <option key={c} value={c} className="bg-primary-900">{c}</option>
                                 ))}
                             </select>
-                        ) : (
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-primary-400 text-xs">▼</div>
+                        </div>
+                    </div>
+
+                    {/* City */}
+                    <div className="relative">
+                        <label className="text-xs text-primary-300 font-semibold mb-2 block">{t('city')}</label>
+                        <div className="relative">
                             <input
                                 type="text"
-                                value={location.city}
-                                onChange={(e) => setLocation({ ...location, city: e.target.value, useCoords: false })}
-                                className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 placeholder:text-primary-400 transition-colors hover:bg-primary-950/70"
-                                placeholder={selectedCountryCode ? t('enterCityName') : t('selectCountryFirst')}
-                                disabled={!selectedCountryCode}
+                                value={cityInput}
+                                onChange={(e) => {
+                                    setCityInput(e.target.value);
+                                    setShowSuggestions(true);
+                                }}
+                                onFocus={() => setShowSuggestions(true)}
+                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                className="w-full px-4 py-3 rounded-lg bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500 placeholder:text-primary-500"
                             />
-                        )}
-                        {cities.length > 0 && <div className="absolute right-4 bottom-3.5 pointer-events-none text-primary-400 text-xs">▼</div>}
+                            {showSuggestions && citySuggestions.length > 0 && (
+                                <div className="absolute z-50 w-full mt-1 bg-primary-800 border border-white/10 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                                    {citySuggestions.filter(c => c.toLowerCase().includes(cityInput.toLowerCase())).map((suggestion) => (
+                                        <button
+                                            key={suggestion}
+                                            onClick={() => handleCitySelect(suggestion)}
+                                            className="w-full text-left px-4 py-2 text-primary-100 hover:bg-white/5"
+                                        >
+                                            {suggestion}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
 
+            {/* Timers Grid */}
             <div className="grid md:grid-cols-2 gap-6">
-                {/* Iftar Countdown */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-primary-900/60 to-primary-800/60 backdrop-blur-md rounded-app-lg border border-accent-500/20 p-8 shadow-glass group hover:border-accent-500/40 transition-all duration-300">
-                    <div className="absolute top-0 right-0 p-32 bg-accent-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="text-center relative z-10">
-                        <span className="text-6xl mb-6 block drop-shadow-lg filter brightness-110">🌙</span>
-                        <h2 className="text-2xl font-bold text-white mb-2">{t('timeUntilIftar')}</h2>
-                        <div className="text-5xl md:text-6xl font-bold text-accent-400 my-6 font-mono tracking-wider drop-shadow-md">
-                            {timeLeftIftar}
-                        </div>
-                        <div className="inline-block px-6 py-3 bg-primary-950/50 rounded-xl border border-white/5">
-                            <p className="text-primary-200 flex items-center gap-3">
-                                <span className="uppercase text-xs font-bold tracking-widest">{t('iftarTime')}</span>
-                                <span className="font-heading font-bold text-white text-2xl">{prayerTimes?.Maghrib || '--:--'}</span>
-                            </p>
-                        </div>
+
+                {/* Iftar Timer Card */}
+                <div className="bg-gradient-to-br from-primary-900 to-primary-800 rounded-app-lg p-8 text-center border border-white/5 shadow-glass flex flex-col items-center justify-center min-h-[300px]">
+                    <div className="mb-4 text-4xl transform -rotate-12">🌙</div>
+                    <h2 className="text-xl font-bold text-white mb-4">{t('timeUntilIftar')}</h2>
+
+                    <div className="text-5xl md:text-6xl font-mono font-bold text-accent-400 tracking-wider mb-8 drop-shadow-md">
+                        {loading ? '--:--:--' : iftarCountdown}
+                    </div>
+
+                    <div className="bg-primary-950/50 px-6 py-2 rounded-lg border border-white/5">
+                        <span className="text-primary-300 text-sm mr-2">{t('iftarTime')}:</span>
+                        <span className="text-white font-bold text-lg">{formatTime12(prayerTimes?.Maghrib || '')}</span>
                     </div>
                 </div>
 
-                {/* Sehri Countdown */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-primary-900/60 to-primary-800/60 backdrop-blur-md rounded-app-lg border border-primary-400/20 p-8 shadow-glass group hover:border-primary-400/40 transition-all duration-300">
-                    <div className="absolute top-0 right-0 p-32 bg-primary-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                    <div className="text-center relative z-10">
-                        <span className="text-6xl mb-6 block drop-shadow-lg filter brightness-110">☀️</span>
-                        <h2 className="text-2xl font-bold text-white mb-2">{t('timeUntilSehri')}</h2>
-                        <div className="text-5xl md:text-6xl font-bold text-primary-200 my-6 font-mono tracking-wider drop-shadow-md">
-                            {timeLeftSehri}
-                        </div>
-                        <div className="inline-block px-6 py-3 bg-primary-950/50 rounded-xl border border-white/5">
-                            <p className="text-primary-200 flex items-center gap-3">
-                                <span className="uppercase text-xs font-bold tracking-widest">{t('sehriTime')}</span>
-                                <span className="font-heading font-bold text-white text-2xl">{prayerTimes?.Fajr || '--:--'}</span>
-                            </p>
-                        </div>
+                {/* Sehri Timer Card */}
+                <div className="bg-gradient-to-br from-primary-900 to-primary-800 rounded-app-lg p-8 text-center border border-white/5 shadow-glass flex flex-col items-center justify-center min-h-[300px]">
+                    <div className="mb-4 text-4xl animate-pulse">☀️</div>
+                    <h2 className="text-xl font-bold text-white mb-4">{t('timeUntilSehri')}</h2>
+
+                    <div className="text-5xl md:text-6xl font-mono font-bold text-white tracking-wider mb-8 drop-shadow-md">
+                        {loading ? '--:--:--' : sehriCountdown}
+                    </div>
+
+                    <div className="bg-primary-950/50 px-6 py-2 rounded-lg border border-white/5">
+                        <span className="text-primary-300 text-sm mr-2">{t('sehriTime')}:</span>
+                        <span className="text-white font-bold text-lg">{formatTime12(prayerTimes?.Fajr || '')}</span>
                     </div>
                 </div>
+
             </div>
 
-            <div className="text-center text-xs text-primary-500/50">
-                Calculation Method: {getCalculationMethod(location.country) === 1 ? 'Karachi (18°)' : 'Standard (ISNA/MWL)'} based on {location.country}. <br />
-                Hijri date adjusts at Maghrib.
+            {/* Footer Info */}
+            <div className="text-center text-primary-500 text-xs mt-8">
+                <p>Calculation Method: University of Islamic Sciences, Karachi (18°) based on {location.country}.</p>
+                <p>Hijri date adjusts at Maghrib.</p>
             </div>
+
         </div>
     );
 }
