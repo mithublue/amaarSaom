@@ -98,7 +98,7 @@
     },
     "IftarSehri": {
         "locationSet": "Location set to:",
-        "findMyLocation": "📍 Find time in my location",
+        "findMyLocation": "Find time in my location",
         "timeUntilIftar": "Time Until Iftar",
         "timeUntilSehri": "Time Until Sehri Ends",
         "iftarTime": "Iftar Time:",

@@ -32,7 +32,7 @@ export default async function DuasPage() {
             {/* Main Content */}
             <main className="flex-grow container mx-auto px-4 py-8 mt-24">
                 <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-12 animate-fade-in">
+                    <div className="text-center mb-8 md:mb-12 animate-fade-in hidden md:block">
                         <div className="inline-block p-4 rounded-full bg-primary-800/20 border border-primary-500/30 mb-6 shadow-gold-glow">
                             <span className="text-4xl">🤲</span>
                         </div>
