@@ -90,7 +90,7 @@
         "loading": "Loading prayer times...",
         "error": "Failed to fetch prayer times. Check city/country.",
         "retry": "Retry",
-        "calculationMethod": "Prayer times calculated using Islamic Society of North America (ISNA) method",
+        "calculationMethod": "Prayer times calculated using University of Islamic Sciences, Karachi method",
         "nextIftar": "Next: Iftar Time",
         "sehriEnds": "Sehri Ends At",
         "enterCity": "Enter City"
@@ -156,7 +156,8 @@
         "copied": "Hadith copied to clipboard! ✅",
         "copy": "Copy",
         "metaTitle": "Hadith Collection | Ramadan Companion",
-        "metaDesc": "Read and share authentic Hadiths categorized by topic."
+        "metaDesc": "Read and share authentic Hadiths categorized by topic.",
+        "saveImage": "Save Image"
     },
     "Duas": {
         "title": "Duas & Amal 🤲"

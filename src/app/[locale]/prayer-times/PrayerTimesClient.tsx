@@ -111,11 +111,11 @@ export default function PrayerTimesClient() {
 
             let url = '';
             if (location.useCoords && location.lat && location.lng) {
-                url = `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${location.lat}&longitude=${location.lng}&method=2`;
+                url = `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${location.lat}&longitude=${location.lng}&method=1`;
             } else {
                 const cleanCity = location.city.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 const cleanCountry = location.country.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                url = `https://api.aladhan.com/v1/timingsByCity?city=${cleanCity}&country=${cleanCountry}&method=2`;
+                url = `https://api.aladhan.com/v1/timingsByCity?city=${cleanCity}&country=${cleanCountry}&method=1`;
             }
 
             const response = await fetch(url);
@@ -368,7 +368,7 @@ export default function PrayerTimesClient() {
                 {/* Info Footer */}
                 <div className="mt-8 pt-6 border-t border-white/10 text-center">
                     <p className="text-primary-400 text-sm">
-                        {t('calculationMethod')} • Muslim World League (MWL)
+                        {t('calculationMethod')} • University of Islamic Sciences, Karachi
                     </p>
                 </div>
             </div>
