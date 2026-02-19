@@ -71,7 +71,7 @@ export default function DuasClient({ language, data }: DuasClientProps) {
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 h-auto lg:h-[calc(100vh-280px)] min-h-[600px] animate-fade-in relative pt-16 lg:pt-0">
 
             {/* Mobile Sticky Header */}
-            <div className="lg:hidden fixed top-[80px] left-0 right-0 z-30 bg-primary-950/90 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between shadow-md">
+            <div className="lg:hidden fixed top-[64px] left-0 right-0 z-30 bg-primary-950/90 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between shadow-md">
                 <button
                     onClick={() => setIsMobileMenuOpen(true)}
                     className="p-2 -ml-2 text-white hover:bg-white/10 rounded-lg transition-colors"

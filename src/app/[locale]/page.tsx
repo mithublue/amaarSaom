@@ -3,6 +3,7 @@ import { Link } from '@/i18n/routing';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { auth } from '@/lib/auth/config';
+import HomeWidgets from '@/components/home/HomeWidgets';
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
@@ -32,33 +33,34 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-5 pointer-events-none"></div>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-accent-500/20 rounded-full blur-[120px] pointer-events-none"></div>
 
-                <div className="max-w-4xl mx-auto text-center relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-tight text-white">
-                        {t('greeting')}{firstName ? <>, <span className="text-accent-400">{firstName}!</span></> : ''} 👋
-                    </h1>
-                    <p className="text-lg md:text-2xl text-primary-200 mb-10 max-w-2xl mx-auto leading-relaxed">
-                        {t('welcomeMessage')}
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        {session ? (
-                            <Link href="/prayer-times" className="px-8 py-4 bg-accent-600 hover:bg-accent-500 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-accent-500/25 flex items-center justify-center gap-2 transform hover:scale-105">
-                                <span>🕌</span> {t('features.prayerTimes.title')}
-                            </Link>
-                        ) : (
-                            <Link href="/api/auth/signin" className="px-8 py-4 bg-accent-600 hover:bg-accent-500 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-accent-500/25 flex items-center justify-center gap-2 transform hover:scale-105">
-                                {t('signInButton')}
-                            </Link>
-                        )}
-                        <Link href="/iftar-sehri" className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-full font-semibold transition-all backdrop-blur-sm border border-white/10 flex items-center justify-center gap-2 hover:border-white/20">
-                            <span>🌙</span> {t('features.iftarSehri.title')}
-                        </Link>
-                    </div>
+                <div className="max-w-4xl mx-auto relative z-10">
+                    {session ? (
+                        /* Logged-in: Quick Action Widgets */
+                        <HomeWidgets userName={firstName} locale={locale} />
+                    ) : (
+                        /* Guest: Welcome Hero */
+                        <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-tight text-white">
+                                {t('greeting')} 👋
+                            </h1>
+                            <p className="text-lg md:text-2xl text-primary-200 mb-10 max-w-2xl mx-auto leading-relaxed">
+                                {t('welcomeMessage')}
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link href="/auth/signin" className="px-8 py-4 bg-accent-600 hover:bg-accent-500 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-accent-500/25 flex items-center justify-center gap-2 transform hover:scale-105">
+                                    {t('signInButton')}
+                                </Link>
+                                <Link href="/iftar-sehri" className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-full font-semibold transition-all backdrop-blur-sm border border-white/10 flex items-center justify-center gap-2 hover:border-white/20">
+                                    <span>🌙</span> {t('features.iftarSehri.title')}
+                                </Link>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </section>
 
             {/* Features Grid */}
-            <section className="py-20 px-4 relative">
+            <section className="py-12 px-4 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {features.map((feature, idx) => (
