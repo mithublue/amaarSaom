@@ -90,7 +90,21 @@
         "retry": "পুনরায় চেষ্টা করুন",
         "calculationMethod": "নামাজের সময় করাচি বিশ্ববিদ্যালয় (University of Islamic Sciences, Karachi) পদ্ধতি ব্যবহার করে গণনা করা হয়েছে",
         "nextIftar": "পরবর্তী: ইফতারের সময়",
-        "sehriEnds": "সেহরির শেষ সময়"
+        "sehriEnds": "সেহরির শেষ সময়",
+        "subtitle": "আপনার অবস্থানের সঠিক নামাজের সময়সূচী",
+        "prayerNames": {
+            "Fajr": "ফজর",
+            "Sunrise": "সূর্যোদয়",
+            "Dhuhr": "জোহর",
+            "Asr": "আসর",
+            "Sunset": "সূর্যাস্ত",
+            "Maghrib": "মাগরিব",
+            "Isha": "এশা",
+            "Imsak": "ইমসাক",
+            "Midnight": "মধ্যরাত",
+            "Firstthird": "রাতের প্রথম ভাগ",
+            "Lastthird": "রাতের শেষ ভাগ"
+        }
     },
     "IftarSehri": {
         "locationSet": "লোকেশন সেট করা হয়েছে:",

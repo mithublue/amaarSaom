@@ -25,7 +25,7 @@ export default async function PrayerTimesPage({ params }: { params: Promise<{ lo
                             {t('title')}
                         </h1>
                         <p className="text-xl text-primary-200 max-w-2xl mx-auto">
-                            Accurate prayer times for your location
+                            {t('subtitle')}
                         </p>
                     </div>
 

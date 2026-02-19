@@ -355,7 +355,7 @@ export default function PrayerTimesClient() {
                                         {name === 'Maghrib' && '🌇'}
                                         {name === 'Isha' && '🌙'}
                                     </div>
-                                    <span className="text-xl font-bold text-white tracking-wide">{name}</span>
+                                    <span className="text-xl font-bold text-white tracking-wide">{t(`prayerNames.${name}` as any)}</span>
                                 </div>
                                 <span className="text-2xl font-mono font-bold text-accent-400 group-hover:text-accent-300 transition-colors bg-black/20 px-4 py-2 rounded-lg border border-white/5">
                                     {formatTime(time as string)}

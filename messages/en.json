@@ -94,6 +94,20 @@
         "calculationMethod": "Prayer times calculated using University of Islamic Sciences, Karachi method",
         "nextIftar": "Next: Iftar Time",
         "sehriEnds": "Sehri Ends At",
+        "subtitle": "Accurate prayer times for your location",
+        "prayerNames": {
+            "Fajr": "Fajr",
+            "Sunrise": "Sunrise",
+            "Dhuhr": "Dhuhr",
+            "Asr": "Asr",
+            "Sunset": "Sunset",
+            "Maghrib": "Maghrib",
+            "Isha": "Isha",
+            "Imsak": "Imsak",
+            "Midnight": "Midnight",
+            "Firstthird": "First Third",
+            "Lastthird": "Last Third"
+        },
         "enterCity": "Enter City"
     },
     "IftarSehri": {
