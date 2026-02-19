@@ -148,6 +148,16 @@
         "browseMore": "Browse More Hadith",
         "comingSoon": "More authentic Hadith collection coming soon! Browse by topic, collection, and bookmark your favorites."
     },
+    "HadithPage": {
+        "title": "Hadith Collection 📚",
+        "subtitle": "Seek knowledge and guidance from the sayings of Prophet Muhammad (PBUH)",
+        "searchPlaceholder": "Search Hadith (English, Bangla, or Arabic)...",
+        "allCategories": "All Categories",
+        "copied": "Hadith copied to clipboard! ✅",
+        "copy": "Copy",
+        "metaTitle": "Hadith Collection | Ramadan Companion",
+        "metaDesc": "Read and share authentic Hadiths categorized by topic."
+    },
     "Duas": {
         "title": "Duas & Amal 🤲"
     },

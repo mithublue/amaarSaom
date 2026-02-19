@@ -12,16 +12,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
     const { locale } = await params;
     const session = await auth();
 
-    if (!session) {
-        redirect({ href: '/auth/signin', locale });
-        return null;
+    if (!session?.user) {
+        redirect({ href: '/api/auth/signin', locale });
     }
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-background-default via-primary-50 to-primary-100 pb-20">
-            <div className="container mx-auto px-4 py-8">
-                <ProfileClient user={session.user} />
-            </div>
-        </main>
+        <ProfileClient user={session!.user} locale={locale} />
     );
 }

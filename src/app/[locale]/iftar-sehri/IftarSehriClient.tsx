@@ -40,7 +40,8 @@ interface AladhanResponse {
 
 export default function IftarSehriClient() {
     const t = useTranslations('IftarSehri');
-    const format = useFormatter();
+    // const format = useFormatter(); // Removed unused
+    // const format = useFormatter(); // Removed unused
 
     // State
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
