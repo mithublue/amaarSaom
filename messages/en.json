@@ -8,6 +8,7 @@
         "welcomeMessage": "May this Ramadan bring you peace, blessings, and spiritual growth",
         "signInTitle": "🔒 Sign In to Start Your Journey",
         "signInDesc": "Track your prayers, complete good deeds, and compete with your community!",
+        "signIn": "Sign In",
         "signInButton": "Sign In with Google 🚀",
         "features": {
             "prayerTimes": {

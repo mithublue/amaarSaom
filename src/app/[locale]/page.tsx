@@ -20,7 +20,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         { key: 'zakat', href: '/zakat', icon: '💰', color: 'bg-green-600' },
     ];
 
-    const firstName = session?.user?.name?.split(' ')[0] || t('guest');
+    const firstName = session?.user?.name?.split(' ')[0];
 
     return (
         <main className="min-h-screen bg-primary-950 text-white selection:bg-accent-500 selection:text-white">
@@ -34,7 +34,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
                 <div className="max-w-4xl mx-auto text-center relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-tight text-white">
-                        {t('greeting')}, <span className="text-accent-400">{firstName}!</span> 👋
+                        {t('greeting')}{firstName ? <>, <span className="text-accent-400">{firstName}!</span></> : ''} 👋
                     </h1>
                     <p className="text-lg md:text-2xl text-primary-200 mb-10 max-w-2xl mx-auto leading-relaxed">
                         {t('welcomeMessage')}
