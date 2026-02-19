@@ -9,6 +9,8 @@ export default function IftarSehriClient() {
     const [timeLeftIftar, setTimeLeftIftar] = useState<string>('--:--:--');
     const [timeLeftSehri, setTimeLeftSehri] = useState<string>('--:--:--');
     const [prayerTimes, setPrayerTimes] = useState<any>(null);
+    const [hijriDate, setHijriDate] = useState<string>('');
+    const [gregorianDate, setGregorianDate] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
     // Location State
@@ -25,43 +27,53 @@ export default function IftarSehriClient() {
     const [cities, setCities] = useState<{ name: string }[]>([]);
     const [selectedCountryCode, setSelectedCountryCode] = useState('');
 
+    // Hijri Adjustment State (Auto + Manual)
+    const [hijriOffset, setHijriOffset] = useState<number>(0);
+
+    // Helpers
+    const getCalculationMethod = (countryName: string) => {
+        const lowerCountry = countryName.toLowerCase();
+        if (['bangladesh', 'pakistan', 'india'].includes(lowerCountry)) return 1; // Karachi
+        if (lowerCountry === 'saudi arabia' || ['qatar', 'uae', 'kuwait', 'oman', 'bahrain'].includes(lowerCountry)) return 4; // Umm al-Qura
+        if (lowerCountry === 'egypt' || lowerCountry === 'lebanon') return 5; // Egypt
+        if (lowerCountry === 'turkey') return 13; // Diyanet
+        if (lowerCountry === 'iran') return 7; // Tehran
+        if (['united states', 'canada', 'united kingdom'].includes(lowerCountry)) return 2; // ISNA
+        if (['indonesia', 'malaysia', 'singapore'].includes(lowerCountry)) return 11; // Majlis Ugama Islam Singapura
+        return 2; // Default
+    };
+
+    const getAutoHijriAdjustment = (countryName: string) => {
+        const lowerCountry = countryName.toLowerCase();
+        // South Asia & some SE Asia often 1 day behind Saudi
+        if (['bangladesh', 'pakistan', 'india', 'indonesia', 'malaysia', 'brunei'].includes(lowerCountry)) return -1;
+        return 0;
+    };
+
     // Load initial profile data
     useEffect(() => {
         const loadProfile = async () => {
             try {
                 const res = await fetch('/api/user/profile');
                 const text = await res.text();
-
                 let responseData;
-                try {
-                    responseData = JSON.parse(text);
-                } catch (e) {
-                    // Response was not JSON (likely HTML error page or login redirect)
-                    console.warn('Profile response was not JSON:', text.substring(0, 50) + '...');
-                    return;
-                }
+                try { responseData = JSON.parse(text); } catch (e) { return; }
 
                 if (responseData && responseData.success && responseData.data?.cityName) {
                     const uCountry = responseData.data.countryName || 'Bangladesh';
-                    setLocation(prev => ({
-                        ...prev,
-                        city: responseData.data.cityName,
-                        country: uCountry,
-                        useCoords: false
-                    }));
+                    setLocation(prev => ({ ...prev, city: responseData.data.cityName, country: uCountry, useCoords: false }));
 
-                    // Find code for the saved country name
                     const foundCountry = allCountries.find(c => c.name === uCountry);
-                    if (foundCountry) {
-                        setSelectedCountryCode(foundCountry.isoCode);
-                    } else {
+                    if (foundCountry) setSelectedCountryCode(foundCountry.isoCode);
+                    else {
                         const bd = allCountries.find(c => c.name === 'Bangladesh');
                         if (bd) setSelectedCountryCode(bd.isoCode);
                     }
+
+                    // Set adjust
+                    setHijriOffset(getAutoHijriAdjustment(uCountry));
                 }
-            } catch (e) {
-                console.error('Failed to load profile (using defaults)', e);
-            }
+            } catch (e) { console.error(e); }
         };
         loadProfile();
     }, [allCountries]);
@@ -75,23 +87,46 @@ export default function IftarSehriClient() {
         }
     }, [selectedCountryCode]);
 
+    // Handle Country Change (Update Auto Adjust)
+    const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newCode = e.target.value;
+        const countryObj = allCountries.find(c => c.isoCode === newCode);
+        const newCountryName = countryObj ? countryObj.name : '';
+
+        setSelectedCountryCode(newCode);
+        setLocation({ ...location, country: newCountryName, city: '', useCoords: false });
+        setHijriOffset(getAutoHijriAdjustment(newCountryName));
+    };
+
     // Fetch Times Wrapper
     const fetchTimes = useCallback(async () => {
         try {
             setLoading(true);
+
+            // local date string YYYY-MM-DD
+            const date = new Date();
+            const localDateString = date.toLocaleDateString('en-CA');
+
             let url = '';
-            // If using coords, use them. Otherwise fallback to City/Country
+            const method = getCalculationMethod(location.country);
+            // remove adjustment from API to get stable baseline
+            // const adjustment = hijriOffset;
+
             if (location.useCoords && location.lat && location.lng) {
-                url = `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${location.lat}&longitude=${location.lng}&method=2`;
+                // Remove adjustment param
+                url = `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${location.lat}&longitude=${location.lng}&method=${method}`;
             } else if (location.city && location.country) {
-                // Sanitize names (remove accents/diacritics) for API
-                // e.g. "Cox's Bāzār" -> "Cox's Bazar"
                 const cleanCity = location.city.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 const cleanCountry = location.country.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-                url = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&method=2`;
+                // Remove adjustment param
+                url = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&method=${method}&date=${localDateString}`;
             } else {
                 setLoading(false);
+                setPrayerTimes(null);
+                setHijriDate('');
+                setGregorianDate('');
+                setTimeLeftIftar('--:--:--');
+                setTimeLeftSehri('--:--:--');
                 return;
             }
 
@@ -105,13 +140,57 @@ export default function IftarSehriClient() {
 
             if (data.code === 200 && data.data) {
                 setPrayerTimes(data.data.timings);
+
+                // Set Dates
+                const hijri = data.data.date.hijri;
+                const gregorian = data.data.date.gregorian;
+
+                // Hijri Calculation (Client-Side Adjustment)
+                let hDay = parseInt(hijri.day);
+                let hMonth = hijri.month.en;
+                let hYear = parseInt(hijri.year);
+
+                // 1. Apply Offset (Manual + Auto)
+                hDay += hijriOffset;
+
+                // 2. Handle Month Boundaries (Simple Approximation for Display)
+                // If day <= 0, go to previous month (30th)
+                if (hDay <= 0) {
+                    hDay = 30; // Fallback to 30th of prev month
+                    // Simple month swap for Ramadan context
+                    if (hMonth === 'Ramadan') hMonth = "Sha'ban";
+                    else if (hMonth === 'Shawwal') hMonth = 'Ramadan';
+                }
+                // If day > 30, go to next
+                if (hDay > 30) {
+                    hDay = 1;
+                    if (hMonth === "Sha'ban") hMonth = 'Ramadan';
+                    else if (hMonth === 'Ramadan') hMonth = 'Shawwal';
+                }
+
+                // 3. Post-Maghrib Transition (Hijri Date starts at sunset)
+                const now = new Date();
+                const maghribTime = new Date(`${localDateString}T${data.data.timings.Maghrib}:00`);
+
+                if (now > maghribTime) {
+                    hDay += 1;
+                    if (hDay > 30) {
+                        hDay = 1;
+                        if (hMonth === "Sha'ban") hMonth = 'Ramadan';
+                        else if (hMonth === 'Ramadan') hMonth = 'Shawwal';
+                    }
+                }
+
+                // Formatting
+                setHijriDate(`${hDay} ${hMonth} ${hYear}`);
+                setGregorianDate(`${gregorian.weekday.en}, ${gregorian.day} ${gregorian.month.en} ${gregorian.year}`);
             }
         } catch (err) {
             console.error('Fetch error:', err);
         } finally {
             setLoading(false);
         }
-    }, [location]);
+    }, [location, hijriOffset]);
 
     useEffect(() => {
         fetchTimes();
@@ -122,10 +201,14 @@ export default function IftarSehriClient() {
         if (!prayerTimes) return;
 
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
+        // Use local date string to avoid UTC issues
+        const todayStr = now.toLocaleDateString('en-CA');
 
-        const maghribTime = new Date(`${todayStr}T${prayerTimes.Maghrib}:00`);
-        const fajrTime = new Date(`${todayStr}T${prayerTimes.Fajr}:00`);
+        const maghribTime = new Date(`${todayStr}T${prayerTimes.Maghrib}`);
+        const fajrTime = new Date(`${todayStr}T${prayerTimes.Fajr}`);
+
+        // Handle invalid dates (Invalid Date) if format issues
+        if (isNaN(maghribTime.getTime()) || isNaN(fajrTime.getTime())) return;
 
         let targetFajr = new Date(fajrTime);
         if (now > fajrTime) targetFajr.setDate(targetFajr.getDate() + 1);
@@ -155,17 +238,9 @@ export default function IftarSehriClient() {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newCode = e.target.value;
-        const countryObj = allCountries.find(c => c.isoCode === newCode);
-        const newCountryName = countryObj ? countryObj.name : '';
-
-        setSelectedCountryCode(newCode);
-        setLocation({ ...location, country: newCountryName, city: '', useCoords: false });
-    };
 
     const getDisplayLocation = () => {
-        if (location.useCoords) return '📍 Your Exact Location'; // Ideally localize this too generally
+        if (location.useCoords) return '📍 Your Exact Location';
         if (location.city && location.country) return `${location.city}, ${location.country}`;
         if (location.country) return `${location.country}`;
         return 'Select Location';
@@ -180,6 +255,19 @@ export default function IftarSehriClient() {
                         {t('locationSet')} <span className="text-accent-400 font-bold ml-1">{getDisplayLocation()}</span>
                     </p>
 
+                    {/* Date Display & Controls */}
+                    <div className="text-right flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setHijriOffset(prev => prev - 1)} className="w-5 h-5 flex items-center justify-center rounded bg-white/10 text-xs hover:bg-white/20 text-white">-</button>
+                            <p className="text-white font-bold text-sm">{hijriDate}</p>
+                            <button onClick={() => setHijriOffset(prev => prev + 1)} className="w-5 h-5 flex items-center justify-center rounded bg-white/10 text-xs hover:bg-white/20 text-white">+</button>
+                        </div>
+                        <p className="text-primary-400 text-xs">{gregorianDate}</p>
+                        <p className="text-[10px] text-primary-500">Hijri Adj: {hijriOffset > 0 ? '+' : ''}{hijriOffset} days</p>
+                    </div>
+                </div>
+
+                <div className="flex justify-end mb-4">
                     <button
                         onClick={() => {
                             if (navigator.geolocation) {
@@ -290,6 +378,11 @@ export default function IftarSehriClient() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div className="text-center text-xs text-primary-500/50">
+                Calculation Method: {getCalculationMethod(location.country) === 1 ? 'Karachi (18°)' : 'Standard (ISNA/MWL)'} based on {location.country}. <br />
+                Hijri date adjusts at Maghrib.
             </div>
         </div>
     );
