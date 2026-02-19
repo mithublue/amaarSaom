@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 
-export default function QuranStats() {
+export default function QuranStats({ locale }: { locale: string }) {
     const [lastRead, setLastRead] = useState<{ surahId: number; surahName: string; surahArabic: string; verseCount: number } | null>(null);
     const [bookmarkCount, setBookmarkCount] = useState(0);
 
@@ -43,6 +43,7 @@ export default function QuranStats() {
                     </p>
                     <Link
                         href={lastRead ? `/quran/${lastRead.surahId}` : '/quran/1'}
+                        locale={locale}
                         className="inline-flex items-center gap-2 bg-accent-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-accent-500 transition shadow-gold-glow hover:scale-105"
                     >
                         {lastRead ? 'Resume Reading' : 'Start Reading'} →
@@ -54,7 +55,7 @@ export default function QuranStats() {
             </div>
 
             {/* Stats / Bookmarks Card */}
-            <Link href="/quran/bookmarks" className="bg-primary-900/40 backdrop-blur-md border border-white/10 shadow-glass rounded-app-lg p-6 flex flex-col justify-between group hover:border-accent-500/30 transition cursor-pointer">
+            <Link href="/quran/bookmarks" locale={locale} className="bg-primary-900/40 backdrop-blur-md border border-white/10 shadow-glass rounded-app-lg p-6 flex flex-col justify-between group hover:border-accent-500/30 transition cursor-pointer">
                 <div>
                     <div className="w-12 h-12 bg-gradient-to-br from-accent-500 to-accent-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:rotate-12 transition shadow-sm text-white">
                         🔖

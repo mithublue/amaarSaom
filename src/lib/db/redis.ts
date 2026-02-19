@@ -43,29 +43,35 @@ const isBuildPhase = process.env.NODE_ENV === 'production' && redisUrl === 'loca
 
 export async function getCached<T>(key: string): Promise<T | null> {
     if (isBuildPhase) return null;
+    if (redis.status !== 'ready') return null; // Fail fast if not connected
+
     try {
         const cached = await redis.get(key);
         return cached ? JSON.parse(cached) : null;
     } catch (error) {
-        console.error(`Error getting cached data for key ${key}:`, error);
+        console.warn(`Redis get error for key ${key}:`, error); // Warn instead of error to avoid overlay
         return null;
     }
 }
 
 export async function setCache(key: string, value: any, ttlSeconds: number = 3600): Promise<void> {
     if (isBuildPhase) return;
+    if (redis.status !== 'ready') return; // Fail fast if not connected
+
     try {
         await redis.setex(key, ttlSeconds, JSON.stringify(value));
     } catch (error) {
-        console.error(`Error setting cache for key ${key}:`, error);
+        console.warn(`Redis set error for key ${key}:`, error); // Warn instead of error
     }
 }
 
 export async function deleteCache(key: string): Promise<void> {
     if (isBuildPhase) return;
+    if (redis.status !== 'ready') return;
+
     try {
         await redis.del(key);
     } catch (error) {
-        console.error(`Error deleting cache for key ${key}:`, error);
+        console.warn(`Redis del error for key ${key}:`, error);
     }
 }

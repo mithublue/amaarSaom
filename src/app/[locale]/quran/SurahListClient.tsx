@@ -5,7 +5,7 @@ import { Link } from '@/i18n/routing';
 import { Chapter } from '@/lib/services/quranService';
 import { Search } from 'lucide-react';
 
-export default function SurahListClient({ chapters }: { chapters: Chapter[] }) {
+export default function SurahListClient({ chapters, locale }: { chapters: Chapter[], locale: string }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [displayCount, setDisplayCount] = useState(15);
     const observerTarget = useRef<HTMLDivElement>(null);
@@ -64,6 +64,7 @@ export default function SurahListClient({ chapters }: { chapters: Chapter[] }) {
                     <Link
                         key={chapter.id}
                         href={`/quran/${chapter.id}`}
+                        locale={locale} // Explicitly pass locale
                         className="flex items-center p-4 bg-primary-950/30 rounded-xl border border-white/5 hover:bg-primary-950/60 hover:border-accent-500/30 transition-all duration-300 group shadow-sm hover:shadow-glass"
                     >
                         <div className="w-12 h-12 bg-primary-900/80 rounded-lg flex items-center justify-center text-accent-400 font-bold text-lg mr-4 border border-white/5 group-hover:bg-accent-600 group-hover:text-white transition-all group-hover:scale-110 shadow-sm relative overflow-hidden">

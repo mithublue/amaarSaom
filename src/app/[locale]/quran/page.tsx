@@ -36,10 +36,10 @@ export default async function QuranPage({ params }: { params: Promise<{ locale: 
                     </div>
 
                     {/* Stats Section */}
-                    <QuranStats />
+                    <QuranStats locale={locale} />
 
                     {/* Surah List */}
-                    <SurahListClient chapters={chapters} />
+                    <SurahListClient chapters={chapters} locale={locale} />
                 </div>
             </main>
 
