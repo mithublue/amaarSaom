@@ -39,11 +39,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                         /* Logged-in: Quick Action Widgets */
                         <HomeWidgets userName={firstName} locale={locale} />
                     ) : (
-                        /* Guest: Top Cards + Welcome Hero */
+                        /* Guest: Welcome Hero + Top Cards */
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            {/* Live timer cards — visible to guests too */}
-                            <TopCards />
-
                             {/* Welcome Hero */}
                             <div className="text-center">
                                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-tight text-white">
@@ -61,6 +58,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                                     </Link>
                                 </div>
                             </div>
+
+                            {/* Live timer cards — below the CTAs */}
+                            <TopCards />
                         </div>
                     )}
                 </div>
