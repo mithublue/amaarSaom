@@ -241,10 +241,10 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 {t('greeting')}{userName ? <>, <span className="text-accent-400">{userName}!</span></> : ''} 👋
             </h1>
 
-            {/* Two Pill Cards */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
-                {/* Current Waqt Remaining */}
-                <Link href="/prayer-times" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
+            {/* Two Pill Cards — prayer timer + iftar/sehri — aligned with 3-col bottom */}
+            <div className="grid grid-cols-3 gap-3 md:gap-4">
+                {/* Current Waqt Remaining — spans 2/3 */}
+                <Link href="/prayer-times" className="col-span-2 group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
                     <div className="flex items-center gap-2 mb-2">
                         <span className="text-xl">🕌</span>
@@ -258,12 +258,12 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     <p className="text-xs text-primary-400 mt-1">{t('endsIn')}</p>
                 </Link>
 
-                {/* Iftar / Sehri */}
-                <Link href="/iftar-sehri" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-accent-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
+                {/* Iftar / Sehri — spans 1/3 */}
+                <Link href="/iftar-sehri" className="col-span-1 group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-accent-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
                     <div className="absolute inset-0 bg-gradient-to-br from-accent-500/5 to-transparent pointer-events-none" />
                     <div className="flex items-center gap-2 mb-2">
                         <span className="text-xl">🌙</span>
-                        <span className="text-xs font-medium text-accent-300">{iftarSehri.label || t('iftar')}</span>
+                        <span className="text-xs font-medium text-accent-300 truncate">{iftarSehri.label || t('iftar')}</span>
                     </div>
                     <div className="text-xl md:text-2xl font-mono font-bold text-white tracking-wider">
                         {loading ? <span className="animate-pulse text-sm text-primary-400">{t('loading')}</span> : iftarSehri.countdown}
@@ -272,34 +272,53 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 </Link>
             </div>
 
-            {/* Progress Bar Widget */}
-            <div className="relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-glass">
-                <div className="absolute inset-0 bg-gradient-to-br from-accent-600/8 via-transparent to-emerald-600/5 pointer-events-none" />
-                <div className="relative z-10 flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-primary-300">{t('todaysDeeds')}</span>
-                    <span className="text-sm font-bold text-accent-400">{todayDeeds} / 10 ✨</span>
-                </div>
-                <div className="w-full bg-primary-800/60 rounded-full h-2 overflow-hidden">
-                    <div
-                        className="h-full bg-gradient-to-r from-accent-600 to-emerald-500 rounded-full transition-all duration-700"
-                        style={{ width: `${Math.min((todayDeeds / 10) * 100, 100)}%` }}
-                    />
-                </div>
-                <Link href="/good-deeds" className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-accent-600/20 hover:bg-accent-600/30 border border-accent-500/30 rounded-xl text-sm text-accent-300 font-medium transition-all hover:text-accent-200">
-                    {t('addDeed')}
-                </Link>
-            </div>
 
-            {/* 4 Dynamic Motivational Widgets */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {motivationWidgets.map((w) => (
-                    <div key={w.key} className="relative overflow-hidden bg-primary-900/40 backdrop-blur-md border border-white/8 rounded-2xl px-5 py-4 shadow-glass">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-accent-600/5 pointer-events-none" />
-                        <p className="relative z-10 text-sm text-primary-100 leading-relaxed">
-                            {w.text}
-                        </p>
+            {/* Bottom Section: Action Cards (2×2) + Today's Deeds (tall) */}
+            <div className="grid grid-cols-3 gap-3 md:gap-4 items-stretch">
+
+                {/* Left 2 columns: 4 action cards in 2×2 */}
+                <div className="col-span-2 grid grid-cols-2 gap-3 md:gap-4">
+                    {motivationWidgets.map((w) => (
+                        <div key={w.key} className="relative overflow-hidden bg-primary-900/40 backdrop-blur-md border border-white/8 rounded-2xl px-4 py-4 shadow-glass">
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-accent-600/5 pointer-events-none" />
+                            <p className="relative z-10 text-sm text-primary-100 leading-relaxed">
+                                {w.text}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Right column: Today's Deeds (spans full height) */}
+                <div className="col-span-1 relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-glass flex flex-col justify-between">
+                    <div className="absolute inset-0 bg-gradient-to-br from-accent-600/8 via-transparent to-emerald-600/5 pointer-events-none" />
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-primary-300">{t('todaysDeeds')}</span>
+                            <span className="text-sm font-bold text-accent-400">{todayDeeds} / 10 ✨</span>
+                        </div>
+                        <div className="w-full bg-primary-800/60 rounded-full h-2 overflow-hidden mb-4">
+                            <div
+                                className="h-full bg-gradient-to-r from-accent-600 to-emerald-500 rounded-full transition-all duration-700"
+                                style={{ width: `${Math.min((todayDeeds / 10) * 100, 100)}%` }}
+                            />
+                        </div>
+                        {/* Deed count visual */}
+                        <div className="grid grid-cols-5 gap-1 mb-4">
+                            {Array.from({ length: 10 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={`h-2 rounded-full transition-all duration-500 ${i < todayDeeds ? 'bg-emerald-500' : 'bg-primary-800/60'}`}
+                                />
+                            ))}
+                        </div>
                     </div>
-                ))}
+                    <Link
+                        href="/good-deeds"
+                        className="relative z-10 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-accent-600/20 hover:bg-accent-600/30 border border-accent-500/30 rounded-xl text-sm text-accent-300 font-medium transition-all hover:text-accent-200 w-full"
+                    >
+                        ✦ {t('addDeed')}
+                    </Link>
+                </div>
             </div>
         </div>
     );
