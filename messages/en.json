@@ -124,7 +124,8 @@
         "enterCityName": "Enter City Name",
         "selectCountryFirst": "Select Country First",
         "calcMethod": "Calculation Method: University of Islamic Sciences, Karachi (18°)",
-        "hijriAdjust": "Hijri date adjusts at Maghrib."
+        "hijriAdjust": "Hijri date adjusts at Maghrib.",
+        "loading": "Loading..."
     },
     "HomeWidgets": {
         "greeting": "As-Salamu Alaykum",

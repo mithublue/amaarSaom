@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
+import { resolveLocation, buildAladhanUrl } from '@/lib/location';
 
 interface PrayerTimes {
     Fajr: string;
@@ -119,23 +120,18 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
         setDeeds(shuffled.slice(0, 4));
     }, []);
 
-    // Fetch prayer times from profile/default
+    // Fetch prayer times using shared location priority chain
     useEffect(() => {
         (async () => {
             try {
-                let city = 'Dhaka', country = 'Bangladesh';
-                try {
-                    const r = await fetch('/api/user/profile');
-                    const d = await r.json();
-                    if (d.success && d.data?.cityName) {
-                        city = d.data.cityName;
-                        country = d.data.countryName || 'Bangladesh';
-                    }
-                } catch { }
-                const r = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=1`);
+                const loc = await resolveLocation();
+                const url = buildAladhanUrl(loc);
+                const r = await fetch(url);
                 const d = await r.json();
-                if (d.code === 200) setPrayerTimes(d.data.timings);
-            } catch { }
+                if (d?.data?.timings) setPrayerTimes(d.data.timings);
+            } catch (err) {
+                console.error('[HomeWidgets] Failed to fetch prayer times:', err);
+            }
         })();
     }, []);
 

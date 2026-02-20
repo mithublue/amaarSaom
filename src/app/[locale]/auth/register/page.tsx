@@ -78,9 +78,12 @@ export default function RegisterPage() {
         <main className="min-h-screen bg-primary-950 flex items-center justify-center px-4 py-12">
             <div className="w-full max-w-md">
                 <div className="bg-primary-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-glass">
-                    {/* Header */}
+                    {/* Header — logo links to home */}
                     <div className="text-center mb-8">
-                        <span className="text-4xl mb-3 block">🌙</span>
+                        <a href="/" className="inline-flex flex-col items-center gap-1 group mb-4">
+                            <span className="text-4xl group-hover:scale-110 transition-transform block">🌙</span>
+                            <span className="text-sm font-bold text-emerald-400 group-hover:text-emerald-300 tracking-widest uppercase">Nuzul</span>
+                        </a>
                         <h1 className="text-2xl font-bold text-white mb-1">Create Account</h1>
                         <p className="text-sm text-primary-400">Join Nuzul</p>
                     </div>
@@ -183,6 +186,16 @@ export default function RegisterPage() {
                             Sign In
                         </a>
                     </p>
+
+                    {/* Cancel */}
+                    <div className="text-center mt-3">
+                        <a
+                            href="/"
+                            className="text-xs text-primary-500 hover:text-primary-300 transition-colors"
+                        >
+                            ✕ Cancel and go back to home
+                        </a>
+                    </div>
                 </div>
             </div>
         </main>

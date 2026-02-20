@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations, useFormatter } from 'next-intl';
 import { countries, commonCities } from '@/lib/locations';
+import { saveGpsLocation } from '@/lib/location';
 
 interface PrayerTimes {
     Fajr: string;
@@ -121,7 +122,7 @@ export default function PrayerTimesClient() {
             const response = await fetch(url);
             const data: AladhanResponse = await response.json();
 
-            if (data.code !== 200) {
+            if (!data?.data?.timings) {
                 throw new Error(t('error'));
             }
 
@@ -261,27 +262,49 @@ export default function PrayerTimesClient() {
 
                 <div className="flex justify-end mt-6">
                     <button
-                        onClick={() => {
-                            if (navigator.geolocation) {
-                                setLoading(true);
-                                navigator.geolocation.getCurrentPosition(
-                                    (position) => {
-                                        setLocation({
-                                            ...location,
-                                            lat: position.coords.latitude,
-                                            lng: position.coords.longitude,
-                                            useCoords: true
-                                        });
-                                        setCityInput('Your Location');
-                                    },
-                                    (error) => {
-                                        alert('Error getting location: ' + error.message);
-                                        setLoading(false);
-                                    }
-                                );
-                            } else {
+                        onClick={async () => {
+                            if (!navigator.geolocation) {
                                 alert('Geolocation is not supported by this browser.');
+                                return;
                             }
+                            setLoading(true);
+                            navigator.geolocation.getCurrentPosition(
+                                async (position) => {
+                                    const { latitude: lat, longitude: lng } = position.coords;
+
+                                    // Reverse geocode to get city & country
+                                    let resolvedCity = 'Your Location';
+                                    let resolvedCountry = location.country;
+                                    try {
+                                        const geo = await fetch(
+                                            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+                                            { headers: { 'Accept-Language': 'en' } }
+                                        );
+                                        const geoData = await geo.json();
+                                        resolvedCity = geoData.address?.city
+                                            || geoData.address?.town
+                                            || geoData.address?.village
+                                            || geoData.address?.county
+                                            || 'Your Location';
+                                        resolvedCountry = geoData.address?.country || resolvedCountry;
+                                    } catch { /* use fallback values */ }
+
+                                    const gpsData = {
+                                        lat,
+                                        lng,
+                                        city: resolvedCity,
+                                        country: resolvedCountry,
+                                        useCoords: true,
+                                    };
+                                    saveGpsLocation(gpsData);
+                                    setLocation(gpsData);
+                                    setCityInput(resolvedCity);
+                                },
+                                (err) => {
+                                    alert('Error getting location: ' + err.message);
+                                    setLoading(false);
+                                }
+                            );
                         }}
                         disabled={loading}
                         className="w-full md:w-auto px-6 py-3 bg-accent-600 text-white rounded-xl hover:bg-accent-500 transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-gold-glow disabled:opacity-50 disabled:cursor-not-allowed"

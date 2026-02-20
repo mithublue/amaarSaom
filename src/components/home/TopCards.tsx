@@ -57,8 +57,10 @@ export default function TopCards() {
             try {
                 const r = await fetch('https://api.aladhan.com/v1/timingsByCity?city=Dhaka&country=Bangladesh&method=1');
                 const d = await r.json();
-                if (d.code === 200) setPrayerTimes(d.data.timings);
-            } catch { }
+                if (d?.data?.timings) setPrayerTimes(d.data.timings);
+            } catch (err) {
+                console.error('[TopCards] Failed to fetch prayer times:', err);
+            }
         })();
         const id = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(id);

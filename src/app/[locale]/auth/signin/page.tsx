@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 
 function SignInForm() {
@@ -54,11 +55,14 @@ function SignInForm() {
         <main className="min-h-screen bg-primary-950 flex items-center justify-center px-4 py-12">
             <div className="w-full max-w-md">
                 <div className="bg-primary-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-glass">
-                    {/* Header */}
+                    {/* Header — logo links to home */}
                     <div className="text-center mb-8">
-                        <span className="text-4xl mb-3 block">🌙</span>
+                        <a href="/" className="inline-flex flex-col items-center gap-1 group mb-4">
+                            <span className="text-4xl group-hover:scale-110 transition-transform block">🌙</span>
+                            <span className="text-sm font-bold text-emerald-400 group-hover:text-emerald-300 tracking-widest uppercase">Nuzul</span>
+                        </a>
                         <h1 className="text-2xl font-bold text-white mb-1">Welcome Back</h1>
-                        <p className="text-sm text-primary-400">Sign in to Nuzul</p>
+                        <p className="text-sm text-primary-400">Sign in to continue</p>
                     </div>
 
                     {/* Verified Banner */}
@@ -138,6 +142,16 @@ function SignInForm() {
                             Create Account
                         </a>
                     </p>
+
+                    {/* Cancel */}
+                    <div className="text-center mt-3">
+                        <a
+                            href="/"
+                            className="text-xs text-primary-500 hover:text-primary-300 transition-colors"
+                        >
+                            ✕ Cancel and go back to home
+                        </a>
+                    </div>
                 </div>
             </div>
         </main>
