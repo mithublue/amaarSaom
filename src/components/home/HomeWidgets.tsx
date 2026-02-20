@@ -235,16 +235,16 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     ];
 
     return (
-        <div className="w-full max-w-4xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="w-full max-w-7xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Greeting */}
             <h1 className="text-3xl md:text-4xl font-bold text-white text-center mb-2">
                 {t('greeting')}{userName ? <>, <span className="text-accent-400">{userName}!</span></> : ''} 👋
             </h1>
 
-            {/* Two Pill Cards — prayer timer + iftar/sehri — aligned with 3-col bottom */}
-            <div className="grid grid-cols-3 gap-3 md:gap-4">
-                {/* Current Waqt Remaining — spans 2/3 */}
-                <Link href="/prayer-times" className="col-span-2 group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
+            {/* Two Pill Cards — equal width, grid-cols-2 */}
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+                {/* Current Waqt Remaining */}
+                <Link href="/prayer-times" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
                     <div className="flex items-center gap-2 mb-2">
                         <span className="text-xl">🕌</span>
@@ -258,8 +258,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     <p className="text-xs text-primary-400 mt-1">{t('endsIn')}</p>
                 </Link>
 
-                {/* Iftar / Sehri — spans 1/3 */}
-                <Link href="/iftar-sehri" className="col-span-1 group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-accent-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
+                {/* Iftar / Sehri */}
+                <Link href="/iftar-sehri" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-accent-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
                     <div className="absolute inset-0 bg-gradient-to-br from-accent-500/5 to-transparent pointer-events-none" />
                     <div className="flex items-center gap-2 mb-2">
                         <span className="text-xl">🌙</span>

@@ -33,7 +33,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-5 pointer-events-none"></div>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-accent-500/20 rounded-full blur-[120px] pointer-events-none"></div>
 
-                <div className="max-w-4xl mx-auto relative z-10">
+                <div className="max-w-7xl mx-auto relative z-10">
                     {session ? (
                         /* Logged-in: Quick Action Widgets */
                         <HomeWidgets userName={firstName} locale={locale} />
