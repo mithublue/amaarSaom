@@ -27,7 +27,7 @@ export default async function AdminLayout({
 
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`}>
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`} suppressHydrationWarning>
                 {children}
             </body>
         </html>

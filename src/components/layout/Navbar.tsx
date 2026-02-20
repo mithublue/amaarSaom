@@ -2,6 +2,7 @@ import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from './LanguageSwitcher';
 import UserMenu from './UserMenu';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 interface NavbarProps {
     session: any;
@@ -26,6 +27,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
 
                 {/* Actions Section - Single Line Alignment */}
                 <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                    {session?.user && <NotificationBell />}
                     <LanguageSwitcher />
                     <UserMenu session={session} locale={locale} />
                 </div>

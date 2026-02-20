@@ -1,5 +1,7 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db/prisma';
 import { authConfig } from './auth.config';
 import { sendSlackNotification } from '@/lib/services/slackService';
@@ -11,10 +13,67 @@ export const config = {
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         }),
+        CredentialsProvider({
+            name: 'credentials',
+            credentials: {
+                email: { label: 'Email', type: 'email' },
+                password: { label: 'Password', type: 'password' },
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) {
+                    throw new Error('Email and password are required');
+                }
+
+                const email = (credentials.email as string).toLowerCase().trim();
+                const password = credentials.password as string;
+
+                const user = await prisma.user.findUnique({
+                    where: { email },
+                });
+
+                if (!user || !user.passwordHash) {
+                    throw new Error('Invalid email or password');
+                }
+
+                if (!user.emailVerified) {
+                    throw new Error('Please verify your email before signing in');
+                }
+
+                const isValid = await bcrypt.compare(password, user.passwordHash);
+                if (!isValid) {
+                    throw new Error('Invalid email or password');
+                }
+
+                // Update last login
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { lastLoginAt: new Date() },
+                });
+
+                // Slack notification
+                sendSlackNotification('login', {
+                    userName: user.name,
+                    email: user.email,
+                    extra: 'Email/Password login',
+                }).catch(() => { });
+
+                return {
+                    id: user.id.toString(),
+                    email: user.email,
+                    name: user.name,
+                    image: user.image,
+                };
+            },
+        }),
     ],
     callbacks: {
         ...authConfig.callbacks,
         async signIn({ user, account, profile }: { user: any, account?: any, profile?: any }) {
+            // Skip for credentials — already handled in authorize()
+            if (account?.provider === 'credentials') {
+                return true;
+            }
+
             console.log('SignIn attempt:', { email: user?.email, provider: account?.provider });
             if (!user.email) {
                 console.error('SignIn failed: No email provided');
@@ -22,38 +81,38 @@ export const config = {
             }
 
             try {
-                // Check if user exists, if not create them
                 const existingUser = await prisma.user.findUnique({
                     where: { email: user.email },
                 });
 
                 if (!existingUser) {
                     console.log('Creating new user:', user.email);
-                    // Create new user
                     await prisma.user.create({
                         data: {
                             email: user.email,
                             name: user.name || '',
                             image: user.image,
                             preferredLanguage: 'en',
+                            emailVerified: true, // Google users are auto-verified
                             lastLoginAt: new Date(),
                         },
                     });
 
-                    // Slack: new registration
                     sendSlackNotification('register', {
                         userName: user.name || '',
                         email: user.email,
+                        extra: 'Google OAuth registration',
                     }).catch(() => { });
                 } else {
                     console.log('Existing user signed in:', user.email);
-                    // Update last login time
                     await prisma.user.update({
                         where: { email: user.email },
-                        data: { lastLoginAt: new Date() },
+                        data: {
+                            lastLoginAt: new Date(),
+                            emailVerified: true, // Ensure Google users always verified
+                        },
                     });
 
-                    // Slack: login
                     sendSlackNotification('login', {
                         userName: existingUser.name,
                         email: user.email,
@@ -67,10 +126,8 @@ export const config = {
             }
         },
         async jwt({ token, user, account }: { token: any, user?: any, account?: any }) {
-            // Initial sign in
             if (user) {
                 try {
-                    // Fetch user from database to get location data
                     const dbUser = await prisma.user.findUnique({
                         where: { email: user.email! },
                         include: {
