@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations, useFormatter } from 'next-intl';
 import { countries, commonCities } from '@/lib/locations';
-import { saveGpsLocation } from '@/lib/location';
+import { saveGpsLocation, getGpsLocation } from '@/lib/location';
 
 interface PrayerTimes {
     Fajr: string;
@@ -61,34 +61,35 @@ export default function PrayerTimesClient() {
     const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Initial load from profile
+    // Initial load: GPS localStorage → profile → default Dhaka
     useEffect(() => {
-        const loadProfile = async () => {
+        const init = async () => {
+            // 1. Check GPS localStorage first (works even when timingsByCity returns 400)
+            const gps = getGpsLocation();
+            if (gps && gps.useCoords && gps.lat != null && gps.lng != null) {
+                setLocation(gps);
+                setCityInput(gps.city || 'Your Location');
+                return;
+            }
+
+            // 2. Profile location
             try {
                 const res = await fetch('/api/user/profile');
                 const text = await res.text();
                 let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) { console.warn('Profile not JSON'); return; }
+                try { data = JSON.parse(text); } catch { return; }
 
                 if (data.success && data.data?.cityName) {
                     const profileCity = data.data.cityName;
                     const profileCountry = data.data.countryName || 'Bangladesh';
-
                     setCityInput(profileCity);
-                    setLocation(prev => ({
-                        ...prev,
-                        city: profileCity,
-                        country: profileCountry,
-                        useCoords: false
-                    }));
+                    setLocation(prev => ({ ...prev, city: profileCity, country: profileCountry, useCoords: false }));
                 }
             } catch (e) {
                 console.error('Failed to load profile location', e);
             }
         };
-        loadProfile();
+        init();
     }, []);
 
     // Update suggestions when country changes
@@ -110,15 +111,37 @@ export default function PrayerTimesClient() {
             setLoading(true);
             setError(null);
 
-            let url = '';
+            const ts = Math.floor(Date.now() / 1000);
+            let lat: number, lng: number;
+
             if (location.useCoords && location.lat && location.lng) {
-                url = `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${location.lat}&longitude=${location.lng}&method=1`;
+                // Already have GPS coordinates → use directly
+                lat = location.lat;
+                lng = location.lng;
             } else {
-                const cleanCity = location.city.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                const cleanCountry = location.country.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                url = `https://api.aladhan.com/v1/timingsByCity?city=${cleanCity}&country=${cleanCountry}&method=1`;
+                // Geocode city + country via Nominatim (timingsByCity is broken)
+                const cleanCity = location.city.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const cleanCountry = location.country.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                try {
+                    const geo = await fetch(
+                        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&format=json&limit=1`,
+                        { headers: { 'Accept-Language': 'en' } }
+                    );
+                    const places = await geo.json();
+                    if (places?.length > 0) {
+                        lat = parseFloat(places[0].lat);
+                        lng = parseFloat(places[0].lon);
+                    } else {
+                        throw new Error('Geocode returned no results');
+                    }
+                } catch {
+                    // Final fallback: Dhaka coordinates
+                    lat = 23.8103;
+                    lng = 90.4125;
+                }
             }
 
+            const url = `https://api.aladhan.com/v1/timings/${ts}?latitude=${lat}&longitude=${lng}&method=1`;
             const response = await fetch(url);
             const data: AladhanResponse = await response.json();
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations, useFormatter } from 'next-intl';
 import { countries, commonCities } from '@/lib/locations';
+import { getGpsLocation, saveGpsLocation } from '@/lib/location';
 
 interface PrayerTimes {
     Fajr: string;
@@ -72,34 +73,33 @@ export default function IftarSehriClient() {
     const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Initial load from profile
+    // Initial load: GPS localStorage → profile → default Dhaka
     useEffect(() => {
-        const loadProfile = async () => {
+        const init = async () => {
+            // 1. GPS localStorage first
+            const gps = getGpsLocation();
+            if (gps && gps.useCoords && gps.lat != null && gps.lng != null) {
+                setLocation(gps);
+                setCityInput(gps.city || 'Your Location');
+                return;
+            }
+            // 2. Profile location
             try {
                 const res = await fetch('/api/user/profile');
                 const text = await res.text();
                 let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) { return; }
-
+                try { data = JSON.parse(text); } catch { return; }
                 if (data.success && data.data?.cityName) {
                     const profileCity = data.data.cityName;
                     const profileCountry = data.data.countryName || 'Bangladesh';
-
                     setCityInput(profileCity);
-                    setLocation(prev => ({
-                        ...prev,
-                        city: profileCity,
-                        country: profileCountry,
-                        useCoords: false
-                    }));
+                    setLocation(prev => ({ ...prev, city: profileCity, country: profileCountry, useCoords: false }));
                 }
             } catch (e) {
                 console.error('Failed to load profile location', e);
             }
         };
-        loadProfile();
+        init();
     }, []);
 
     // Update suggestions when country changes
@@ -195,41 +195,50 @@ export default function IftarSehriClient() {
             setLoading(true);
             setError(null);
 
-            // Using method 1 (Karachi) universally as base, API usually handles location specific methods well enough via defaults if we removed method param, 
-            // but sticking to 1 or 2 is safe.
-            // Let's use Method 1 (Karachi) as requested before.
-            const method = 1;
+            const ts = Math.floor(Date.now() / 1000);
+            let lat: number, lng: number;
 
-            let url = '';
             if (location.useCoords && location.lat && location.lng) {
-                url = `https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${location.lat}&longitude=${location.lng}&method=${method}`;
+                // GPS coordinates — use directly
+                lat = location.lat;
+                lng = location.lng;
             } else {
-                const cleanCity = location.city.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                const cleanCountry = location.country.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                url = `https://api.aladhan.com/v1/timingsByCity?city=${cleanCity}&country=${cleanCountry}&method=${method}`;
+                // Geocode city → coordinates via Nominatim (timingsByCity is broken)
+                const cleanCity = location.city.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const cleanCountry = location.country.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                try {
+                    const geo = await fetch(
+                        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cleanCity)}&country=${encodeURIComponent(cleanCountry)}&format=json&limit=1`,
+                        { headers: { 'Accept-Language': 'en' } }
+                    );
+                    const places = await geo.json();
+                    if (places?.length > 0) {
+                        lat = parseFloat(places[0].lat);
+                        lng = parseFloat(places[0].lon);
+                    } else {
+                        throw new Error('Geocode returned no results');
+                    }
+                } catch {
+                    // Final fallback: Dhaka coordinates
+                    lat = 23.8103;
+                    lng = 90.4125;
+                }
             }
 
+            const url = `https://api.aladhan.com/v1/timings/${ts}?latitude=${lat}&longitude=${lng}&method=1`;
             const response = await fetch(url);
             const data: AladhanResponse = await response.json();
 
-            if (data.code !== 200) {
+            if (!data?.data?.timings) {
                 throw new Error('Failed to fetch data');
             }
 
             setPrayerTimes(data.data.timings);
             setTimeZone(data.data.meta.timezone);
 
-            // Handle API Date & Adjustment
-            // Default rule: Bangladesh = -1 (local override), Others = 0 (trust API/User)
-            // But we allow user to override manually too.
             let defaultAdj = 0;
             if (location.country === 'Bangladesh') defaultAdj = -1;
-
-            // We set the initial adjustment based on country, 
-            // BUT we should respect if user manually changed it? 
-            // For now, let's reset to country default on country change for "Accuracy".
             setHijriAdjustment(defaultAdj);
-
             updateHijriDisplay(data.data.date.hijri, defaultAdj);
 
         } catch (err) {

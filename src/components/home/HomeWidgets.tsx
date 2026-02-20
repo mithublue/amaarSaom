@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { resolveLocation, buildAladhanUrl } from '@/lib/location';
+import { resolveAladhanUrl } from '@/lib/location';
 
 interface PrayerTimes {
     Fajr: string;
@@ -120,12 +120,11 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
         setDeeds(shuffled.slice(0, 4));
     }, []);
 
-    // Fetch prayer times using shared location priority chain
+    // Fetch prayer times: GPS localStorage → Nominatim geocode → locale default
     useEffect(() => {
         (async () => {
             try {
-                const loc = await resolveLocation();
-                const url = buildAladhanUrl(loc);
+                const url = await resolveAladhanUrl(locale);
                 const r = await fetch(url);
                 const d = await r.json();
                 if (d?.data?.timings) setPrayerTimes(d.data.timings);
@@ -133,7 +132,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 console.error('[HomeWidgets] Failed to fetch prayer times:', err);
             }
         })();
-    }, []);
+    }, [locale]);
 
     // Fetch today's deeds
     useEffect(() => {

@@ -60,7 +60,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                             </div>
 
                             {/* Live timer cards — below the CTAs */}
-                            <TopCards />
+                            <TopCards locale={locale} />
                         </div>
                     )}
                 </div>
