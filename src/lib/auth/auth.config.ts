@@ -3,7 +3,8 @@ import type { NextAuthConfig } from 'next-auth';
 export const authConfig: NextAuthConfig = {
     secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
     pages: {
-        signIn: '/auth/signin', // Middleware should handle locale prefix or app redirect
+        signIn: '/auth/signin',
+        signOut: '/auth/signout',
         error: '/auth/error',
     },
     callbacks: {
