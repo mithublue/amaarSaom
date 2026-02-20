@@ -139,10 +139,10 @@
         "addDeed": "✨ Add Deed",
         "loading": "Loading...",
         "motivation": {
-            "default1": "Many are doing deeds today! Start with {deed}.",
-            "default2": "Do {deed} now to stay ahead in today's leaderboard.",
-            "default3": "Alhamdulillah, many prayed Tahajjud today. Complete {deed} to reach top 20%.",
-            "default4": "Many are ahead in good deeds today! Get back on track with — {deed}"
+            "default1": "Many are doing deeds today! Start with <deed>morning dhikr</deed>.",
+            "default2": "Do <deed>daily hadith reading</deed> now to stay ahead in today's leaderboard.",
+            "default3": "Alhamdulillah, many prayed Tahajjud today. Complete <deed>Surah Mulk recitation</deed> to reach top 20%.",
+            "default4": "Many are ahead in good deeds today! Get back on track with — <deed>evening dhikr</deed>"
         }
     },
     "Quran": {

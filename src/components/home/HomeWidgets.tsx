@@ -215,22 +215,22 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
         {
             key: 'msg1',
             text: nearbyUser
-                ? <>{nearbyUser.name} {t('motivation.default1', { deed: '' })} <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link></>
-                : <>{t.rich('motivation.default1', { deed: (chunks) => <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link> })}</>,
+                ? <>{nearbyUser.name} {t.rich('motivation.default1', { deed: () => <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link> })}</>
+                : <>{t.rich('motivation.default1', { deed: () => <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link> })}</>,
         },
         {
             key: 'msg2',
             text: nearbyUser
-                ? <>{nearbyUser.name} ({nearbyUser.totalPoints}) - {t.rich('motivation.default2', { deed: (chunks) => <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> })}</>
-                : <>{t.rich('motivation.default2', { deed: (chunks) => <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> })}</>,
+                ? <>{nearbyUser.name} ({nearbyUser.totalPoints}) - {t.rich('motivation.default2', { deed: () => <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> })}</>
+                : <>{t.rich('motivation.default2', { deed: () => <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> })}</>,
         },
         {
             key: 'msg3',
-            text: <>{t.rich('motivation.default3', { deed: (chunks) => <Link href={deeds[2].href} className="text-emerald-400 font-semibold hover:underline">{deeds[2].namebn}</Link> })}</>,
+            text: <>{t.rich('motivation.default3', { deed: () => <Link href={deeds[2].href} className="text-emerald-400 font-semibold hover:underline">{deeds[2].namebn}</Link> })}</>,
         },
         {
             key: 'msg4',
-            text: <>{t.rich('motivation.default4', { deed: (chunks) => <Link href={deeds[3].href} className="text-emerald-400 font-semibold hover:underline">{deeds[3].namebn}</Link> })}</>,
+            text: <>{t.rich('motivation.default4', { deed: () => <Link href={deeds[3].href} className="text-emerald-400 font-semibold hover:underline">{deeds[3].namebn}</Link> })}</>,
         },
     ];
 
