@@ -241,8 +241,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 {t('greeting')}{userName ? <>, <span className="text-accent-400">{userName}!</span></> : ''} 👋
             </h1>
 
-            {/* Two Pill Cards — equal width, grid-cols-2 */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
+            {/* Top row: 3 equal cards */}
+            <div className="grid grid-cols-3 gap-3 md:gap-4">
                 {/* Current Waqt Remaining */}
                 <Link href="/prayer-times" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
@@ -270,7 +270,28 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     </div>
                     <p className="text-xs text-primary-400 mt-1">{t('timeRemaining')}</p>
                 </Link>
+
+                {/* Leaderboard */}
+                <Link href="/leaderboard" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-yellow-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">🏆</span>
+                        <span className="text-xs font-medium text-yellow-300 truncate">Leaderboard</span>
+                    </div>
+                    {nearbyUser ? (
+                        <div>
+                            <p className="text-xs text-primary-300 leading-snug mb-1">
+                                Rank #{nearbyUser.rank} — <span className="text-white font-medium">{nearbyUser.name}</span>
+                            </p>
+                            <p className="text-lg font-bold text-yellow-400">{nearbyUser.totalPoints} pts</p>
+                        </div>
+                    ) : (
+                        <p className="text-xl md:text-2xl font-bold text-white">View</p>
+                    )}
+                    <p className="text-xs text-primary-400 mt-1 group-hover:text-yellow-400 transition-colors">See rankings →</p>
+                </Link>
             </div>
+
 
 
             {/* Bottom Section: Action Cards (2×2) + Today's Deeds (tall) */}
