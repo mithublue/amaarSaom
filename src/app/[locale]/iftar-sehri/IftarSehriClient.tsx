@@ -317,7 +317,7 @@ export default function IftarSehriClient() {
                                 -
                             </button>
                             <span className="font-bold text-base text-white tracking-wide px-2 min-w-[120px] text-center">
-                                {hijriDateStr || 'Loading...'}
+                                {hijriDateStr || t('loading')}
                             </span>
                             <button
                                 onClick={() => handleAdjustmentChange(hijriAdjustment + 1)}
@@ -338,7 +338,7 @@ export default function IftarSehriClient() {
                         </div>
                         {/* Adjustment Text */}
                         <div className="text-[10px] text-primary-500 mt-0.5 opacity-60">
-                            Hijri Adj: {hijriAdjustment > 0 ? `+${hijriAdjustment}` : hijriAdjustment} days
+                            {t('hijriAdjust')} {hijriAdjustment > 0 ? `+${hijriAdjustment}` : hijriAdjustment}
                         </div>
                     </div>
                 </div>
@@ -390,6 +390,7 @@ export default function IftarSehriClient() {
                                 }}
                                 className="w-full px-4 py-3 rounded-lg bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500 appearance-none cursor-pointer"
                             >
+                                <option value="" disabled>{t('selectCountry')}</option>
                                 {countries.map((c) => (
                                     <option key={c} value={c} className="bg-primary-900">{c}</option>
                                 ))}
@@ -411,6 +412,7 @@ export default function IftarSehriClient() {
                                 }}
                                 onFocus={() => setShowSuggestions(true)}
                                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                placeholder={t('enterCityName')}
                                 className="w-full px-4 py-3 rounded-lg bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500 placeholder:text-primary-500"
                             />
                             {showSuggestions && citySuggestions.length > 0 && (
@@ -468,8 +470,8 @@ export default function IftarSehriClient() {
 
             {/* Footer Info */}
             <div className="text-center text-primary-500 text-xs mt-8">
-                <p>Calculation Method: University of Islamic Sciences, Karachi (18°) based on {location.country}.</p>
-                <p>Hijri date adjusts at Maghrib.</p>
+                <p>{t('calcMethod')} {location.country}.</p>
+                <p>{t('hijriAdjust')}</p>
             </div>
 
         </div>

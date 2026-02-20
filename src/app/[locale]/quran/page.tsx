@@ -5,6 +5,7 @@ import QuranStats from './QuranStats';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { auth } from '@/lib/auth/config';
+import { getTranslations } from 'next-intl/server';
 
 export const metadata = {
     title: 'Holy Quran | Ramadan Companion',
@@ -15,6 +16,7 @@ export default async function QuranPage({ params }: { params: Promise<{ locale: 
     const chapters = await getAllChapters();
     const { locale } = await params;
     const session = await auth();
+    const t = await getTranslations({ locale, namespace: 'Quran' });
 
     return (
         <div className="min-h-screen flex flex-col font-sans bg-primary-950 text-white">
@@ -28,10 +30,10 @@ export default async function QuranPage({ params }: { params: Promise<{ locale: 
                             <span className="text-4xl">📖</span>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4 drop-shadow-md">
-                            The Holy Quran
+                            {t('title')}
                         </h1>
                         <p className="text-xl text-primary-200 max-w-2xl mx-auto">
-                            Read, listen, and reflect on the divine message of Allah.
+                            {t('subtitle')}
                         </p>
                     </div>
 

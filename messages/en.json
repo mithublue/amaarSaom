@@ -122,7 +122,62 @@
         "selectCountry": "Select Country",
         "selectCity": "Select City",
         "enterCityName": "Enter City Name",
-        "selectCountryFirst": "Select Country First"
+        "selectCountryFirst": "Select Country First",
+        "calcMethod": "Calculation Method: University of Islamic Sciences, Karachi (18°)",
+        "hijriAdjust": "Hijri date adjusts at Maghrib."
+    },
+    "HomeWidgets": {
+        "greeting": "As-Salamu Alaykum",
+        "nextPrayer": "Next Prayer",
+        "iftar": "Iftar",
+        "sehri": "Sehri",
+        "sehriEnds": "Sehri Ends",
+        "sehriStarts": "Sehri Starts",
+        "timeRemaining": "Time Remaining",
+        "endsIn": "Ends In",
+        "todaysDeeds": "Today's Deeds",
+        "addDeed": "✨ Add Deed",
+        "loading": "Loading...",
+        "motivation": {
+            "default1": "Many are doing deeds today! Start with {deed}.",
+            "default2": "Do {deed} now to stay ahead in today's leaderboard.",
+            "default3": "Alhamdulillah, many prayed Tahajjud today. Complete {deed} to reach top 20%.",
+            "default4": "Many are ahead in good deeds today! Get back on track with — {deed}"
+        }
+    },
+    "Quran": {
+        "title": "The Holy Quran",
+        "subtitle": "Read, listen, and reflect on the divine message of Allah",
+        "searchPlaceholder": "Search Surah...",
+        "surah": "Surah",
+        "ayahs": "Ayahs",
+        "revelation": "Revelation",
+        "mecca": "Meccan",
+        "medina": "Medinan",
+        "readButton": "Read",
+        "startReading": "Start Reading",
+        "stats": {
+            "totalSurahs": "Total Surahs",
+            "totalAyahs": "Total Ayahs",
+            "revelationPlace": "Revelation",
+            "meccan": "Meccan",
+            "medinan": "Medinan",
+            "continueReading": "Continue Reading",
+            "resumeReading": "Resume Reading",
+            "startJourney": "Start your journey with Al-Fatihah",
+            "bookmarks": "Bookmarks",
+            "viewSavedVerses": "view saved verses",
+            "savedAyahs": "Saved Ayahs"
+        },
+        "bookmarks": {
+            "title": "My Bookmarks",
+            "empty": "No Bookmarks Yet",
+            "emptyDesc": "Mark verses while reading to save them here.",
+            "startReading": "Start Reading",
+            "surah": "Surah",
+            "ayah": "Ayah",
+            "viewVerse": "View Verse"
+        }
     },
     "Navigation": {
         "home": "Home",

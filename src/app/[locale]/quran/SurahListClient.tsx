@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from '@/i18n/routing';
 import { Chapter } from '@/lib/services/quranService';
 import { Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function SurahListClient({ chapters, locale }: { chapters: Chapter[], locale: string }) {
+    const t = useTranslations('Quran');
     const [searchQuery, setSearchQuery] = useState('');
     const [displayCount, setDisplayCount] = useState(15);
     const observerTarget = useRef<HTMLDivElement>(null);
@@ -45,12 +47,12 @@ export default function SurahListClient({ chapters, locale }: { chapters: Chapte
         <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 md:p-8 animate-fade-in">
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                    Start Reciting <span className="text-accent-400 text-lg">✨</span>
+                    {t('bookmarks.startReading')} <span className="text-accent-400 text-lg">✨</span>
                 </h3>
                 <div className="relative w-full md:w-72">
                     <input
                         type="text"
-                        placeholder="Search Surah (e.g. Yasin, 36)..."
+                        placeholder={t('searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-primary-800 text-white border border-white/10 rounded-xl focus:outline-none focus:border-accent-500 placeholder-primary-500 transition shadow-inner"
@@ -79,7 +81,7 @@ export default function SurahListClient({ chapters, locale }: { chapters: Chapte
                                 </div>
                                 <div className="text-right">
                                     <span className="text-primary-200 font-arabic text-xl block leading-none mb-1 group-hover:text-white transition">{chapter.name_arabic}</span>
-                                    <span className="text-[10px] text-primary-400 bg-white/5 border border-white/5 px-2 py-0.5 rounded-full">{chapter.verses_count} ayahs</span>
+                                    <span className="text-[10px] text-primary-400 bg-white/5 border border-white/5 px-2 py-0.5 rounded-full">{chapter.verses_count} {t('ayahs')}</span>
                                 </div>
                             </div>
                         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 
 interface PrayerTimes {
     Fajr: string;
@@ -103,6 +104,7 @@ function getIftarSehriInfo(times: PrayerTimes, nowMin: number): { label: string;
 }
 
 export default function HomeWidgets({ userName, locale }: { userName?: string; locale: string }) {
+    const t = useTranslations('HomeWidgets');
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
     const [now, setNow] = useState(new Date());
     const [prayerInfo, setPrayerInfo] = useState({ name: '', countdown: '' });
@@ -198,32 +200,37 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
         } else {
             isRemSec = (is.targetMin + 24 * 60 - nowMin) * 60 - nowSec;
         }
-        setIftarSehri({ label: is.label, countdown: formatCountdown(Math.max(0, isRemSec)) });
-    }, [now, prayerTimes]);
+        // Map internal label to translation key
+        let labelKey = 'iftar';
+        if (is.label === 'সেহরী শেষ') labelKey = 'sehriEnds';
+        else if (is.label === 'সেহরী শুরু') labelKey = 'sehriStarts';
+
+        setIftarSehri({ label: t(labelKey), countdown: formatCountdown(Math.max(0, isRemSec)) });
+    }, [now, prayerTimes, t]); // Added t dependency
 
     const loading = !prayerTimes;
 
-    // 4 motivational messages
+    // 4 motivational messages using translations
     const motivationWidgets = [
         {
             key: 'msg1',
             text: nearbyUser
-                ? <><span className="text-accent-400 font-semibold">{nearbyUser.name}</span> আজ দারুণ আমল করছেন! চলুন, আপনিও <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link> দিয়ে আজকের খাতা খুলুন।</>
-                : <>অনেকেই আজ আমল করছেন! আপনিও <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link> দিয়ে শুরু করুন।</>,
+                ? <>{nearbyUser.name} {t('motivation.default1', { deed: '' })} <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link></>
+                : <>{t.rich('motivation.default1', { deed: (chunks) => <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link> })}</>,
         },
         {
             key: 'msg2',
             text: nearbyUser
-                ? <><span className="text-accent-400 font-semibold">{nearbyUser.name}</span>-এর আজকের পয়েন্ট {nearbyUser.totalPoints}! তাকে ছুঁতে এখনই <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> করে ফেলুন।</>
-                : <>আজকের লিডারবোর্ডে এগিয়ে থাকতে এখনই <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> করে ফেলুন।</>,
+                ? <>{nearbyUser.name} ({nearbyUser.totalPoints}) - {t.rich('motivation.default2', { deed: (chunks) => <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> })}</>
+                : <>{t.rich('motivation.default2', { deed: (chunks) => <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> })}</>,
         },
         {
             key: 'msg3',
-            text: <>আলহামদুলিল্লাহ, আজ অনেক মানুষ তাহাজ্জুদ পড়েছেন। টপ ২০%-এ জায়গা করে নিতে আজকের <Link href={deeds[2].href} className="text-emerald-400 font-semibold hover:underline">{deeds[2].namebn}</Link> সম্পন্ন করুন।</>,
+            text: <>{t.rich('motivation.default3', { deed: (chunks) => <Link href={deeds[2].href} className="text-emerald-400 font-semibold hover:underline">{deeds[2].namebn}</Link> })}</>,
         },
         {
             key: 'msg4',
-            text: <>নেক আমলের প্রতিযোগিতায় আজ অনেকেই এগিয়ে! ছোট্ট এই কাজটি দিয়ে ট্র্যাকে ফিরুন — <Link href={deeds[3].href} className="text-emerald-400 font-semibold hover:underline">{deeds[3].namebn}</Link></>,
+            text: <>{t.rich('motivation.default4', { deed: (chunks) => <Link href={deeds[3].href} className="text-emerald-400 font-semibold hover:underline">{deeds[3].namebn}</Link> })}</>,
         },
     ];
 
@@ -231,7 +238,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
         <div className="w-full max-w-4xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Greeting */}
             <h1 className="text-3xl md:text-4xl font-bold text-white text-center mb-2">
-                আস-সালামু আলাইকুম{userName ? <>, <span className="text-accent-400">{userName}!</span></> : ''} 👋
+                {t('greeting')}{userName ? <>, <span className="text-accent-400">{userName}!</span></> : ''} 👋
             </h1>
 
             {/* Two Pill Cards */}
@@ -242,13 +249,13 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     <div className="flex items-center gap-2 mb-2">
                         <span className="text-xl">🕌</span>
                         <span className="text-xs font-medium text-emerald-300 truncate">
-                            {prayerInfo.name || 'ওয়াক্ত'}
+                            {prayerInfo.name || t('nextPrayer')}
                         </span>
                     </div>
                     <div className="text-xl md:text-2xl font-mono font-bold text-white tracking-wider">
-                        {loading ? <span className="animate-pulse text-sm text-primary-400">লোড হচ্ছে...</span> : prayerInfo.countdown}
+                        {loading ? <span className="animate-pulse text-sm text-primary-400">{t('loading')}</span> : prayerInfo.countdown}
                     </div>
-                    <p className="text-xs text-primary-400 mt-1">শেষ হতে বাকি</p>
+                    <p className="text-xs text-primary-400 mt-1">{t('endsIn')}</p>
                 </Link>
 
                 {/* Iftar / Sehri */}
@@ -256,12 +263,12 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     <div className="absolute inset-0 bg-gradient-to-br from-accent-500/5 to-transparent pointer-events-none" />
                     <div className="flex items-center gap-2 mb-2">
                         <span className="text-xl">🌙</span>
-                        <span className="text-xs font-medium text-accent-300">{iftarSehri.label || 'ইফতার'}</span>
+                        <span className="text-xs font-medium text-accent-300">{iftarSehri.label || t('iftar')}</span>
                     </div>
                     <div className="text-xl md:text-2xl font-mono font-bold text-white tracking-wider">
-                        {loading ? <span className="animate-pulse text-sm text-primary-400">লোড হচ্ছে...</span> : iftarSehri.countdown}
+                        {loading ? <span className="animate-pulse text-sm text-primary-400">{t('loading')}</span> : iftarSehri.countdown}
                     </div>
-                    <p className="text-xs text-primary-400 mt-1">বাকি সময়</p>
+                    <p className="text-xs text-primary-400 mt-1">{t('timeRemaining')}</p>
                 </Link>
             </div>
 
@@ -269,8 +276,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
             <div className="relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-glass">
                 <div className="absolute inset-0 bg-gradient-to-br from-accent-600/8 via-transparent to-emerald-600/5 pointer-events-none" />
                 <div className="relative z-10 flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-primary-300">আজকের আমল</span>
-                    <span className="text-sm font-bold text-accent-400">{todayDeeds} / ১০ ✨</span>
+                    <span className="text-sm font-medium text-primary-300">{t('todaysDeeds')}</span>
+                    <span className="text-sm font-bold text-accent-400">{todayDeeds} / 10 ✨</span>
                 </div>
                 <div className="w-full bg-primary-800/60 rounded-full h-2 overflow-hidden">
                     <div
@@ -279,7 +286,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     />
                 </div>
                 <Link href="/good-deeds" className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-accent-600/20 hover:bg-accent-600/30 border border-accent-500/30 rounded-xl text-sm text-accent-300 font-medium transition-all hover:text-accent-200">
-                    ✨ আমল যোগ করুন
+                    {t('addDeed')}
                 </Link>
             </div>
 
