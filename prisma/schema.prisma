@@ -248,7 +248,7 @@ model SystemSettings {
 model PushSubscription {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  token     String   @unique @db.Text
+  token     String   @unique @db.VarChar(512)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

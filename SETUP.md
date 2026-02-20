@@ -1,4 +1,4 @@
-# Ramadan Companion - Setup Guide
+# Nuzul - Setup Guide
 
 ## Prerequisites
 - Node.js 18+ installed
@@ -69,7 +69,7 @@ Visit: http://localhost:3000
 ## Project Structure
 
 ```
-ramadan-companion/
+ramadan-companion/ (Nuzul)
 ├── prisma/
 │   ├── schema.prisma      # Database schema
 │   ├── seed.ts            # Seed data

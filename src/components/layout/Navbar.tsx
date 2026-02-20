@@ -1,8 +1,15 @@
+'use client';
+
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
 import LanguageSwitcher from './LanguageSwitcher';
 import UserMenu from './UserMenu';
-import NotificationBell from '@/components/notifications/NotificationBell';
+
+const NotificationBell = dynamic(
+    () => import('@/components/notifications/NotificationBell'),
+    { ssr: false }
+);
 
 interface NavbarProps {
     session: any;
@@ -27,7 +34,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
 
                 {/* Actions Section - Single Line Alignment */}
                 <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                    {session?.user && <NotificationBell />}
+                    <NotificationBell />
                     <LanguageSwitcher />
                     <UserMenu session={session} locale={locale} />
                 </div>
