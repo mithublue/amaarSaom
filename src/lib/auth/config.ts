@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@/lib/db/prisma';
 import { authConfig } from './auth.config';
+import { sendSlackNotification } from '@/lib/services/slackService';
 
 export const config = {
     ...authConfig,
@@ -35,10 +36,28 @@ export const config = {
                             name: user.name || '',
                             image: user.image,
                             preferredLanguage: 'en',
+                            lastLoginAt: new Date(),
                         },
                     });
+
+                    // Slack: new registration
+                    sendSlackNotification('register', {
+                        userName: user.name || '',
+                        email: user.email,
+                    }).catch(() => { });
                 } else {
                     console.log('Existing user signed in:', user.email);
+                    // Update last login time
+                    await prisma.user.update({
+                        where: { email: user.email },
+                        data: { lastLoginAt: new Date() },
+                    });
+
+                    // Slack: login
+                    sendSlackNotification('login', {
+                        userName: existingUser.name,
+                        email: user.email,
+                    }).catch(() => { });
                 }
 
                 return true;

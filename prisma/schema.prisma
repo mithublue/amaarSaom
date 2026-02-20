@@ -71,6 +71,8 @@ model User {
   districtId        Int?             @map("district_id")
   preferredLanguage String           @default("en") @map("preferred_language") @db.VarChar(5)
   timezone          String           @default("Asia/Dhaka") @db.VarChar(50)
+  lastLoginAt       DateTime?        @map("last_login_at")
+  lastActiveAt      DateTime?        @map("last_active_at")
   createdAt         DateTime         @default(now()) @map("created_at")
   updatedAt         DateTime         @updatedAt @map("updated_at")
   country           Country?         @relation(fields: [countryId], references: [id])
@@ -208,4 +210,19 @@ model PrayerSettings {
   user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("prayer_settings")
+}
+
+// ============================================
+// System Settings Models
+// ============================================
+
+model SystemSettings {
+  id                 Int      @id @default(autoincrement())
+  slackWebhookUrl    String?  @map("slack_webhook_url") @db.Text
+  notifyOnRegister   Boolean  @default(true)  @map("notify_on_register")
+  notifyOnLogin      Boolean  @default(true)  @map("notify_on_login")
+  notifyOnVisit      Boolean  @default(false) @map("notify_on_visit")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
 }
