@@ -133,7 +133,7 @@ export default function HadithClient({ initialHadiths, session, locale, highligh
 
                                 <div className="flex flex-col items-center text-center relative z-10">
                                     <span className="text-accent-400 text-xs font-bold tracking-widest uppercase mb-6 px-3 py-1 bg-accent-500/10 rounded-full border border-accent-500/20">
-                                        Ramadan Companion
+                                        Nuzul
                                     </span>
 
                                     {/* Scrollable Text Area if too long, but try to keep it clean */}

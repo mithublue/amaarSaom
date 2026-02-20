@@ -82,7 +82,7 @@ export default function RegisterPage() {
                     <div className="text-center mb-8">
                         <span className="text-4xl mb-3 block">🌙</span>
                         <h1 className="text-2xl font-bold text-white mb-1">Create Account</h1>
-                        <p className="text-sm text-primary-400">Join Ramadan Companion</p>
+                        <p className="text-sm text-primary-400">Join Nuzul</p>
                     </div>
 
                     {/* Error */}

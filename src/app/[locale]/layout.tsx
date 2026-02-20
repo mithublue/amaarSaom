@@ -18,13 +18,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ramadan Companion - Your Spiritual Journey Partner",
+  title: "Nuzul - Your Spiritual Journey Partner",
   description: "Track prayers, complete good deeds, compete with your community, and strengthen your faith this Ramadan",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Ramadan Companion",
+    title: "Nuzul",
   },
   formatDetection: {
     telephone: false,

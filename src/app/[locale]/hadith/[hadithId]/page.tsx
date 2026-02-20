@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     }
 
     return {
-        title: `Hadith #${hadith.id} | Ramadan Companion`,
+        title: `Hadith #${hadith.id} | Nuzul`,
         description: hadith.textEn.substring(0, 150) + '...',
         openGraph: {
             title: `Hadith - ${hadith.source}`,

@@ -8,7 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-    title: 'Community Leaderboard | Ramadan Companion',
+    title: 'Community Leaderboard | Nuzul',
     description: 'Compete for good deeds and track your spiritual progress',
 };
 

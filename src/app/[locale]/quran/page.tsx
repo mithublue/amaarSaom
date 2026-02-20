@@ -8,7 +8,7 @@ import { auth } from '@/lib/auth/config';
 import { getTranslations } from 'next-intl/server';
 
 export const metadata = {
-    title: 'Holy Quran | Ramadan Companion',
+    title: 'Holy Quran | Nuzul',
     description: 'Read and listen to the Holy Quran',
 };
 

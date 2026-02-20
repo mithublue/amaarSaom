@@ -34,7 +34,7 @@ export async function sendVerificationEmail(email: string, token: string): Promi
     <body>
         <div class="container">
             <div class="header">
-                <h1>🌙 Ramadan Companion</h1>
+                <h1>🌙 Nuzul</h1>
                 <p>Verify your email to get started</p>
             </div>
             <div class="content">
@@ -60,9 +60,9 @@ export async function sendVerificationEmail(email: string, token: string): Promi
         const transporter = getTransporter();
 
         await transporter.sendMail({
-            from: `"Ramadan Companion" <${process.env.SMTP_EMAIL}>`,
+            from: `"Nuzul" <${process.env.SMTP_EMAIL}>`,
             to: email,
-            subject: '✅ Verify your email — Ramadan Companion',
+            subject: '✅ Verify your email — Nuzul',
             html,
         });
 

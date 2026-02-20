@@ -58,7 +58,7 @@ function SignInForm() {
                     <div className="text-center mb-8">
                         <span className="text-4xl mb-3 block">🌙</span>
                         <h1 className="text-2xl font-bold text-white mb-1">Welcome Back</h1>
-                        <p className="text-sm text-primary-400">Sign in to Ramadan Companion</p>
+                        <p className="text-sm text-primary-400">Sign in to Nuzul</p>
                     </div>
 
                     {/* Verified Banner */}

@@ -1,6 +1,6 @@
 {
-    "name": "Ramadan Companion",
-    "short_name": "Ramadan App",
+    "name": "Nuzul",
+    "short_name": "Nuzul",
     "description": "Your complete digital companion for the holy month of Ramadan",
     "start_url": "/",
     "display": "standalone",

@@ -18,7 +18,7 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Background message:', payload);
 
-    const notificationTitle = payload.notification?.title || 'Ramadan Companion';
+    const notificationTitle = payload.notification?.title || 'Nuzul';
     const notificationOptions = {
         body: payload.notification?.body || '',
         icon: '/icons/icon-192x192.png',

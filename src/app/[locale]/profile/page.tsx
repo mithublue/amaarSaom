@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth/config';
 import { redirect } from '@/i18n/routing';
 
 export const metadata: Metadata = {
-    title: 'My Profile | Ramadan Companion',
+    title: 'My Profile | Nuzul',
     description: 'Manage your profile and location settings',
 };
 

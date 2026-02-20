@@ -1,6 +1,6 @@
 {
     "HomePage": {
-        "title": "Ramadan Companion",
+        "title": "Nuzul",
         "profile": "Profile",
         "signOut": "Sign Out",
         "greeting": "Assalamu Alaikum",
@@ -46,7 +46,7 @@
         }
     },
     "Dashboard": {
-        "title": "Ramadan Companion",
+        "title": "Nuzul",
         "signOut": "Sign Out",
         "guest": "Guest User",
         "greeting": "Assalamu Alaikum",
@@ -59,7 +59,7 @@
     },
     "Footer": {
         "disclaimer": "This point system is only to encourage you. The real reward is known and given by Allah alone.",
-        "copyright": "Ramadan Companion. Built for the Ummah."
+        "copyright": "Nuzul. Built for the Ummah."
     },
     "Profile": {
         "title": "My Profile 👤",
@@ -225,7 +225,7 @@
         "allCategories": "All Categories",
         "copied": "Hadith copied to clipboard! ✅",
         "copy": "Copy",
-        "metaTitle": "Hadith Collection | Ramadan Companion",
+        "metaTitle": "Hadith Collection | Nuzul",
         "metaDesc": "Read and share authentic Hadiths categorized by topic.",
         "saveImage": "Save Image"
     },
