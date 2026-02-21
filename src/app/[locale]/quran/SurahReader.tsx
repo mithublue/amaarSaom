@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Chapter, Verse } from '@/lib/services/quranService';
 import Link from 'next/link';
 
@@ -11,22 +11,17 @@ interface SurahReaderProps {
 
 export default function SurahReader({ surah, verses }: SurahReaderProps) {
     const [playingVerse, setPlayingVerse] = useState<number | null>(null);
+    const [continuousPlay, setContinuousPlay] = useState(false);
+    const [continuousFrom, setContinuousFrom] = useState<number | null>(null); // verse index
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [bookmarks, setBookmarks] = useState<string[]>([]);
 
     useEffect(() => {
-        // Load bookmarks from local storage
         const stored = localStorage.getItem('quran_bookmarks');
         if (stored) {
-            try {
-                setBookmarks(JSON.parse(stored));
-            } catch (e: any) {
-                // Fallback for corrupted/legacy data (comma-separated strings)
-                setBookmarks(stored.split(',').filter(Boolean));
-            }
+            try { setBookmarks(JSON.parse(stored)); }
+            catch { setBookmarks(stored.split(',').filter(Boolean)); }
         }
-
-        // Save "Continue Reading"
         if (surah) {
             localStorage.setItem('lastRead', JSON.stringify({
                 surahId: surah.id,
@@ -38,6 +33,34 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
         }
     }, [surah]);
 
+    // Build audio URL for a verse
+    const getAudioUrl = (verse: Verse) => {
+        const paddedSurah = String(surah.id).padStart(3, '0');
+        const paddedVerse = String(verse.verse_key.split(':')[1]).padStart(3, '0');
+        return `https://verses.quran.com/Alafasy/mp3/${paddedSurah}${paddedVerse}.mp3`;
+    };
+
+    // Play a specific verse; optionally chain to next in continuous mode
+    const playVerse = useCallback((verse: Verse, idx: number, chain = false) => {
+        if (audioRef.current) audioRef.current.pause();
+
+        const audio = new Audio(getAudioUrl(verse));
+        audioRef.current = audio;
+        setPlayingVerse(verse.id);
+
+        audio.play().catch(e => console.error('Audio play error:', e));
+
+        audio.onended = () => {
+            setPlayingVerse(null);
+            // In continuous mode, auto-play next verse
+            if (chain && idx + 1 < verses.length) {
+                playVerse(verses[idx + 1], idx + 1, true);
+            } else {
+                setContinuousFrom(null);
+            }
+        };
+    }, [verses, surah.id]); // eslint-disable-line
+
     const playAudio = (verse: Verse) => {
         if (playingVerse === verse.id && audioRef.current) {
             if (audioRef.current.paused) {
@@ -45,32 +68,33 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
             } else {
                 audioRef.current.pause();
                 setPlayingVerse(null);
+                setContinuousFrom(null);
             }
         } else {
-            if (audioRef.current) {
-                audioRef.current.pause();
-            }
-            // Construct audio URL locally (Mishary Rashid Alafasy)
-            // Format: 001001.mp3 (3 digits surah, 3 digits verse)
-            const paddedSurah = String(surah.id).padStart(3, '0');
-            const paddedVerse = String(verse.verse_key.split(':')[1]).padStart(3, '0');
-            const audioUrl = `https://verses.quran.com/Alafasy/mp3/${paddedSurah}${paddedVerse}.mp3`;
-
-            const audio = new Audio(audioUrl);
-            audioRef.current = audio;
-            setPlayingVerse(verse.id);
-            audio.play().catch(e => console.error("Audio play error:", e));
-            audio.onended = () => setPlayingVerse(null);
+            const idx = verses.findIndex(v => v.id === verse.id);
+            playVerse(verse, idx, false); // single verse
+            setContinuousFrom(null);
         }
     };
 
+    const startContinuousPlay = (fromIdx = 0) => {
+        setContinuousPlay(true);
+        setContinuousFrom(fromIdx);
+        playVerse(verses[fromIdx], fromIdx, true);
+    };
+
+    const stopPlay = () => {
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+        setPlayingVerse(null);
+        setContinuousFrom(null);
+    };
+
     const toggleBookmark = (verseKey: string) => {
-        const newBookmarks = bookmarks.includes(verseKey)
+        const next = bookmarks.includes(verseKey)
             ? bookmarks.filter(b => b !== verseKey)
             : [...bookmarks, verseKey];
-
-        setBookmarks(newBookmarks);
-        localStorage.setItem('quran_bookmarks', JSON.stringify(newBookmarks));
+        setBookmarks(next);
+        localStorage.setItem('quran_bookmarks', JSON.stringify(next));
     };
 
     const shareVerse = (verseKey: string) => {
@@ -98,14 +122,38 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                         <div className="w-64 h-64 bg-accent-500 rounded-full blur-3xl"></div>
                     </div>
                     <div className="font-arabic text-3xl md:text-4xl text-white leading-[2.0] md:leading-[2.2] relative z-10 drop-shadow-md">
-                        بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                        بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                     </div>
                 </div>
             )}
 
+            {/* ── Continuous Play Toolbar ─────────────────────────────────── */}
+            <div className="flex items-center gap-3 justify-end mb-6 flex-wrap">
+                {playingVerse !== null ? (
+                    <button
+                        onClick={stopPlay}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-600/90 hover:bg-red-500 text-white text-sm font-medium transition-all shadow-md"
+                    >
+                        ⏹ Stop Playing
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => startContinuousPlay(0)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent-600/90 hover:bg-accent-500 text-white text-sm font-medium transition-all shadow-md"
+                    >
+                        ▶▶ Play All
+                    </button>
+                )}
+                {continuousFrom !== null && playingVerse !== null && (
+                    <span className="text-xs text-accent-300 px-3 py-1 bg-accent-900/30 rounded-full border border-accent-500/20 animate-pulse">
+                        🔊 Playing continuously...
+                    </span>
+                )}
+            </div>
+
             {/* Verses List */}
             <div className="space-y-6">
-                {verses.map((verse) => (
+                {verses.map((verse, idx) => (
                     <div
                         key={verse.id}
                         id={`ayah-${verse.verse_key}`}
@@ -117,11 +165,21 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                                 {verse.verse_key}
                             </span>
                             <div className="flex gap-2">
+                                {/* Single verse play */}
                                 <button
                                     onClick={() => playAudio(verse)}
+                                    title="Play this verse"
                                     className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${playingVerse === verse.id ? 'bg-accent-600 text-white shadow-gold-glow scale-110' : 'bg-primary-950/50 text-primary-200 hover:bg-white/10 hover:text-white'}`}
                                 >
                                     {playingVerse === verse.id ? '⏸' : '▶'}
+                                </button>
+                                {/* Play from here continuously */}
+                                <button
+                                    onClick={() => startContinuousPlay(idx)}
+                                    title="Play continuously from this verse"
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-accent-400 hover:bg-accent-900/40 hover:text-accent-300 transition-all text-xs font-bold"
+                                >
+                                    ▶▶
                                 </button>
                                 <button
                                     onClick={() => toggleBookmark(verse.verse_key)}
@@ -165,13 +223,12 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
             {/* Navigation */}
             <div className="flex justify-between mt-16 pt-8 border-t border-white/10">
                 {surah.id > 1 ? (
-                    <Link href={`/quran/${surah.id - 1}`} className="flex items-center gap-2 text-primary-300 hover:text-white transition font-semibold px-4 py-2 hover:bg-white/5 rounded-lg">
+                    <Link href={`/quran/${surah.id - 1}`} onClick={stopPlay} className="flex items-center gap-2 text-primary-300 hover:text-white transition font-semibold px-4 py-2 hover:bg-white/5 rounded-lg">
                         ← Previous Surah
                     </Link>
                 ) : <div></div>}
-
                 {surah.id < 114 && (
-                    <Link href={`/quran/${surah.id + 1}`} className="flex items-center gap-2 text-primary-300 hover:text-white transition font-semibold px-4 py-2 hover:bg-white/5 rounded-lg">
+                    <Link href={`/quran/${surah.id + 1}`} onClick={stopPlay} className="flex items-center gap-2 text-primary-300 hover:text-white transition font-semibold px-4 py-2 hover:bg-white/5 rounded-lg">
                         Next Surah →
                     </Link>
                 )}

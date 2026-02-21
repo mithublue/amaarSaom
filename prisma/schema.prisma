@@ -1,4 +1,3 @@
-// This is your Prisma schema file
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,10 +6,6 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
-// ============================================
-// Location Models (Bangladesh-focused)
-// ============================================
 
 model Country {
   id        Int        @id @default(autoincrement())
@@ -30,8 +25,8 @@ model Division {
   nameEn    String     @map("name_en") @db.VarChar(100)
   nameBn    String?    @map("name_bn") @db.VarChar(100)
   nameAr    String?    @map("name_ar") @db.VarChar(100)
-  country   Country    @relation(fields: [countryId], references: [id])
   districts District[]
+  country   Country    @relation(fields: [countryId], references: [id])
   users     User[]
 
   @@index([countryId])
@@ -39,11 +34,11 @@ model Division {
 }
 
 model District {
-  id         Int     @id @default(autoincrement())
-  divisionId Int     @map("division_id")
-  nameEn     String  @map("name_en") @db.VarChar(100)
-  nameBn     String? @map("name_bn") @db.VarChar(100)
-  nameAr     String? @map("name_ar") @db.VarChar(100)
+  id         Int      @id @default(autoincrement())
+  divisionId Int      @map("division_id")
+  nameEn     String   @map("name_en") @db.VarChar(100)
+  nameBn     String?  @map("name_bn") @db.VarChar(100)
+  nameAr     String?  @map("name_ar") @db.VarChar(100)
   latitude   Decimal? @db.Decimal(10, 8)
   longitude  Decimal? @db.Decimal(11, 8)
   division   Division @relation(fields: [divisionId], references: [id])
@@ -54,41 +49,39 @@ model District {
   @@map("districts")
 }
 
-// ============================================
-// User Models
-// ============================================
-
 model User {
-  id                Int              @id @default(autoincrement())
-  email             String           @unique @db.VarChar(255)
-  name              String           @db.VarChar(100)
-  passwordHash      String?          @map("password_hash") @db.Text
-  emailVerified     Boolean          @default(false) @map("email_verified")
-  phone             String?          @db.VarChar(20)
-  image             String?          @db.Text
-  countryName       String?          @default("Bangladesh") @map("country_name") @db.VarChar(100)
-  cityName          String?          @default("Dhaka") @map("city_name") @db.VarChar(100)
-  countryId         Int?             @map("country_id")
-  divisionId        Int?             @map("division_id")
-  districtId        Int?             @map("district_id")
-  preferredLanguage String           @default("en") @map("preferred_language") @db.VarChar(5)
-  timezone          String           @default("Asia/Dhaka") @db.VarChar(50)
-  lastLoginAt       DateTime?        @map("last_login_at")
-  lastActiveAt      DateTime?        @map("last_active_at")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-  country           Country?         @relation(fields: [countryId], references: [id])
-  division          Division?        @relation(fields: [divisionId], references: [id])
-  district          District?        @relation(fields: [districtId], references: [id])
-  goals             UserGoal[]
+  id                Int                @id @default(autoincrement())
+  email             String             @unique @db.VarChar(255)
+  name              String             @db.VarChar(100)
+  phone             String?            @db.VarChar(20)
+  image             String?            @db.Text
+  countryId         Int?               @map("country_id")
+  divisionId        Int?               @map("division_id")
+  districtId        Int?               @map("district_id")
+  preferredLanguage String             @default("en") @map("preferred_language") @db.VarChar(5)
+  timezone          String             @default("Asia/Dhaka") @db.VarChar(50)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  cityName          String?            @default("Dhaka") @map("city_name") @db.VarChar(100)
+  countryName       String?            @default("Bangladesh") @map("country_name") @db.VarChar(100)
+  lastActiveAt      DateTime?          @map("last_active_at")
+  lastLoginAt       DateTime?          @map("last_login_at")
+  emailVerified     Boolean            @default(false) @map("email_verified")
+  passwordHash      String?            @map("password_hash") @db.Text
+  accounts          Account[]
   completedDeeds    CompletedDeed[]
   leaderboards      LeaderboardCache[]
   prayerSettings    PrayerSettings?
-  accounts          Account[]
   pushSubscriptions PushSubscription[]
+  goals             UserGoal[]
+  country           Country?           @relation(fields: [countryId], references: [id])
+  district          District?          @relation(fields: [districtId], references: [id])
+  division          Division?          @relation(fields: [divisionId], references: [id])
 
   @@index([email])
   @@index([countryId, divisionId, districtId])
+  @@index([districtId], map: "users_district_id_fkey")
+  @@index([divisionId], map: "users_division_id_fkey")
   @@map("users")
 }
 
@@ -119,22 +112,16 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId], map: "accounts_user_id_fkey")
   @@map("accounts")
 }
-
-// ============================================
-// Good Deeds Models
-// ============================================
 
 model PredefinedGoodDeed {
   id                  Int             @id @default(autoincrement())
   nameEn              String          @map("name_en") @db.VarChar(100)
   nameBn              String?         @map("name_bn") @db.VarChar(100)
   nameAr              String?         @map("name_ar") @db.VarChar(100)
-  category            String          @default("other") @db.VarChar(50) // Internal key or fallback
-  categoryEn          String?         @map("category_en") @db.VarChar(100)
-  categoryBn          String?         @map("category_bn") @db.VarChar(100)
-  categoryAr          String?         @map("category_ar") @db.VarChar(100)
+  category            String          @default("other") @db.VarChar(50)
   tier                String          @default("easy") @db.VarChar(20)
   points              Int             @default(10)
   timeEstimateMinutes Int?            @map("time_estimate_minutes")
@@ -144,8 +131,11 @@ model PredefinedGoodDeed {
   descriptionEn       String?         @map("description_en") @db.Text
   descriptionBn       String?         @map("description_bn") @db.Text
   descriptionAr       String?         @map("description_ar") @db.Text
-  goals               UserGoal[]
+  categoryAr          String?         @map("category_ar") @db.VarChar(100)
+  categoryBn          String?         @map("category_bn") @db.VarChar(100)
+  categoryEn          String?         @map("category_en") @db.VarChar(100)
   completedDeeds      CompletedDeed[]
+  goals               UserGoal[]
 
   @@map("predefined_good_deeds")
 }
@@ -161,10 +151,11 @@ model UserGoal {
   endDate        DateTime            @map("end_date") @db.Date
   isCompleted    Boolean             @default(false) @map("is_completed")
   createdAt      DateTime            @default(now()) @map("created_at")
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   goodDeed       PredefinedGoodDeed? @relation(fields: [goodDeedId], references: [id])
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, goalType, startDate])
+  @@index([goodDeedId], map: "user_goals_good_deed_id_fkey")
   @@map("user_goals")
 }
 
@@ -182,17 +173,14 @@ model CompletedDeed {
   notes          String?             @db.Text
   isStreakBonus  Boolean             @default(false) @map("is_streak_bonus")
   isPowerDay     Boolean             @default(false) @map("is_power_day")
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   goodDeed       PredefinedGoodDeed? @relation(fields: [goodDeedId], references: [id])
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
   @@index([date])
+  @@index([goodDeedId], map: "completed_deeds_good_deed_id_fkey")
   @@map("completed_deeds")
 }
-
-// ============================================
-// Leaderboard Models
-// ============================================
 
 model LeaderboardCache {
   id          Int      @id @default(autoincrement())
@@ -211,39 +199,27 @@ model LeaderboardCache {
   @@map("leaderboard_cache")
 }
 
-// ============================================
-// Prayer Settings Models
-// ============================================
-
 model PrayerSettings {
-  id                   Int     @id @default(autoincrement())
-  userId               Int     @unique @map("user_id")
-  calculationMethod    String  @default("Karachi") @map("calculation_method") @db.VarChar(20)
-  juristicMethod       String  @default("Hanafi") @map("juristic_method") @db.VarChar(20)
-  enableNotifications  Boolean @default(true) @map("enable_notifications")
-  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  Int     @id @default(autoincrement())
+  userId              Int     @unique @map("user_id")
+  calculationMethod   String  @default("Karachi") @map("calculation_method") @db.VarChar(20)
+  juristicMethod      String  @default("Hanafi") @map("juristic_method") @db.VarChar(20)
+  enableNotifications Boolean @default(true) @map("enable_notifications")
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("prayer_settings")
 }
 
-// ============================================
-// System Settings Models
-// ============================================
-
 model SystemSettings {
-  id                 Int      @id @default(autoincrement())
-  slackWebhookUrl    String?  @map("slack_webhook_url") @db.Text
-  notifyOnRegister   Boolean  @default(true)  @map("notify_on_register")
-  notifyOnLogin      Boolean  @default(true)  @map("notify_on_login")
-  notifyOnVisit      Boolean  @default(false) @map("notify_on_visit")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id               Int      @id @default(autoincrement())
+  slackWebhookUrl  String?  @map("slack_webhook_url") @db.Text
+  notifyOnRegister Boolean  @default(true) @map("notify_on_register")
+  notifyOnLogin    Boolean  @default(true) @map("notify_on_login")
+  notifyOnVisit    Boolean  @default(false) @map("notify_on_visit")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@map("system_settings")
 }
-
-// ============================================
-// Push Notifications
-// ============================================
 
 model PushSubscription {
   id        Int      @id @default(autoincrement())
@@ -257,22 +233,17 @@ model PushSubscription {
   @@map("push_subscriptions")
 }
 
-// ============================================
-// Zakat — Gold & Silver Price Cache
-// ============================================
-
 model GoldSilverPrice {
-  id              Int      @id @default(autoincrement())
-  goldPer22KGram  Decimal  @map("gold_per_22k_gram") @db.Decimal(12, 2)
-  goldPer24KGram  Decimal  @map("gold_per_24k_gram") @db.Decimal(12, 2)
-  goldPer21KGram  Decimal  @map("gold_per_21k_gram") @db.Decimal(12, 2)
-  goldPer18KGram  Decimal  @map("gold_per_18k_gram") @db.Decimal(12, 2)
-  silverPerGram   Decimal  @map("silver_per_gram")   @db.Decimal(10, 2)
-  currency        String   @default("BDT")            @db.VarChar(5)
-  source          String   @default("BAJUS")          @db.VarChar(50)
-  isManual        Boolean  @default(false)            @map("is_manual")
-  fetchedAt       DateTime @default(now())            @map("fetched_at")
+  id             Int      @id @default(autoincrement())
+  goldPer22KGram Decimal  @map("gold_per_22k_gram") @db.Decimal(12, 2)
+  goldPer24KGram Decimal  @map("gold_per_24k_gram") @db.Decimal(12, 2)
+  goldPer21KGram Decimal  @map("gold_per_21k_gram") @db.Decimal(12, 2)
+  goldPer18KGram Decimal  @map("gold_per_18k_gram") @db.Decimal(12, 2)
+  silverPerGram  Decimal  @map("silver_per_gram") @db.Decimal(10, 2)
+  currency       String   @default("BDT") @db.VarChar(5)
+  source         String   @default("BAJUS") @db.VarChar(50)
+  isManual       Boolean  @default(false) @map("is_manual")
+  fetchedAt      DateTime @default(now()) @map("fetched_at")
 
   @@map("gold_silver_prices")
 }
-

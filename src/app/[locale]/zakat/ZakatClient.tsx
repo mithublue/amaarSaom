@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const TOLA_TO_GRAM = 11.664;           // 1 ভরি = 11.664 গ্রাম
@@ -55,10 +56,11 @@ const EMPTY_FORM: FormData = {
 };
 
 const n = (v: string) => parseFloat(v || '0') || 0;
-const fmt = (v: number) => '৳' + Math.round(v).toLocaleString('bn-BD', { useGrouping: true });
+const sym = (currency: string) => currency === 'BDT' ? '৳' : currency === 'SAR' ? '﷼' : currency === 'GBP' ? '£' : currency === 'AED' ? 'د.إ' : currency === 'INR' ? '₹' : '$';
+const fmt = (v: number, currency = 'BDT') => sym(currency) + Math.round(v).toLocaleString();
 const fmtNum = (v: number) => Math.round(v).toLocaleString('bn-BD');
 
-const STEPS = ['নগদ ও সঞ্চয়', 'সোনা ও রূপা', 'ব্যবসা ও বিনিয়োগ', 'ঋণ ও দায়'];
+const STEPS_KEYS = ['cash', 'gold', 'business', 'debt'] as const;
 
 // ── Input helper ────────────────────────────────────────────────────────────
 function Field({ label, hint, value, onChange, prefix = '৳', suffix = '' }: {
@@ -87,10 +89,11 @@ function Field({ label, hint, value, onChange, prefix = '৳', suffix = '' }: {
 }
 
 // ── EditablePrice component ─────────────────────────────────────────────────
-function EditablePriceRow({ label, value, onChange, note }: {
-    label: string; value: string; onChange: (v: string) => void; note?: string;
+function EditablePriceRow({ label, value, onChange, note, currency = 'BDT' }: {
+    label: string; value: string; onChange: (v: string) => void; note?: string; currency?: string;
 }) {
     const [editing, setEditing] = useState(false);
+    const currSym = sym(currency);
     return (
         <div className="bg-emerald-900/20 border border-emerald-500/20 rounded-xl p-4 space-y-2">
             <div className="flex items-center justify-between gap-2">
@@ -106,13 +109,13 @@ function EditablePriceRow({ label, value, onChange, note }: {
                             className="w-32 bg-primary-900 border border-emerald-500/40 rounded-lg px-2 py-1 text-white text-sm text-right outline-none"
                         />
                     ) : (
-                        <span className="text-white font-semibold text-base">৳{parseFloat(value || '0').toLocaleString()}</span>
+                        <span className="text-white font-semibold text-base">{currSym}{parseFloat(value || '0').toLocaleString()}</span>
                     )}
                     <button
                         onClick={() => setEditing(!editing)}
                         title="দাম পরিবর্তন করুন"
                         className="text-emerald-400 hover:text-emerald-300 text-lg transition-colors"
-                    >✎</button>
+                    >✐</button>
                 </div>
             </div>
             {note && <p className="text-xs text-primary-400">💡 {note}</p>}
@@ -121,7 +124,7 @@ function EditablePriceRow({ label, value, onChange, note }: {
 }
 
 // ── Result Section ──────────────────────────────────────────────────────────
-function ResultView({ data, onEdit }: { data: FormData; onEdit: () => void }) {
+function ResultView({ data, onEdit, currency = 'BDT' }: { data: FormData; onEdit: () => void; currency?: string }) {
     const goldGrams = n(data.goldAmount) * (data.goldUnit === 'bhari' ? TOLA_TO_GRAM : 1);
     const goldBDT = goldGrams * n(data.goldPricePerGram);
 
@@ -321,29 +324,35 @@ function ResultView({ data, onEdit }: { data: FormData; onEdit: () => void }) {
 
 // ── Main Wizard ─────────────────────────────────────────────────────────────
 export default function ZakatCalculatorClient() {
+    const t = useTranslations('ZakatPage');
     const [step, setStep] = useState(0);
     const [form, setForm] = useState<FormData>(EMPTY_FORM);
     const [prices, setPrices] = useState<GoldPrice | null>(null);
     const [showResult, setShowResult] = useState(false);
+    const [region, setRegion] = useState<'BD' | 'GLOBAL'>('BD');
+    const [currency, setCurrency] = useState('BDT');
 
     const set = (key: keyof FormData) => (v: string) => setForm(f => ({ ...f, [key]: v }));
     const setAny = (key: keyof FormData, v: any) => setForm(f => ({ ...f, [key]: v }));
 
-    // Fetch gold price on mount
+    // Fetch gold price on mount — region detected server-side from real IP
     useEffect(() => {
-        fetch('/api/gold-price').then(r => r.json()).then(d => {
-            if (d.success && d.data) {
-                const p: GoldPrice = d.data;
-                setPrices(p);
-                // Pre-fill gold/silver editable prices
-                const goldKey = `goldPer${form.goldKarat}KGram` as keyof GoldPrice;
-                setForm(f => ({
-                    ...f,
-                    goldPricePerGram: String(parseFloat(String(p[goldKey])).toFixed(2)),
-                    silverPricePerGram: String(parseFloat(String(p.silverPerGram)).toFixed(2)),
-                }));
-            }
-        }).catch(() => { });
+        fetch('/api/gold-price')
+            .then(res => res.json())
+            .then(d => {
+                if (d.success && d.data) {
+                    const p: GoldPrice = d.data;
+                    setPrices(p);
+                    // Use currency from server response
+                    if (d.currency) setCurrency(d.currency);
+                    if (d.region) setRegion(d.region);
+                    setForm(f => ({
+                        ...f,
+                        goldPricePerGram: String(parseFloat(String(p[`goldPer${f.goldKarat}KGram` as keyof GoldPrice])).toFixed(2)),
+                        silverPricePerGram: String(parseFloat(String(p.silverPerGram)).toFixed(2)),
+                    }));
+                }
+            }).catch(() => { });
     }, []);
 
     // Update gold price when karat changes
@@ -385,6 +394,7 @@ export default function ZakatCalculatorClient() {
                         value={form.goldPricePerGram}
                         onChange={set('goldPricePerGram')}
                         note="আপনার স্থানীয় বাজারের সাথে মিল না থাকলে সঠিক দামটি বসিয়ে নিন।"
+                        currency={currency}
                     />
                     <p className="text-xs text-primary-500 text-right">
                         উৎস: {prices.source} {prices.fetchedAt ? `• ${new Date(prices.fetchedAt).toLocaleDateString('bn-BD')}` : '• ডিফল্ট মান'}
@@ -419,7 +429,7 @@ export default function ZakatCalculatorClient() {
                 <Field label="" value={form.goldAmount} onChange={set('goldAmount')} prefix="" suffix={form.goldUnit === 'bhari' ? 'ভরি' : 'g'} />
                 {n(form.goldAmount) > 0 && n(form.goldPricePerGram) > 0 && (
                     <p className="text-xs text-emerald-400 text-right">
-                        ≈ {fmt(n(form.goldAmount) * (form.goldUnit === 'bhari' ? TOLA_TO_GRAM : 1) * n(form.goldPricePerGram))}
+                        ≈ {fmt(n(form.goldAmount) * (form.goldUnit === 'bhari' ? TOLA_TO_GRAM : 1) * n(form.goldPricePerGram), currency)}
                     </p>
                 )}
             </div>
@@ -431,6 +441,7 @@ export default function ZakatCalculatorClient() {
                     value={form.silverPricePerGram}
                     onChange={set('silverPricePerGram')}
                     note="নিসাব হিসাবে রূপার দর ব্যবহার করা হবে।"
+                    currency={currency}
                 />
             )}
 
@@ -483,7 +494,7 @@ export default function ZakatCalculatorClient() {
 
     if (showResult) {
         return (
-            <ResultView data={form} onEdit={() => { setShowResult(false); setStep(0); }} />
+            <ResultView data={form} currency={currency} onEdit={() => { setShowResult(false); setStep(0); }} />
         );
     }
 
@@ -491,13 +502,13 @@ export default function ZakatCalculatorClient() {
         <div className="w-full max-w-lg mx-auto space-y-6">
             {/* Step indicator */}
             <div className="flex items-center justify-between">
-                {STEPS.map((s, i) => (
+                {STEPS_KEYS.map((key, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${i < step ? 'bg-emerald-600 border-emerald-500 text-white' : i === step ? 'bg-emerald-900/60 border-emerald-400 text-emerald-300' : 'bg-primary-900/40 border-white/10 text-primary-500'}`}>
                             {i < step ? '✓' : i + 1}
                         </div>
-                        <span className={`text-[10px] text-center leading-tight hidden sm:block ${i === step ? 'text-emerald-300' : 'text-primary-500'}`}>{s}</span>
-                        {i < STEPS.length - 1 && (
+                        <span className={`text-[10px] text-center leading-tight hidden sm:block ${i === step ? 'text-emerald-300' : 'text-primary-500'}`}>{t(`steps.${key}`)}</span>
+                        {i < STEPS_KEYS.length - 1 && (
                             <div className={`hidden sm:block absolute h-0.5 w-8 mt-4 ${i < step ? 'bg-emerald-500' : 'bg-white/10'}`} />
                         )}
                     </div>
@@ -513,25 +524,25 @@ export default function ZakatCalculatorClient() {
             <div className="flex gap-3">
                 {step > 0 && (
                     <button
-                        onClick={() => setStep(s => s - 1)}
+                        onClick={() => setStep((s: number) => s - 1)}
                         className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-medium transition-colors"
-                    >← পেছনে</button>
+                    >{t('back')}</button>
                 )}
-                {step < STEPS.length - 1 ? (
+                {step < STEPS_KEYS.length - 1 ? (
                     <button
-                        onClick={() => setStep(s => s + 1)}
+                        onClick={() => setStep((s: number) => s + 1)}
                         className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold transition-all"
-                    >পরবর্তী →</button>
+                    >{t('next')}</button>
                 ) : (
                     <button
                         onClick={() => setShowResult(true)}
                         className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl text-white font-bold transition-all shadow-lg"
-                    >🤲 যাকাত হিসাব করুন</button>
+                    >{t('calculate')}</button>
                 )}
             </div>
 
             {/* Step counter */}
-            <p className="text-center text-xs text-primary-500">ধাপ {step + 1} / {STEPS.length}</p>
+            <p className="text-center text-xs text-primary-500">{t('step')} {step + 1} {t('of')} {STEPS_KEYS.length}</p>
         </div>
     );
 }
