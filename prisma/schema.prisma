@@ -256,3 +256,23 @@ model PushSubscription {
   @@index([userId])
   @@map("push_subscriptions")
 }
+
+// ============================================
+// Zakat — Gold & Silver Price Cache
+// ============================================
+
+model GoldSilverPrice {
+  id              Int      @id @default(autoincrement())
+  goldPer22KGram  Decimal  @map("gold_per_22k_gram") @db.Decimal(12, 2)
+  goldPer24KGram  Decimal  @map("gold_per_24k_gram") @db.Decimal(12, 2)
+  goldPer21KGram  Decimal  @map("gold_per_21k_gram") @db.Decimal(12, 2)
+  goldPer18KGram  Decimal  @map("gold_per_18k_gram") @db.Decimal(12, 2)
+  silverPerGram   Decimal  @map("silver_per_gram")   @db.Decimal(10, 2)
+  currency        String   @default("BDT")            @db.VarChar(5)
+  source          String   @default("BAJUS")          @db.VarChar(50)
+  isManual        Boolean  @default(false)            @map("is_manual")
+  fetchedAt       DateTime @default(now())            @map("fetched_at")
+
+  @@map("gold_silver_prices")
+}
+

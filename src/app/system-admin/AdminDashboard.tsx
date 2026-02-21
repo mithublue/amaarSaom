@@ -35,6 +35,11 @@ export default function AdminDashboard() {
     const [saving, setSaving] = useState(false);
     const [saveMsg, setSaveMsg] = useState('');
     const [webhookInput, setWebhookInput] = useState('');
+    const [goldPrice, setGoldPrice] = useState<any>(null);
+    const [goldSaving, setGoldSaving] = useState(false);
+    const [goldMsg, setGoldMsg] = useState('');
+    const [manualGold, setManualGold] = useState({ goldPer22KGram: '', goldPer24KGram: '', goldPer21KGram: '', goldPer18KGram: '', silverPerGram: '' });
+    const [showManualGold, setShowManualGold] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -55,6 +60,10 @@ export default function AdminDashboard() {
                 setSettings(settingsData.data);
                 setWebhookInput(settingsData.data.slackWebhookUrl || '');
             }
+            // Load gold price
+            const gpRes = await fetch('/api/gold-price');
+            const gpData = await gpRes.json();
+            if (gpData.success) setGoldPrice(gpData.data);
         } catch (err) {
             console.error('Failed to load admin data:', err);
         }
@@ -150,8 +159,8 @@ export default function AdminDashboard() {
                     <button
                         onClick={() => setTab('users')}
                         className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'users'
-                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
                         👥 Users ({users.length})
@@ -159,8 +168,8 @@ export default function AdminDashboard() {
                     <button
                         onClick={() => setTab('settings')}
                         className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'settings'
-                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
                         ⚙️ Settings
@@ -287,8 +296,8 @@ export default function AdminDashboard() {
                                                 <td className="px-6 py-4 text-center">
                                                     <span
                                                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${user.isOnline
-                                                                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                                                : 'bg-gray-500/10 text-gray-500 border border-gray-500/20'
+                                                            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                                            : 'bg-gray-500/10 text-gray-500 border border-gray-500/20'
                                                             }`}
                                                     >
                                                         <span
@@ -378,6 +387,80 @@ export default function AdminDashboard() {
                                 enabled={settings.notifyOnVisit}
                                 onToggle={() => toggleSetting('notifyOnVisit')}
                             />
+                        </div>
+
+                        {/* Gold & Silver Price */}
+                        <div className="bg-gray-900/40 border border-white/5 rounded-2xl p-6 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">🪙</span>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-white">Gold & Silver Prices</h2>
+                                        <p className="text-sm text-gray-500">Used for Zakat Calculator — fetched from BAJUS</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowManualGold(!showManualGold)}
+                                        className="text-xs text-gray-400 hover:text-white border border-white/10 px-3 py-1.5 rounded-lg transition"
+                                    >✎ Manual</button>
+                                    <button
+                                        onClick={async () => {
+                                            setGoldSaving(true); setGoldMsg('');
+                                            const r = await fetch('/api/system-admin/scrape-gold', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+                                            const d = await r.json();
+                                            if (d.success) { setGoldPrice(d.data); setGoldMsg('✅ Prices updated from BAJUS!'); }
+                                            else setGoldMsg('❌ ' + (d.error || 'Scraping failed — try manual.'));
+                                            setGoldSaving(false); setTimeout(() => setGoldMsg(''), 4000);
+                                        }}
+                                        disabled={goldSaving}
+                                        className="text-xs bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                                    >{goldSaving ? '⏳' : '🔄 Refresh BAJUS'}</button>
+                                </div>
+                            </div>
+
+                            {/* Current prices display */}
+                            {goldPrice && (
+                                <div className="grid grid-cols-3 gap-2 text-sm">
+                                    {[['22K Gold/g', goldPrice.goldPer22KGram], ['24K Gold/g', goldPrice.goldPer24KGram], ['Silver/g', goldPrice.silverPerGram]].map(([l, v]) => (
+                                        <div key={l as string} className="bg-gray-800/60 rounded-xl p-3 text-center">
+                                            <p className="text-gray-400 text-xs">{l as string}</p>
+                                            <p className="text-white font-bold">৳{parseFloat(String(v)).toFixed(0)}</p>
+                                        </div>
+                                    ))}
+                                    <p className="col-span-3 text-xs text-gray-600">
+                                        Source: {goldPrice.source} {goldPrice.fetchedAt ? '• ' + new Date(goldPrice.fetchedAt).toLocaleString() : '• defaults'}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Manual entry */}
+                            {showManualGold && (
+                                <div className="space-y-3 pt-2 border-t border-white/5">
+                                    <p className="text-sm text-gray-400">Enter prices per gram (BDT):</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[['goldPer22KGram', '22K Gold'], ['goldPer24KGram', '24K Gold'], ['goldPer21KGram', '21K Gold'], ['goldPer18KGram', '18K Gold'], ['silverPerGram', 'Silver']].map(([k, label]) => (
+                                            <div key={k}>
+                                                <label className="text-xs text-gray-500 block mb-1">{label}/gram</label>
+                                                <input type="number" value={(manualGold as any)[k]} onChange={e => setManualGold(g => ({ ...g, [k]: e.target.value }))}
+                                                    placeholder="0" className="w-full bg-gray-800 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-emerald-500/50" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            setGoldSaving(true); setGoldMsg('');
+                                            const r = await fetch('/api/system-admin/scrape-gold', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ manual: true, ...manualGold }) });
+                                            const d = await r.json();
+                                            if (d.success) { setGoldPrice(d.data); setGoldMsg('✅ Manual prices saved!'); setShowManualGold(false); }
+                                            else setGoldMsg('❌ ' + d.error);
+                                            setGoldSaving(false); setTimeout(() => setGoldMsg(''), 3000);
+                                        }}
+                                        className="px-5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-xl transition"
+                                    >💾 Save Manual Prices</button>
+                                </div>
+                            )}
+                            {goldMsg && <p className="text-sm">{goldMsg}</p>}
                         </div>
 
                         {/* Save Button */}
