@@ -35,6 +35,8 @@ export const viewport = {
   themeColor: "#047857",
 };
 
+import ErrorReporter from "@/components/error/ErrorReporter";
+
 export default async function LocaleLayout({
   children,
   params
@@ -60,6 +62,7 @@ export default async function LocaleLayout({
         suppressHydrationWarning={true}
       >
         <NextIntlClientProvider messages={messages}>
+          <ErrorReporter />
           {children}
           <Toaster position="bottom-center" richColors theme="dark" />
         </NextIntlClientProvider>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/config';
 import { completeDeed, getUserDeedsHistory, getUserTotalPoints } from '@/lib/services/deedsService';
+import { reportErrorToSlack } from '@/lib/slack';
 
 /**
  * GET /api/deeds/history
@@ -8,8 +9,9 @@ import { completeDeed, getUserDeedsHistory, getUserTotalPoints } from '@/lib/ser
  * Query params: period (today|week|month|all)
  */
 export async function GET(request: NextRequest) {
+    let session;
     try {
-        const session = await auth();
+        session = await auth();
 
         if (!session?.user?.id) {
             return NextResponse.json(
@@ -34,6 +36,12 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error fetching deed history:', error);
+        await reportErrorToSlack({
+            message: 'Error fetching deed history',
+            stack: (error as Error).stack,
+            url: `/api/deeds?period=${request.nextUrl.searchParams.get('period') || 'all'}`,
+            userId: session?.user?.id
+        });
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -47,8 +55,9 @@ export async function GET(request: NextRequest) {
  * Body: { goodDeedId?, customDeedName?, notes?, ramadanDayNumber? }
  */
 export async function POST(request: NextRequest) {
+    let session;
     try {
-        const session = await auth();
+        session = await auth();
 
         if (!session?.user?.id) {
             return NextResponse.json(
@@ -82,6 +91,12 @@ export async function POST(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error completing deed:', error);
+        await reportErrorToSlack({
+            message: 'Error completing deed',
+            stack: (error as Error).stack,
+            url: '/api/deeds (POST)',
+            userId: session?.user?.id
+        });
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

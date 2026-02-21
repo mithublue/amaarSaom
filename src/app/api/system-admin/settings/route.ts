@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { requireAdmin } from '@/lib/auth/adminAuth';
+import { reportErrorToSlack } from '@/lib/slack';
 
 async function getOrCreateSettings() {
     let settings = await prisma.systemSettings.findFirst();
@@ -21,6 +22,7 @@ export async function GET() {
         return NextResponse.json({ success: true, data: settings });
     } catch (error) {
         console.error('Admin settings fetch error:', error);
+        await reportErrorToSlack({ message: 'Error fetching admin settings', stack: (error as Error).stack, url: '/api/system-admin/settings' });
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }
@@ -48,6 +50,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ success: true, data: updated });
     } catch (error) {
         console.error('Admin settings update error:', error);
+        await reportErrorToSlack({ message: 'Error updating admin settings', stack: (error as Error).stack, url: '/api/system-admin/settings (PATCH)' });
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }

@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/config';
 import { prisma } from '@/lib/db/prisma';
+import { reportErrorToSlack } from '@/lib/slack';
 
 /**
  * GET /api/user/profile
  * Get current user's profile
  */
 export async function GET() {
+    let session;
     try {
-        const session = await auth();
+        session = await auth();
 
         if (!session?.user?.id) {
             return NextResponse.json(
@@ -42,6 +44,12 @@ export async function GET() {
         });
     } catch (error) {
         console.error('Error fetching user profile:', error);
+        await reportErrorToSlack({
+            message: 'Error fetching user profile',
+            stack: (error as Error).stack,
+            url: '/api/user/profile',
+            userId: session?.user?.id
+        });
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -55,8 +63,9 @@ export async function GET() {
  * Body: { name?, districtId?, divisionId?, countryId?, language? }
  */
 export async function PUT(request: NextRequest) {
+    let session;
     try {
-        const session = await auth();
+        session = await auth();
 
         if (!session?.user?.id) {
             return NextResponse.json(
@@ -93,6 +102,12 @@ export async function PUT(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error updating user profile:', error);
+        await reportErrorToSlack({
+            message: 'Error updating user profile',
+            stack: (error as Error).stack,
+            url: '/api/user/profile (PUT)',
+            userId: session?.user?.id
+        });
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

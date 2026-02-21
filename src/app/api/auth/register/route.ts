@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { prisma } from '@/lib/db/prisma';
 import { sendVerificationEmail } from '@/lib/services/emailService';
 import { sendSlackNotification } from '@/lib/services/slackService';
+import { reportErrorToSlack } from '@/lib/slack';
 
 export async function POST(req: Request) {
     try {
@@ -85,6 +86,11 @@ export async function POST(req: Request) {
         });
     } catch (error) {
         console.error('Registration error:', error);
+        await reportErrorToSlack({
+            message: 'Error during user registration',
+            stack: (error as Error).stack,
+            url: '/api/auth/register',
+        });
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
