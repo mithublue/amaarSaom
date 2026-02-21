@@ -35,16 +35,23 @@ export default async function ZakatPage({ params }: { params: Promise<{ locale: 
                 </div>
             </main>
 
-            {/* Print styles */}
+            {/* Print / PDF styles */}
             <style>{`
+                @media screen {
+                    .print-only { display: none !important; }
+                }
                 @media print {
-                    body * { visibility: hidden; }
-                    #zakat-result-print, #zakat-result-print * { visibility: visible; }
-                    #zakat-result-print { position: absolute; top: 0; left: 0; width: 100%; padding: 2rem; }
-                    .print\\:hidden { display: none !important; }
-                    body { background: white; color: black; }
+                    @page { margin: 0.8cm; size: A4; }
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    body { background: #030712 !important; margin: 0; }
+                    body > * { visibility: hidden; }
+                    .print-only { display: block !important; visibility: visible !important; }
+                    .print-only * { visibility: visible !important; }
+                    .screen-only { display: none !important; }
+                    nav, header, footer, .navbar { display: none !important; }
                 }
             `}</style>
+
         </div>
     );
 }
