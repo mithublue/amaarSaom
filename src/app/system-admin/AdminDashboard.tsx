@@ -22,6 +22,8 @@ interface Settings {
     notifyOnRegister: boolean;
     notifyOnLogin: boolean;
     notifyOnVisit: boolean;
+    globalPrayerNotifications: boolean;
+    globalLeaderboardNotifications: boolean;
 }
 
 type Tab = 'users' | 'settings';
@@ -83,6 +85,8 @@ export default function AdminDashboard() {
                     notifyOnRegister: settings.notifyOnRegister,
                     notifyOnLogin: settings.notifyOnLogin,
                     notifyOnVisit: settings.notifyOnVisit,
+                    globalPrayerNotifications: settings.globalPrayerNotifications,
+                    globalLeaderboardNotifications: settings.globalLeaderboardNotifications,
                 }),
             });
             const data = await res.json();
@@ -99,7 +103,7 @@ export default function AdminDashboard() {
         setTimeout(() => setSaveMsg(''), 3000);
     }
 
-    function toggleSetting(key: 'notifyOnRegister' | 'notifyOnLogin' | 'notifyOnVisit') {
+    function toggleSetting(key: 'notifyOnRegister' | 'notifyOnLogin' | 'notifyOnVisit' | 'globalPrayerNotifications' | 'globalLeaderboardNotifications') {
         if (!settings) return;
         setSettings({ ...settings, [key]: !settings[key] });
     }
@@ -387,6 +391,26 @@ export default function AdminDashboard() {
                                 enabled={settings.notifyOnVisit}
                                 onToggle={() => toggleSetting('notifyOnVisit')}
                             />
+
+                            <div className="pt-4 border-t border-white/5">
+                                <h3 className="text-sm font-semibold text-emerald-400 mb-4 tracking-wider uppercase">Global Push Notifications</h3>
+                                <div className="space-y-4">
+                                    <ToggleRow
+                                        label="Global Prayer Reminders"
+                                        description="Master switch for all prayer time push notifications"
+                                        icon="🕌"
+                                        enabled={settings.globalPrayerNotifications}
+                                        onToggle={() => toggleSetting('globalPrayerNotifications')}
+                                    />
+                                    <ToggleRow
+                                        label="Global Leaderboard Motivation"
+                                        description="Master switch for daily leaderboard motivational nudges"
+                                        icon="🏆"
+                                        enabled={settings.globalLeaderboardNotifications}
+                                        onToggle={() => toggleSetting('globalLeaderboardNotifications')}
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         {/* Gold & Silver Price */}

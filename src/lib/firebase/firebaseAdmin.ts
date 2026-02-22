@@ -65,3 +65,21 @@ export async function sendPushNotification(
         return { success: 0, failure: 0 };
     }
 }
+
+/** Send a push notification to a single user by userId */
+export async function sendPushToUser(
+    userId: number,
+    title: string,
+    body: string,
+    data?: Record<string, string>
+): Promise<boolean> {
+    const { prisma } = await import('@/lib/db/prisma');
+    const subs = await (prisma as any).pushSubscription.findMany({
+        where: { userId },
+        select: { token: true },
+    });
+    if (subs.length === 0) return false;
+    const tokens = subs.map((s: { token: string }) => s.token);
+    const result = await sendPushNotification(tokens, title, body, data);
+    return result.success > 0;
+}

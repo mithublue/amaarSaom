@@ -44,6 +44,8 @@ export async function PATCH(req: Request) {
                 ...(body.notifyOnRegister !== undefined && { notifyOnRegister: body.notifyOnRegister }),
                 ...(body.notifyOnLogin !== undefined && { notifyOnLogin: body.notifyOnLogin }),
                 ...(body.notifyOnVisit !== undefined && { notifyOnVisit: body.notifyOnVisit }),
+                ...(body.globalPrayerNotifications !== undefined && { globalPrayerNotifications: body.globalPrayerNotifications }),
+                ...(body.globalLeaderboardNotifications !== undefined && { globalLeaderboardNotifications: body.globalLeaderboardNotifications }),
             },
         });
 

@@ -13,27 +13,18 @@ export default function NotificationBell() {
         // Silently request permission and register token on mount
         (async () => {
             if (!('Notification' in window)) return;
-            if (Notification.permission === 'default') {
-                const token = await requestNotificationPermission();
-                if (token) {
-                    await fetch('/api/notifications/subscribe', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token }),
-                    }).catch(() => { });
-                }
-            } else if (Notification.permission === 'granted') {
-                // Already granted — just get the token silently
-                const { getToken } = await import('firebase/messaging');
-                const { getMessagingInstance } = await import('@/lib/firebase/firebase') as any;
-                // re-use existing token registration via subscribe API
-                const token = await requestNotificationPermission().catch(() => null);
-                if (token) {
-                    await fetch('/api/notifications/subscribe', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token }),
-                    }).catch(() => { });
+            if (Notification.permission === 'default' || Notification.permission === 'granted') {
+                try {
+                    const token = await requestNotificationPermission();
+                    if (token) {
+                        await fetch('/api/notifications/subscribe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token }),
+                        }).catch(() => { });
+                    }
+                } catch {
+                    // Silently ignore — non-critical background task
                 }
             }
         })();

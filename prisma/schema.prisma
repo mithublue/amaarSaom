@@ -73,6 +73,7 @@ model User {
   leaderboards      LeaderboardCache[]
   prayerSettings    PrayerSettings?
   pushSubscriptions PushSubscription[]
+  notificationPrefs NotificationPreferences?
   goals             UserGoal[]
   country           Country?           @relation(fields: [countryId], references: [id])
   district          District?          @relation(fields: [districtId], references: [id])
@@ -215,8 +216,10 @@ model SystemSettings {
   slackWebhookUrl  String?  @map("slack_webhook_url") @db.Text
   notifyOnRegister Boolean  @default(true) @map("notify_on_register")
   notifyOnLogin    Boolean  @default(true) @map("notify_on_login")
-  notifyOnVisit    Boolean  @default(false) @map("notify_on_visit")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  notifyOnVisit             Boolean  @default(false) @map("notify_on_visit")
+  globalPrayerNotifications Boolean  @default(true)  @map("global_prayer_notifications")
+  globalLeaderboardNotifications Boolean @default(true) @map("global_leaderboard_notifications")
+  updatedAt                 DateTime @updatedAt      @map("updated_at")
 
   @@map("system_settings")
 }
@@ -246,4 +249,24 @@ model GoldSilverPrice {
   fetchedAt      DateTime @default(now()) @map("fetched_at")
 
   @@map("gold_silver_prices")
+}
+
+model NotificationPreferences {
+  id                    Int      @id @default(autoincrement())
+  userId                Int      @unique @map("user_id")
+  // Per-prayer toggles
+  fajrReminder          Boolean  @default(true)  @map("fajr_reminder")
+  dhuhrReminder         Boolean  @default(true)  @map("dhuhr_reminder")
+  asrReminder           Boolean  @default(true)  @map("asr_reminder")
+  maghribReminder       Boolean  @default(true)  @map("maghrib_reminder")
+  ishaReminder          Boolean  @default(true)  @map("isha_reminder")
+  // Leaderboard motivation
+  leaderboardMotivation Boolean  @default(true)  @map("leaderboard_motivation")
+  leaderboardHour       Int      @default(20)    @map("leaderboard_hour")
+  leaderboardMinute     Int      @default(0)     @map("leaderboard_minute")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt      @map("updated_at")
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }

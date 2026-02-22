@@ -7,6 +7,12 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { countries, commonCities } from '@/lib/locations';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+
+// Lazy load the notification panel (uses Firebase client which needs browser)
+const NotificationSettingsPanel = dynamic(() => import('./NotificationSettingsPanel'), { ssr: false });
+
+type Tab = 'profile' | 'notifications';
 
 interface ProfileClientProps {
     user: User;
@@ -15,6 +21,7 @@ interface ProfileClientProps {
 
 export default function ProfileClient({ user, locale }: ProfileClientProps) {
     const t = useTranslations('Profile');
+    const [activeTab, setActiveTab] = useState<Tab>('profile');
 
     // State
     const [country, setCountry] = useState('Bangladesh');
@@ -30,11 +37,16 @@ export default function ProfileClient({ user, locale }: ProfileClientProps) {
         // @ts-ignore - existing properties
         if (user.cityName) setCity(user.cityName);
 
-        // Fetch fresh profile data to be sure
         fetch('/api/user/profile')
-            .then(res => res.json())
+            .then(res => {
+                if (res.status === 401 || res.status === 404) {
+                    window.location.href = '/api/auth/signout';
+                    throw new Error('User not found in database, logging out...');
+                }
+                return res.json();
+            })
             .then(data => {
-                if (data.success && data.data) {
+                if (data && data.success && data.data) {
                     if (data.data.countryName) setCountry(data.data.countryName);
                     if (data.data.cityName) setCity(data.data.cityName);
                 }
@@ -42,7 +54,6 @@ export default function ProfileClient({ user, locale }: ProfileClientProps) {
             .catch(console.error);
     }, [user]);
 
-    // Update suggestions
     useEffect(() => {
         if (commonCities[country]) {
             setCitySuggestions(commonCities[country]);
@@ -60,13 +71,12 @@ export default function ProfileClient({ user, locale }: ProfileClientProps) {
                 body: JSON.stringify({ countryName: country, cityName: city })
             });
             const data = await res.json();
-
             if (res.ok && data.success) {
                 toast.success('Profile updated successfully!');
             } else {
                 toast.error(data.message || 'Failed to update profile');
             }
-        } catch (error) {
+        } catch {
             toast.error('An error occurred');
         } finally {
             setIsLoading(false);
@@ -78,97 +88,123 @@ export default function ProfileClient({ user, locale }: ProfileClientProps) {
             <Navbar session={{ user }} locale={locale} />
 
             <main className="flex-grow pt-24 pb-12 px-4 max-w-4xl mx-auto w-full">
-                <div className="text-center mb-12 animate-fade-in">
+                <div className="text-center mb-8 animate-fade-in">
                     <h1 className="text-4xl font-bold mb-4">{t('title')}</h1>
-                    <div className="bg-primary-900/50 p-8 rounded-2xl border border-white/5 backdrop-blur-sm shadow-glass">
-                        <div className="w-24 h-24 bg-accent-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-bold shadow-gold-glow">
+
+                    {/* Avatar */}
+                    <div className="flex flex-col items-center mb-8">
+                        <div className="w-24 h-24 bg-accent-500 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl font-bold shadow-gold-glow">
                             {user.name?.charAt(0) || 'U'}
                         </div>
-                        <h2 className="text-2xl font-bold mb-2">{user.name}</h2>
-                        <p className="text-primary-300 mb-6">{user.email}</p>
+                        <h2 className="text-2xl font-bold mb-1">{user.name}</h2>
+                        <p className="text-primary-300 text-sm">{user.email}</p>
+                    </div>
 
-                        <div className="text-left mt-8 border-t border-white/10 pt-6">
-                            <h3 className="text-xl font-semibold mb-4 text-accent-300">{t('locationSettings')}</h3>
-                            <p className="text-primary-400 text-sm mb-6">{t('locationDesc')}</p>
+                    {/* Tab Bar */}
+                    <div className="flex rounded-xl bg-primary-900/40 border border-white/5 p-1 mb-8 max-w-sm mx-auto">
+                        <button
+                            onClick={() => setActiveTab('profile')}
+                            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'profile' ? 'bg-accent-700 text-white shadow' : 'text-primary-400 hover:text-white'}`}
+                        >
+                            👤 {t('title').replace('My Profile ', '').replace(' 👤', '') || 'Profile'}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('notifications')}
+                            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'notifications' ? 'bg-accent-700 text-white shadow' : 'text-primary-400 hover:text-white'}`}
+                        >
+                            🔔 Notifications
+                        </button>
+                    </div>
 
-                            <div className="grid md:grid-cols-2 gap-6 items-end bg-primary-800/30 p-6 rounded-xl border border-white/5">
-                                {/* Country Selector */}
-                                <div className="relative group w-full">
-                                    <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">Country</label>
-                                    <select
-                                        value={country}
-                                        onChange={(e) => {
-                                            const newCountry = e.target.value;
-                                            setCountry(newCountry);
-                                            // Auto-select first city if available
-                                            if (commonCities[newCountry] && commonCities[newCountry].length > 0) {
-                                                setCity(commonCities[newCountry][0]);
-                                            } else {
-                                                setCity('');
-                                            }
-                                        }}
-                                        className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
-                                    >
-                                        {countries.map((c) => (
-                                            <option key={c} value={c} className="bg-primary-900 text-white">{c}</option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-4 bottom-3.5 pointer-events-none text-primary-400 text-xs">▼</div>
-                                </div>
+                    {/* Tab content */}
+                    <div className="bg-primary-900/50 p-6 rounded-2xl border border-white/5 backdrop-blur-sm shadow-glass text-left">
+                        {activeTab === 'profile' && (
+                            <div>
+                                <h3 className="text-xl font-semibold mb-4 text-accent-300">{t('locationSettings')}</h3>
+                                <p className="text-primary-400 text-sm mb-6">{t('locationDesc')}</p>
 
-                                {/* City Input */}
-                                <div className="relative group w-full">
-                                    <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">City</label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={city}
+                                <div className="grid md:grid-cols-2 gap-6 items-end bg-primary-800/30 p-6 rounded-xl border border-white/5">
+                                    {/* Country Selector */}
+                                    <div className="relative group w-full">
+                                        <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">Country</label>
+                                        <select
+                                            value={country}
                                             onChange={(e) => {
-                                                setCity(e.target.value);
-                                                setShowSuggestions(true);
+                                                const newCountry = e.target.value;
+                                                setCountry(newCountry);
+                                                if (commonCities[newCountry]?.length > 0) {
+                                                    setCity(commonCities[newCountry][0]);
+                                                } else {
+                                                    setCity('');
+                                                }
                                             }}
-                                            onFocus={() => setShowSuggestions(true)}
-                                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                            className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 placeholder:text-primary-400 transition-colors hover:bg-primary-950/70"
-                                            placeholder="Enter your city"
-                                        />
-                                        {showSuggestions && citySuggestions.length > 0 && (
-                                            <div className="absolute z-50 w-full mt-1 bg-primary-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto backdrop-blur-xl">
-                                                {citySuggestions.filter(c => c.toLowerCase().includes(city.toLowerCase())).map((suggestion) => (
-                                                    <button
-                                                        key={suggestion}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setCity(suggestion);
-                                                            setShowSuggestions(false);
-                                                        }}
-                                                        className="w-full text-left px-4 py-3 text-primary-100 hover:bg-white/5 transition border-b border-white/5 last:border-0"
-                                                    >
-                                                        {suggestion}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
+                                            className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 appearance-none cursor-pointer transition-colors hover:bg-primary-950/70"
+                                        >
+                                            {countries.map((c) => (
+                                                <option key={c} value={c} className="bg-primary-900 text-white">{c}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-4 bottom-3.5 pointer-events-none text-primary-400 text-xs">▼</div>
+                                    </div>
+
+                                    {/* City Input */}
+                                    <div className="relative group w-full">
+                                        <label className="text-xs text-primary-300 font-semibold mb-2 block uppercase tracking-wider">City</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={city}
+                                                onChange={(e) => { setCity(e.target.value); setShowSuggestions(true); }}
+                                                onFocus={() => setShowSuggestions(true)}
+                                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                                className="w-full px-4 py-3 rounded-xl bg-primary-800 text-white border border-white/10 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 placeholder:text-primary-400 transition-colors hover:bg-primary-950/70"
+                                                placeholder="Enter your city"
+                                            />
+                                            {showSuggestions && citySuggestions.length > 0 && (
+                                                <div className="absolute z-50 w-full mt-1 bg-primary-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto backdrop-blur-xl">
+                                                    {citySuggestions.filter(c => c.toLowerCase().includes(city.toLowerCase())).map((suggestion) => (
+                                                        <button
+                                                            key={suggestion}
+                                                            type="button"
+                                                            onClick={() => { setCity(suggestion); setShowSuggestions(false); }}
+                                                            className="w-full text-left px-4 py-3 text-primary-100 hover:bg-white/5 transition border-b border-white/5 last:border-0"
+                                                        >
+                                                            {suggestion}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="mt-6 flex justify-end">
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isLoading}
-                                    className="px-6 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-500 transition-colors font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    {isLoading ? 'Saving...' : 'Save Changes'}
-                                </button>
+                                <div className="mt-6 flex justify-end">
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={isLoading}
+                                        className="px-6 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-500 transition-colors font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isLoading ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        <div className="mt-8 flex justify-center">
-                            <a href="/api/auth/signout" className="inline-block px-6 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-200 rounded-lg transition-colors border border-red-500/30">
-                                Sign Out
-                            </a>
-                        </div>
+                        {activeTab === 'notifications' && (
+                            <div>
+                                <h3 className="text-xl font-semibold mb-4 text-accent-300">🔔 Notification Preferences</h3>
+                                <p className="text-primary-400 text-sm mb-6">
+                                    Manage how and when Nuzul notifies you. Prayer reminders and leaderboard motivation help you stay consistent.
+                                </p>
+                                <NotificationSettingsPanel />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-6 flex justify-center">
+                        <a href="/api/auth/signout" className="inline-block px-6 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-200 rounded-lg transition-colors border border-red-500/30">
+                            Sign Out
+                        </a>
                     </div>
                 </div>
             </main>
