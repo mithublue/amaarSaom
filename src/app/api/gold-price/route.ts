@@ -53,7 +53,9 @@ export async function GET(req: NextRequest) {
         }
 
         // ── 3. Map country code to region ─────────────────────────────────
-        const region = countryCode === 'BD' ? 'BD' : 'GLOBAL';
+        // Only go GLOBAL if we KNOW it's a non-BD country.
+        // null (localhost/private IP/unknown) → fallback to BD.
+        const region: 'BD' | 'GLOBAL' = (countryCode && countryCode !== 'BD') ? 'GLOBAL' : 'BD';
 
         // ── 4. Map country to currency for display ────────────────────────
         const currencyMap: Record<string, string> = {
