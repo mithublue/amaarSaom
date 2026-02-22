@@ -40,8 +40,20 @@ export default function AdminDashboard() {
     const [goldPrice, setGoldPrice] = useState<any>(null);
     const [goldSaving, setGoldSaving] = useState(false);
     const [goldMsg, setGoldMsg] = useState('');
-    const [manualGold, setManualGold] = useState({ goldPer22KGram: '', goldPer24KGram: '', goldPer21KGram: '', goldPer18KGram: '', silverPerGram: '' });
+    const [manualGold, setManualGold] = useState({ gold22kGram: '', gold24kGram: '', gold21kGram: '', gold18kGram: '', silverPerGram: '' });
     const [showManualGold, setShowManualGold] = useState(false);
+
+    // Custom Notification State
+    const [showNotifForm, setShowNotifForm] = useState(false);
+    const [notifData, setNotifData] = useState({
+        receiverEmails: '',
+        title: "Prophet's Companion",
+        content: '',
+        scheduledAt: new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16) // Default 10 mins from now
+    });
+    const [notifSaving, setNotifSaving] = useState(false);
+    const [notifMsg, setNotifMsg] = useState('');
+    const [recentNotifs, setRecentNotifs] = useState<any[]>([]);
 
     useEffect(() => {
         loadData();
@@ -66,6 +78,11 @@ export default function AdminDashboard() {
             const gpRes = await fetch('/api/gold-price');
             const gpData = await gpRes.json();
             if (gpData.success) setGoldPrice(gpData.data);
+
+            // Load custom notifications
+            const cnRes = await fetch('/api/admin/notifications/custom');
+            const cnData = await cnRes.json();
+            if (cnData.success) setRecentNotifs(cnData.data);
         } catch (err) {
             console.error('Failed to load admin data:', err);
         }
@@ -101,6 +118,49 @@ export default function AdminDashboard() {
         }
         setSaving(false);
         setTimeout(() => setSaveMsg(''), 3000);
+    }
+
+    async function saveCustomNotification() {
+        setNotifSaving(true);
+        setNotifMsg('');
+        try {
+            const res = await fetch('/api/admin/notifications/custom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(notifData),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setNotifMsg('✅ Notification scheduled successfully!');
+                setNotifData({ ...notifData, content: '', receiverEmails: '' });
+                loadData(); // Refresh list
+            } else {
+                setNotifMsg('❌ ' + (data.error || 'Failed to save.'));
+            }
+        } catch {
+            setNotifMsg('❌ Network error.');
+        }
+        setNotifSaving(false);
+        setTimeout(() => setNotifMsg(''), 4000);
+    }
+
+    async function deleteCustomNotification(id: number) {
+        if (!confirm('Are you sure you want to cancel this scheduled notification?')) return;
+        try {
+            const res = await fetch('/api/admin/notifications/custom', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setRecentNotifs(recentNotifs.filter(n => n.id !== id));
+            } else {
+                alert('Failed to delete: ' + data.error);
+            }
+        } catch {
+            alert('Network error.');
+        }
     }
 
     function toggleSetting(key: 'notifyOnRegister' | 'notifyOnLogin' | 'notifyOnVisit' | 'globalPrayerNotifications' | 'globalLeaderboardNotifications') {
@@ -446,7 +506,7 @@ export default function AdminDashboard() {
                             {/* Current prices display */}
                             {goldPrice && (
                                 <div className="grid grid-cols-3 gap-2 text-sm">
-                                    {[['22K Gold/g', goldPrice.goldPer22KGram], ['24K Gold/g', goldPrice.goldPer24KGram], ['Silver/g', goldPrice.silverPerGram]].map(([l, v]) => (
+                                    {[['22K Gold/g', goldPrice.gold22kGram], ['24K Gold/g', goldPrice.gold24kGram], ['Silver/g', goldPrice.silverPerGram]].map(([l, v]) => (
                                         <div key={l as string} className="bg-gray-800/60 rounded-xl p-3 text-center">
                                             <p className="text-gray-400 text-xs">{l as string}</p>
                                             <p className="text-white font-bold">৳{parseFloat(String(v)).toFixed(0)}</p>
@@ -463,7 +523,7 @@ export default function AdminDashboard() {
                                 <div className="space-y-3 pt-2 border-t border-white/5">
                                     <p className="text-sm text-gray-400">Enter prices per gram (BDT):</p>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {[['goldPer22KGram', '22K Gold'], ['goldPer24KGram', '24K Gold'], ['goldPer21KGram', '21K Gold'], ['goldPer18KGram', '18K Gold'], ['silverPerGram', 'Silver']].map(([k, label]) => (
+                                        {[['gold22kGram', '22K Gold'], ['gold24kGram', '24K Gold'], ['gold21kGram', '21K Gold'], ['gold18kGram', '18K Gold'], ['silverPerGram', 'Silver']].map(([k, label]) => (
                                             <div key={k}>
                                                 <label className="text-xs text-gray-500 block mb-1">{label}/gram</label>
                                                 <input type="number" value={(manualGold as any)[k]} onChange={e => setManualGold(g => ({ ...g, [k]: e.target.value }))}
@@ -485,6 +545,111 @@ export default function AdminDashboard() {
                                 </div>
                             )}
                             {goldMsg && <p className="text-sm">{goldMsg}</p>}
+                        </div>
+
+                        {/* Send Custom Notification Toggle & Form */}
+                        <div className="bg-gray-900/40 border border-white/5 rounded-2xl p-6 space-y-5">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">📢</span>
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-white">Custom Notifications</h2>
+                                        <p className="text-sm text-gray-500">Send direct push messages to specific users</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowNotifForm(!showNotifForm)}
+                                    className={`relative w-12 h-6 rounded-full transition-all duration-300 ${showNotifForm ? 'bg-emerald-600' : 'bg-gray-700'}`}
+                                >
+                                    <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all duration-300 ${showNotifForm ? 'left-[26px]' : 'left-0.5'}`}></span>
+                                </button>
+                            </div>
+
+                            {showNotifForm && (
+                                <div className="space-y-4 pt-4 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Receiver Emails (comma separated)</label>
+                                        <textarea
+                                            value={notifData.receiverEmails}
+                                            onChange={e => setNotifData({ ...notifData, receiverEmails: e.target.value })}
+                                            placeholder="user1@example.com, user2@example.com"
+                                            rows={2}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-4 py-2 text-white text-sm outline-none focus:border-emerald-500/50"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Notification Title</label>
+                                        <input
+                                            type="text"
+                                            value={notifData.title}
+                                            onChange={e => setNotifData({ ...notifData, title: e.target.value })}
+                                            placeholder="Title"
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-4 py-2 text-white text-sm outline-none focus:border-emerald-500/50"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Message Content</label>
+                                        <textarea
+                                            value={notifData.content}
+                                            onChange={e => setNotifData({ ...notifData, content: e.target.value })}
+                                            placeholder="What do you want to say?"
+                                            rows={3}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-4 py-2 text-white text-sm outline-none focus:border-emerald-500/50"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Schedule Time</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={notifData.scheduledAt}
+                                            onChange={e => setNotifData({ ...notifData, scheduledAt: e.target.value })}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-4 py-2 text-white text-sm outline-none focus:border-emerald-500/50"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={saveCustomNotification}
+                                        disabled={notifSaving}
+                                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition disabled:opacity-50"
+                                    >
+                                        {notifSaving ? '⏳ Saving...' : '📅 Schedule Notification'}
+                                    </button>
+                                    {notifMsg && <p className="text-center text-sm font-medium text-emerald-400">{notifMsg}</p>}
+
+                                    {/* Recent list */}
+                                    {recentNotifs.length > 0 && (
+                                        <div className="pt-4 mt-4 border-t border-white/5">
+                                            <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">Recent Scheduled Messages</h4>
+                                            <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                                {recentNotifs.map((n: any) => (
+                                                    <div key={n.id} className="bg-gray-800/40 rounded-lg p-3 border border-white/5 flex justify-between items-center text-xs">
+                                                        <div className="flex-1 min-w-0 pr-4">
+                                                            <p className="text-white font-medium truncate">{n.content}</p>
+                                                            <p className="text-gray-500 mt-0.5">To: {n.receiverEmails.slice(0, 30)}...</p>
+                                                        </div>
+                                                        <div className="text-right flex items-center gap-3">
+                                                            <div>
+                                                                <p className={n.isSent ? "text-emerald-400" : "text-amber-400"}>
+                                                                    {n.isSent ? '✅ Sent' : '⏳ Pending'}
+                                                                </p>
+                                                                <p className="text-gray-500 mt-0.5">{new Date(n.scheduledAt).toLocaleDateString()} {new Date(n.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                            </div>
+                                                            {!n.isSent && (
+                                                                <button
+                                                                    onClick={() => deleteCustomNotification(n.id)}
+                                                                    className="p-1.5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 rounded-lg transition"
+                                                                    title="Cancel notification"
+                                                                >
+                                                                    ✕
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Save Button */}

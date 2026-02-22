@@ -228,7 +228,38 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    return NextResponse.json({ success: true, dryRun, ...stats });
+    // ── CONDITION 3: Custom Admin Notifications ──
+    const now = new Date();
+    const pendingNotifs = await prisma.customNotification.findMany({
+        where: { isSent: false, scheduledAt: { lte: now } }
+    });
+
+    for (const notif of pendingNotifs) {
+        const emails = notif.receiverEmails.split(',').map(e => e.trim().toLowerCase());
+        const targetUsers = await prisma.user.findMany({
+            where: { email: { in: emails } },
+            select: { id: true, email: true }
+        });
+
+        for (const target of targetUsers) {
+            try {
+                await sendPushToUser(target.id, notif.title, notif.content, {
+                    type: 'custom_admin_notification',
+                    notifId: notif.id.toString()
+                });
+            } catch (err) {
+                console.error(`Failed to send custom notif to ${target.email}:`, err);
+            }
+        }
+
+        // Mark as sent
+        await prisma.customNotification.update({
+            where: { id: notif.id },
+            data: { isSent: true }
+        });
+    }
+
+    return NextResponse.json({ success: true, dryRun, ...stats, customNotifsSent: pendingNotifs.length });
 }
 
 // Allow GET as well for easy browser testing

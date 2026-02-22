@@ -3,10 +3,10 @@ import { prisma } from '@/lib/db/prisma';
 export const TOLA_TO_GRAM = 11.664;
 
 export interface GoldPriceData {
-    goldPer22KGram: number;
-    goldPer24KGram: number;
-    goldPer21KGram: number;
-    goldPer18KGram: number;
+    gold22kGram: number;
+    gold24kGram: number;
+    gold21kGram: number;
+    gold18kGram: number;
     silverPerGram: number;
     currency: string;
     source: string;
@@ -27,27 +27,41 @@ export async function scrapeBajusPrices(): Promise<GoldPriceData> {
 
     const html = await bajusRes.text();
 
-    const extractPrice = (label: string): number | null => {
-        const re = new RegExp(label + '[^\\d]*(\\d[\\d,]+)', 'i');
+    const extractPrice = (label: string): { price: number; isPerGram: boolean } | null => {
+        // Look for the label, then find the FIRST number that follows it (optionally with BDT/GRAM units)
+        // This avoids matching unrelated numbers in the footer or nearby text
+        const re = new RegExp(label + '[^\\d]*?([\\d,]+(?:\\.\\d+)?)\\s*(BDT/GRAM|BDT/VORI|BDT)?', 'i');
         const m = html.match(re);
-        return m ? parseFloat(m[1].replace(/,/g, '')) : null;
+        if (!m) return null;
+
+        const price = parseFloat(m[1].replace(/,/g, ''));
+        const unit = m[2] ? m[2].toUpperCase() : '';
+        const isPerGram = unit.includes('GRAM');
+
+        return { price, isPerGram };
     };
 
-    const goldPer22K = extractPrice('22') ?? extractPrice('22K');
-    const goldPer24K = extractPrice('24') ?? extractPrice('24K');
-    const goldPer21K = extractPrice('21') ?? extractPrice('21K');
-    const goldPer18K = extractPrice('18') ?? extractPrice('18K');
-    const silver = extractPrice('silver') ?? extractPrice('রুপা');
+    const g22 = extractPrice('22 KARAT Gold') ?? extractPrice('22');
+    const g24 = extractPrice('24 KARAT Gold') ?? extractPrice('24');
+    const g21 = extractPrice('21 KARAT Gold') ?? extractPrice('21');
+    const g18 = extractPrice('18 KARAT Gold') ?? extractPrice('18');
+    const silver = extractPrice('22 KARAT Silver') ?? extractPrice('silver') ?? extractPrice('রুপা');
 
-    if (!goldPer22K) throw new Error('Could not parse BAJUS gold price (22K missing)');
+    if (!g22) throw new Error('Could not parse BAJUS gold price (22K missing)');
 
-    // BAJUS prices are per ভরি (tola) — convert to per gram
+    const toGram = (res: { price: number; isPerGram: boolean } | null, fallback?: number): number => {
+        if (!res) return fallback ? parseFloat((fallback / TOLA_TO_GRAM).toFixed(2)) : 0;
+        if (res.isPerGram) return res.price;
+        return parseFloat((res.price / TOLA_TO_GRAM).toFixed(2));
+    };
+
+    // BAJUS prices are usually per ভরি (tola) but sometimes reported per gram
     return {
-        goldPer22KGram: parseFloat((goldPer22K / TOLA_TO_GRAM).toFixed(2)),
-        goldPer24KGram: parseFloat(((goldPer24K ?? goldPer22K * 1.095) / TOLA_TO_GRAM).toFixed(2)),
-        goldPer21KGram: parseFloat(((goldPer21K ?? goldPer22K * 0.955) / TOLA_TO_GRAM).toFixed(2)),
-        goldPer18KGram: parseFloat(((goldPer18K ?? goldPer22K * 0.818) / TOLA_TO_GRAM).toFixed(2)),
-        silverPerGram: parseFloat(((silver ?? goldPer22K * 0.017) / TOLA_TO_GRAM).toFixed(2)),
+        gold22kGram: toGram(g22),
+        gold24kGram: toGram(g24, g22.price * 1.095),
+        gold21kGram: toGram(g21, g22.price * 0.955),
+        gold18kGram: toGram(g18, g22.price * 0.818),
+        silverPerGram: toGram(silver, g22.price * 0.017),
         currency: 'BDT',
         source: 'BAJUS',
         isManual: false,
@@ -78,10 +92,10 @@ export async function fetchGoldApiPrices(currency = 'USD'): Promise<GoldPriceDat
 
     // GoldAPI returns price_gram_22k, price_gram_24k etc. directly!
     return {
-        goldPer22KGram: parseFloat((gold.price_gram_22k ?? gold.price / 31.1035 * 0.9167).toFixed(2)),
-        goldPer24KGram: parseFloat((gold.price_gram_24k ?? gold.price / 31.1035).toFixed(2)),
-        goldPer21KGram: parseFloat((gold.price_gram_21k ?? gold.price / 31.1035 * 0.875).toFixed(2)),
-        goldPer18KGram: parseFloat((gold.price_gram_18k ?? gold.price / 31.1035 * 0.75).toFixed(2)),
+        gold22kGram: parseFloat((gold.price_gram_22k ?? gold.price / 31.1035 * 0.9167).toFixed(2)),
+        gold24kGram: parseFloat((gold.price_gram_24k ?? gold.price / 31.1035).toFixed(2)),
+        gold21kGram: parseFloat((gold.price_gram_21k ?? gold.price / 31.1035 * 0.875).toFixed(2)),
+        gold18kGram: parseFloat((gold.price_gram_18k ?? gold.price / 31.1035 * 0.75).toFixed(2)),
         silverPerGram: parseFloat((silver.price / 31.1035).toFixed(4)),
         currency,
         source: 'GoldAPI',

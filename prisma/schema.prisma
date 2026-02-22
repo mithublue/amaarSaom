@@ -269,3 +269,16 @@ model VerificationToken {
   @@index([email])
   @@map("verification_tokens")
 }
+
+model CustomNotification {
+  id             Int      @id @default(autoincrement())
+  receiverEmails String   @map("receiver_emails") @db.Text
+  title          String   @default("Prophet's Companion")
+  content        String   @db.Text
+  scheduledAt    DateTime @map("scheduled_at")
+  isSent         Boolean  @default(false) @map("is_sent")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("custom_notifications")
+}
