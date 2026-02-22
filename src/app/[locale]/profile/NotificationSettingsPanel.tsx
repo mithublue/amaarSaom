@@ -10,6 +10,7 @@ interface NotifPrefs {
     asrReminder: boolean;
     maghribReminder: boolean;
     ishaReminder: boolean;
+    prayerReminder: boolean;
     leaderboardMotivation: boolean;
     leaderboardHour: number;
     leaderboardMinute: number;
@@ -21,6 +22,7 @@ const DEFAULTS: NotifPrefs = {
     asrReminder: true,
     maghribReminder: true,
     ishaReminder: true,
+    prayerReminder: true,
     leaderboardMotivation: true,
     leaderboardHour: 20,
     leaderboardMinute: 0,
@@ -34,7 +36,7 @@ const PRAYERS: { key: keyof Pick<NotifPrefs, 'fajrReminder' | 'dhuhrReminder' | 
     { key: 'ishaReminder', label: 'Isha', emoji: '🌃', time: 'night' },
 ];
 
-type ToggleKey = keyof Pick<NotifPrefs, 'fajrReminder' | 'dhuhrReminder' | 'asrReminder' | 'maghribReminder' | 'ishaReminder' | 'leaderboardMotivation'>;
+type ToggleKey = keyof Pick<NotifPrefs, 'fajrReminder' | 'dhuhrReminder' | 'asrReminder' | 'maghribReminder' | 'ishaReminder' | 'prayerReminder' | 'leaderboardMotivation'>;
 
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
     return (
@@ -147,13 +149,15 @@ export default function NotificationSettingsPanel() {
             {/* ── Prayer Reminders ── */}
             <div className="bg-primary-800/30 rounded-xl border border-white/5 overflow-hidden">
                 <div className="px-5 py-4 border-b border-white/5">
-                    <h4 className="text-white font-semibold">🕌 Prayer Reminders</h4>
+                    <h4 className="text-white font-semibold flex items-center justify-between">
+                        <span>🕌 Prayer Reminders</span>
+                        <Toggle on={prefs.prayerReminder} onClick={() => toggle('prayerReminder')} />
+                    </h4>
                     <p className="text-xs text-primary-400 mt-1">
                         Sent 15–20 minutes after each prayer — includes dhikr & dua reminders.
-                        Toggle each prayer individually.
                     </p>
                 </div>
-                {PRAYERS.map(({ key, label, emoji, time }) => (
+                {prefs.prayerReminder && PRAYERS.map(({ key, label, emoji, time }) => (
                     <div key={key} className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition">
                         <div className="flex items-center gap-3">
                             <span className="text-xl">{emoji}</span>

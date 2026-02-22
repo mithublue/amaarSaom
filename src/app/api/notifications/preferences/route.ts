@@ -20,6 +20,7 @@ export async function GET() {
         asrReminder: true,
         maghribReminder: true,
         ishaReminder: true,
+        prayerReminder: true,
         leaderboardMotivation: true,
         leaderboardHour: 20,
         leaderboardMinute: 0,
@@ -41,10 +42,10 @@ export async function PUT(req: Request) {
     const body = await req.json();
     const {
         fajrReminder, dhuhrReminder, asrReminder, maghribReminder, ishaReminder,
-        leaderboardMotivation, leaderboardHour, leaderboardMinute,
+        prayerReminder, leaderboardMotivation, leaderboardHour, leaderboardMinute,
     } = body;
 
-    const prefs = await (prisma as any).notificationPreferences.upsert({
+    const prefs = await prisma.notificationPreferences.upsert({
         where: { userId: user.id },
         create: {
             userId: user.id,
@@ -53,6 +54,7 @@ export async function PUT(req: Request) {
             asrReminder: asrReminder ?? true,
             maghribReminder: maghribReminder ?? true,
             ishaReminder: ishaReminder ?? true,
+            prayerReminder: prayerReminder ?? true,
             leaderboardMotivation: leaderboardMotivation ?? true,
             leaderboardHour: leaderboardHour ?? 20,
             leaderboardMinute: leaderboardMinute ?? 0,
@@ -63,6 +65,7 @@ export async function PUT(req: Request) {
             ...(asrReminder !== undefined && { asrReminder }),
             ...(maghribReminder !== undefined && { maghribReminder }),
             ...(ishaReminder !== undefined && { ishaReminder }),
+            ...(prayerReminder !== undefined && { prayerReminder }),
             ...(leaderboardMotivation !== undefined && { leaderboardMotivation }),
             ...(leaderboardHour !== undefined && { leaderboardHour }),
             ...(leaderboardMinute !== undefined && { leaderboardMinute }),

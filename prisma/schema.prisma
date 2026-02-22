@@ -132,6 +132,7 @@ model NotificationPreferences {
   asrReminder           Boolean  @default(true) @map("asr_reminder")
   maghribReminder       Boolean  @default(true) @map("maghrib_reminder")
   ishaReminder          Boolean  @default(true) @map("isha_reminder")
+  prayerReminder        Boolean  @default(true) @map("prayer_reminder")
   leaderboardMotivation Boolean  @default(true) @map("leaderboard_motivation")
   leaderboardHour       Int      @default(20) @map("leaderboard_hour")
   leaderboardMinute     Int      @default(0) @map("leaderboard_minute")
@@ -243,7 +244,7 @@ model User {
   accounts               Account[]
   completedDeeds         CompletedDeed[]
   leaderboardCache       LeaderboardCache[]
-  notificationPreferences NotificationPreferences?
+  notificationPrefs      NotificationPreferences?
   prayerSettings         PrayerSettings?
   pushSubscriptions      PushSubscription[]
   userGoals              UserGoal[]

@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     const stats = { prayerSent: 0, leaderboardSent: 0, prayerSkipped: 0, leaderboardSkipped: 0 };
 
     // ── Load all subscribed users + their prefs ──
-    const users = await (prisma as any).user.findMany({
+    const users = await prisma.user.findMany({
         where: { pushSubscriptions: { some: {} } },
         select: {
             id: true,
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
     });
 
     // ── Load random good deeds for CTA ──
-    const deeds = await (prisma as any).predefinedGoodDeed.findMany({
+    const deeds = await prisma.predefinedGoodDeed.findMany({
         where: { isActive: true },
         select: { nameEn: true, nameBn: true, nameAr: true },
         take: 30,
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
 
-    const weeklyBoard = await (prisma as any).leaderboardCache.findMany({
+    const weeklyBoard = await prisma.leaderboardCache.findMany({
         where: { period: 'week', date: { gte: weekStart }, rank: { not: null } },
         orderBy: { rank: 'asc' },
         select: { userId: true, totalPoints: true, rank: true },
@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
                     const prayer = getPrayerToRemind(times, tz);
                     if (prayer) {
                         const prefKey = PRAYER_PREF_KEY[prayer];
-                        const enabled = !prefs || prefs[prefKey] !== false;
+                        const enabled = !prefs || (prefs as any)[prefKey] !== false;
 
                         if (enabled && !prayerWasSent(user.id, prayer)) {
                             const { title, body } = getPrayerNotificationText(prayer, lang);

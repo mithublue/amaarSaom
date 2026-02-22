@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay()); // Sunday
 
-    const weeklyBoard = await (prisma as any).leaderboardCache.findMany({
+    const weeklyBoard = await prisma.leaderboardCache.findMany({
         where: {
             period: 'week',
             date: { gte: weekStart },
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Pick a random deed name for the CTA
-    const deeds = await (prisma as any).predefinedGoodDeed.findMany({
+    const deeds = await prisma.predefinedGoodDeed.findMany({
         where: { isActive: true },
         select: { nameEn: true, nameBn: true, nameAr: true },
         take: 20,
@@ -127,12 +127,14 @@ export async function POST(req: NextRequest) {
         const pointDiff = above.totalPoints - entry.totalPoints;
         if (pointDiff <= 0) continue;
 
-        const lang = user.preferredLanguage || 'en';
+        const lang: string = user.preferredLanguage || 'en';
         const deedName = randomDeed
-            ? (lang === 'bn' ? randomDeed.nameBn : lang === 'ar' ? randomDeed.nameAr : randomDeed.nameEn)
+            ? (lang === 'bn' ? (randomDeed.nameBn || randomDeed.nameEn) : lang === 'ar' ? (randomDeed.nameAr || randomDeed.nameEn) : randomDeed.nameEn)
             : 'morning dhikr';
 
-        const { title, body } = buildMessage(above.user.name || 'Someone', pointDiff, deedName, lang);
+        if (!above.user) continue;
+        const competitorName: string = above.user.name || 'Someone';
+        const { title, body } = buildMessage(competitorName, pointDiff, deedName, lang);
 
         if (!dryRun) {
             await sendPushToUser(user.id, title, body, {

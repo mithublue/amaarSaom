@@ -47,12 +47,10 @@ export async function POST(req: NextRequest) {
     const users = await (prisma as any).user.findMany({
         where: {
             pushSubscriptions: { some: {} }, // has at least 1 FCM token
-            notificationPrefs: {
-                OR: [
-                    { prayerReminder: true },
-                    { notificationPrefs: null }, // treat no-prefs as default (enabled)
-                ],
-            },
+            OR: [
+                { notificationPrefs: { prayerReminder: true } },
+                { notificationPrefs: null }, // treat no-prefs as default (enabled)
+            ],
         },
         select: {
             id: true,
@@ -66,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     const results: { userId: number; prayer: string; sent: boolean }[] = [];
 
-    for (const user of users) {
+    for (const user of (users as any[])) {
         // Skip if prayer reminders explicitly disabled
         if (user.notificationPrefs && !user.notificationPrefs.prayerReminder) continue;
 
