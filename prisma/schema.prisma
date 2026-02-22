@@ -7,243 +7,264 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model accounts {
-  id                  String  @id
-  user_id             Int
-  type                String
-  provider            String
-  provider_account_id String
-  refresh_token       String? @db.Text
-  access_token        String? @db.Text
-  expires_at          Int?
-  token_type          String?
-  scope               String?
-  id_token            String? @db.Text
-  session_state       String?
-  users               users   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model Account {
+  id                String  @id
+  userId            Int     @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refreshToken      String? @map("refresh_token") @db.Text
+  accessToken       String? @map("access_token") @db.Text
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
+  scope             String?
+  idToken           String? @map("id_token") @db.Text
+  sessionState      String? @map("session_state")
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, provider_account_id])
-  @@index([user_id], map: "accounts_user_id_fkey")
+  @@unique([provider, providerAccountId])
+  @@index([userId], map: "accounts_user_id_fkey")
+  @@map("accounts")
 }
 
-model completed_deeds {
-  id                    Int                    @id @default(autoincrement())
-  user_id               Int
-  good_deed_id          Int?
-  custom_deed_name      String?                @db.VarChar(200)
-  base_points           Int                    @default(10)
-  bonus_points          Int                    @default(0)
-  multiplier            Decimal                @default(1.00) @db.Decimal(3, 2)
-  total_points          Int
-  completed_at          DateTime               @default(now())
-  date                  DateTime               @db.Date
-  notes                 String?                @db.Text
-  is_streak_bonus       Boolean                @default(false)
-  is_power_day          Boolean                @default(false)
-  predefined_good_deeds predefined_good_deeds? @relation(fields: [good_deed_id], references: [id])
-  users                 users                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model CompletedDeed {
+  id                 Int                   @id @default(autoincrement())
+  userId             Int                   @map("user_id")
+  goodDeedId         Int?                  @map("good_deed_id")
+  customDeedName     String?               @map("custom_deed_name") @db.VarChar(200)
+  basePoints         Int                   @default(10) @map("base_points")
+  bonusPoints        Int                   @default(0) @map("bonus_points")
+  multiplier         Decimal               @default(1.00) @db.Decimal(3, 2)
+  totalPoints        Int                   @map("total_points")
+  completedAt        DateTime              @default(now()) @map("completed_at")
+  date               DateTime              @db.Date
+  notes              String?               @db.Text
+  isStreakBonus      Boolean               @default(false) @map("is_streak_bonus")
+  isPowerDay         Boolean               @default(false) @map("is_power_day")
+  predefinedGoodDeed PredefinedGoodDeed?   @relation(fields: [goodDeedId], references: [id])
+  user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([date])
-  @@index([good_deed_id], map: "completed_deeds_good_deed_id_fkey")
-  @@index([user_id, date])
+  @@index([goodDeedId], map: "completed_deeds_good_deed_id_fkey")
+  @@index([userId, date])
+  @@map("completed_deeds")
 }
 
-model countries {
-  id        Int         @id @default(autoincrement())
-  name_en   String      @db.VarChar(100)
-  name_bn   String?     @db.VarChar(100)
-  name_ar   String?     @db.VarChar(100)
-  code      String      @unique @db.VarChar(3)
-  divisions divisions[]
-  users     users[]
+model Country {
+  id        Int        @id @default(autoincrement())
+  nameEn    String     @map("name_en") @db.VarChar(100)
+  nameBn    String?    @map("name_bn") @db.VarChar(100)
+  nameAr    String?    @map("name_ar") @db.VarChar(100)
+  code      String     @unique @db.VarChar(3)
+  divisions Division[]
+  users     User[]
+
+  @@map("countries")
 }
 
-model districts {
-  id          Int       @id @default(autoincrement())
-  division_id Int
-  name_en     String    @db.VarChar(100)
-  name_bn     String?   @db.VarChar(100)
-  name_ar     String?   @db.VarChar(100)
-  latitude    Decimal?  @db.Decimal(10, 8)
-  longitude   Decimal?  @db.Decimal(11, 8)
-  divisions   divisions @relation(fields: [division_id], references: [id])
-  users       users[]
+model District {
+  id         Int      @id @default(autoincrement())
+  divisionId Int      @map("division_id")
+  nameEn     String   @map("name_en") @db.VarChar(100)
+  nameBn     String?  @map("name_bn") @db.VarChar(100)
+  nameAr     String?  @map("name_ar") @db.VarChar(100)
+  latitude   Decimal? @db.Decimal(10, 8)
+  longitude  Decimal? @db.Decimal(11, 8)
+  division   Division @relation(fields: [divisionId], references: [id])
+  users      User[]
 
-  @@index([division_id])
+  @@index([divisionId])
   @@index([latitude, longitude])
+  @@map("districts")
 }
 
-model divisions {
-  id         Int         @id @default(autoincrement())
-  country_id Int
-  name_en    String      @db.VarChar(100)
-  name_bn    String?     @db.VarChar(100)
-  name_ar    String?     @db.VarChar(100)
-  districts  districts[]
-  countries  countries   @relation(fields: [country_id], references: [id])
-  users      users[]
+model Division {
+  id        Int        @id @default(autoincrement())
+  countryId Int        @map("country_id")
+  nameEn    String     @map("name_en") @db.VarChar(100)
+  nameBn    String?    @map("name_bn") @db.VarChar(100)
+  nameAr    String?    @map("name_ar") @db.VarChar(100)
+  districts District[]
+  country   Country    @relation(fields: [countryId], references: [id])
+  users     User[]
 
-  @@index([country_id])
+  @@index([countryId])
+  @@map("divisions")
 }
 
-model gold_silver_prices {
-  id                Int      @id @default(autoincrement())
-  gold_per_22k_gram Decimal  @db.Decimal(12, 2)
-  gold_per_24k_gram Decimal  @db.Decimal(12, 2)
-  gold_per_21k_gram Decimal  @db.Decimal(12, 2)
-  gold_per_18k_gram Decimal  @db.Decimal(12, 2)
-  silver_per_gram   Decimal  @db.Decimal(10, 2)
-  currency          String   @default("'BDT'") @db.VarChar(5)
-  source            String   @default("'BAJUS'") @db.VarChar(50)
-  is_manual         Boolean  @default(false)
-  fetched_at        DateTime @default(now())
+model GoldSilverPrice {
+  id             Int      @id @default(autoincrement())
+  gold22kGram    Decimal  @map("gold_per_22k_gram") @db.Decimal(12, 2)
+  gold24kGram    Decimal  @map("gold_per_24k_gram") @db.Decimal(12, 2)
+  gold21kGram    Decimal  @map("gold_per_21k_gram") @db.Decimal(12, 2)
+  gold18kGram    Decimal  @map("gold_per_18k_gram") @db.Decimal(12, 2)
+  silverPerGram  Decimal  @map("silver_per_gram") @db.Decimal(10, 2)
+  currency       String   @default("BDT") @db.VarChar(5)
+  source         String   @default("BAJUS") @db.VarChar(50)
+  isManual       Boolean  @default(false) @map("is_manual")
+  fetchedAt      DateTime @default(now()) @map("fetched_at")
+
+  @@map("gold_silver_prices")
 }
 
-model leaderboard_cache {
-  id           Int      @id @default(autoincrement())
-  user_id      Int
-  period       String   @db.VarChar(20)
-  scope_type   String   @db.VarChar(20)
-  scope_id     Int?
-  total_points Int      @default(0)
-  rank         Int?
-  date         DateTime @db.Date
-  last_updated DateTime @default(now())
-  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model LeaderboardCache {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  period      String   @db.VarChar(20)
+  scopeType   String   @map("scope_type") @db.VarChar(20)
+  scopeId     Int?     @map("scope_id")
+  totalPoints Int      @default(0) @map("total_points")
+  rank        Int?
+  date        DateTime @db.Date
+  lastUpdated DateTime @default(now()) @map("last_updated")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([user_id, period, scope_type, scope_id, date])
-  @@index([period, scope_type, scope_id, rank])
+  @@unique([userId, period, scopeType, scopeId, date])
+  @@index([period, scopeType, scopeId, rank])
+  @@map("leaderboard_cache")
 }
 
-model notification_preferences {
-  id                     Int      @id @default(autoincrement())
-  user_id                Int      @unique
-  fajr_reminder          Boolean  @default(true)
-  dhuhr_reminder         Boolean  @default(true)
-  asr_reminder           Boolean  @default(true)
-  maghrib_reminder       Boolean  @default(true)
-  isha_reminder          Boolean  @default(true)
-  leaderboard_motivation Boolean  @default(true)
-  leaderboard_hour       Int      @default(20)
-  leaderboard_minute     Int      @default(0)
-  created_at             DateTime @default(now())
-  updated_at             DateTime
-  users                  users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model NotificationPreferences {
+  id                    Int      @id @default(autoincrement())
+  userId                Int      @unique @map("user_id")
+  fajrReminder          Boolean  @default(true) @map("fajr_reminder")
+  dhuhrReminder         Boolean  @default(true) @map("dhuhr_reminder")
+  asrReminder           Boolean  @default(true) @map("asr_reminder")
+  maghribReminder       Boolean  @default(true) @map("maghrib_reminder")
+  ishaReminder          Boolean  @default(true) @map("isha_reminder")
+  leaderboardMotivation Boolean  @default(true) @map("leaderboard_motivation")
+  leaderboardHour       Int      @default(20) @map("leaderboard_hour")
+  leaderboardMinute     Int      @default(0) @map("leaderboard_minute")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }
 
-model prayer_settings {
-  id                   Int     @id @default(autoincrement())
-  user_id              Int     @unique
-  calculation_method   String  @default("'Karachi'") @db.VarChar(20)
-  juristic_method      String  @default("'Hanafi'") @db.VarChar(20)
-  enable_notifications Boolean @default(true)
-  users                users   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model PrayerSettings {
+  id                  Int     @id @default(autoincrement())
+  userId              Int     @unique @map("user_id")
+  calculationMethod   String  @default("Karachi") @map("calculation_method") @db.VarChar(20)
+  juristicMethod      String  @default("Hanafi") @map("juristic_method") @db.VarChar(20)
+  enableNotifications Boolean @default(true) @map("enable_notifications")
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("prayer_settings")
 }
 
-model predefined_good_deeds {
-  id                    Int               @id @default(autoincrement())
-  name_en               String            @db.VarChar(100)
-  name_bn               String?           @db.VarChar(100)
-  name_ar               String?           @db.VarChar(100)
-  category              String            @default("'other'") @db.VarChar(50)
-  tier                  String            @default("'easy'") @db.VarChar(20)
-  points                Int               @default(10)
-  time_estimate_minutes Int?
-  icon                  String?           @db.VarChar(50)
-  is_active             Boolean           @default(true)
-  display_order         Int               @default(0)
-  description_en        String?           @db.Text
-  description_bn        String?           @db.Text
-  description_ar        String?           @db.Text
-  category_ar           String?           @db.VarChar(100)
-  category_bn           String?           @db.VarChar(100)
-  category_en           String?           @db.VarChar(100)
-  completed_deeds       completed_deeds[]
-  user_goals            user_goals[]
+model PredefinedGoodDeed {
+  id                  Int               @id @default(autoincrement())
+  nameEn              String            @map("name_en") @db.VarChar(100)
+  nameBn              String?           @map("name_bn") @db.VarChar(100)
+  nameAr              String?           @map("name_ar") @db.VarChar(100)
+  category            String            @default("other") @db.VarChar(50)
+  tier                String            @default("easy") @db.VarChar(20)
+  points              Int               @default(10)
+  timeEstimateMinutes Int?              @map("time_estimate_minutes")
+  icon                String?           @db.VarChar(50)
+  isActive            Boolean           @default(true) @map("is_active")
+  displayOrder        Int               @default(0) @map("display_order")
+  descriptionEn       String?           @map("description_en") @db.Text
+  descriptionBn       String?           @map("description_bn") @db.Text
+  descriptionAr       String?           @map("description_ar") @db.Text
+  categoryAr          String?           @map("category_ar") @db.VarChar(100)
+  categoryBn          String?           @map("category_bn") @db.VarChar(100)
+  categoryEn          String?           @map("category_en") @db.VarChar(100)
+  completedDeeds      CompletedDeed[]
+  userGoals           UserGoal[]
+
+  @@map("predefined_good_deeds")
 }
 
-model push_subscriptions {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  token      String   @unique @db.VarChar(512)
-  created_at DateTime @default(now())
-  updated_at DateTime
-  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @unique @db.VarChar(512)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([user_id])
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
-model system_settings {
-  id                               Int      @id @default(autoincrement())
-  slack_webhook_url                String?  @db.Text
-  notify_on_register               Boolean  @default(true)
-  notify_on_login                  Boolean  @default(true)
-  notify_on_visit                  Boolean  @default(false)
-  updated_at                       DateTime
-  global_leaderboard_notifications Boolean  @default(true)
-  global_prayer_notifications      Boolean  @default(true)
+model SystemSettings {
+  id                             Int      @id @default(autoincrement())
+  slackWebhookUrl                String?  @map("slack_webhook_url") @db.Text
+  notifyOnRegister               Boolean  @default(true) @map("notify_on_register")
+  notifyOnLogin                  Boolean  @default(true) @map("notify_on_login")
+  notifyOnVisit                  Boolean  @default(false) @map("notify_on_visit")
+  updatedAt                      DateTime @updatedAt @map("updated_at")
+  globalLeaderboardNotifications Boolean  @default(true) @map("global_leaderboard_notifications")
+  globalPrayerNotifications      Boolean  @default(true) @map("global_prayer_notifications")
+
+  @@map("system_settings")
 }
 
-model user_goals {
-  id                    Int                    @id @default(autoincrement())
-  user_id               Int
-  good_deed_id          Int?
-  custom_deed_name      String?                @db.VarChar(200)
-  goal_type             String                 @db.VarChar(20)
-  target_count          Int                    @default(1)
-  start_date            DateTime               @db.Date
-  end_date              DateTime               @db.Date
-  is_completed          Boolean                @default(false)
-  created_at            DateTime               @default(now())
-  predefined_good_deeds predefined_good_deeds? @relation(fields: [good_deed_id], references: [id])
-  users                 users                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model UserGoal {
+  id                 Int                 @id @default(autoincrement())
+  userId             Int                 @map("user_id")
+  goodDeedId         Int?                @map("good_deed_id")
+  customDeedName     String?             @map("custom_deed_name") @db.VarChar(200)
+  goalType           String              @map("goal_type") @db.VarChar(20)
+  targetCount        Int                 @default(1) @map("target_count")
+  startDate          DateTime            @map("start_date") @db.Date
+  endDate            DateTime            @map("end_date") @db.Date
+  isCompleted        Boolean             @default(false) @map("is_completed")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  predefinedGoodDeed PredefinedGoodDeed? @relation(fields: [goodDeedId], references: [id])
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([good_deed_id], map: "user_goals_good_deed_id_fkey")
-  @@index([user_id, goal_type, start_date])
+  @@index([goodDeedId], map: "user_goals_good_deed_id_fkey")
+  @@index([userId, goalType, startDate])
+  @@map("user_goals")
 }
 
-model users {
-  id                       Int                       @id @default(autoincrement())
-  email                    String                    @unique @db.VarChar(255)
-  name                     String                    @db.VarChar(100)
-  phone                    String?                   @db.VarChar(20)
-  image                    String?                   @db.Text
-  country_id               Int?
-  division_id              Int?
-  district_id              Int?
-  preferred_language       String                    @default("'en'") @db.VarChar(5)
-  timezone                 String                    @default("'Asia/Dhaka'") @db.VarChar(50)
-  created_at               DateTime                  @default(now())
-  updated_at               DateTime
-  city_name                String?                   @default("'Dhaka'") @db.VarChar(100)
-  country_name             String?                   @default("'Bangladesh'") @db.VarChar(100)
-  last_active_at           DateTime?
-  last_login_at            DateTime?
-  email_verified           Boolean                   @default(false)
-  password_hash            String?                   @db.Text
-  accounts                 accounts[]
-  completed_deeds          completed_deeds[]
-  leaderboard_cache        leaderboard_cache[]
-  notification_preferences notification_preferences?
-  prayer_settings          prayer_settings?
-  push_subscriptions       push_subscriptions[]
-  user_goals               user_goals[]
-  countries                countries?                @relation(fields: [country_id], references: [id])
-  districts                districts?                @relation(fields: [district_id], references: [id])
-  divisions                divisions?                @relation(fields: [division_id], references: [id])
+model User {
+  id                     Int                      @id @default(autoincrement())
+  email                  String                   @unique @db.VarChar(255)
+  name                   String                   @db.VarChar(100)
+  phone                  String?                  @db.VarChar(20)
+  image                  String?                  @db.Text
+  countryId              Int?                     @map("country_id")
+  divisionId             Int?                     @map("division_id")
+  districtId             Int?                     @map("district_id")
+  preferredLanguage      String                   @default("en") @map("preferred_language") @db.VarChar(5)
+  timezone               String                   @default("Asia/Dhaka") @db.VarChar(50)
+  createdAt              DateTime                 @default(now()) @map("created_at")
+  updatedAt              DateTime                 @updatedAt @map("updated_at")
+  cityName               String?                  @default("Dhaka") @map("city_name") @db.VarChar(100)
+  countryName            String?                  @default("Bangladesh") @map("country_name") @db.VarChar(100)
+  lastActiveAt           DateTime?                @map("last_active_at")
+  lastLoginAt            DateTime?                @map("last_login_at")
+  emailVerified          Boolean                  @default(false) @map("email_verified")
+  passwordHash           String?                  @map("password_hash") @db.Text
+  accounts               Account[]
+  completedDeeds         CompletedDeed[]
+  leaderboardCache       LeaderboardCache[]
+  notificationPreferences NotificationPreferences?
+  prayerSettings         PrayerSettings?
+  pushSubscriptions      PushSubscription[]
+  userGoals              UserGoal[]
+  country                Country?                 @relation(fields: [countryId], references: [id])
+  district               District?                @relation(fields: [districtId], references: [id])
+  division               Division?                @relation(fields: [divisionId], references: [id])
 
-  @@index([country_id, division_id, district_id])
-  @@index([district_id], map: "users_district_id_fkey")
-  @@index([division_id], map: "users_division_id_fkey")
+  @@index([countryId, divisionId, districtId])
+  @@index([districtId], map: "users_district_id_fkey")
+  @@index([divisionId], map: "users_division_id_fkey")
   @@index([email])
+  @@map("users")
 }
 
-model verification_tokens {
-  id         Int      @id @default(autoincrement())
-  email      String   @db.VarChar(255)
-  token      String   @unique @db.VarChar(255)
-  expires_at DateTime
-  created_at DateTime @default(now())
+model VerificationToken {
+  id        Int      @id @default(autoincrement())
+  email     String   @db.VarChar(255)
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([email])
+  @@map("verification_tokens")
 }
