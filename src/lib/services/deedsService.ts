@@ -87,7 +87,7 @@ async function checkStreakBonus(userId: number, currentDate: Date): Promise<{ ha
                 gte: sevenDaysAgo,
                 lte: today,
             },
-            goodDeed: {
+            predefinedGoodDeed: {
                 category: 'prayer',
             },
         },
@@ -168,7 +168,7 @@ export async function completeDeed(params: {
             isPowerDay: pointCalc.isPowerDay,
         },
         include: {
-            goodDeed: true,
+            predefinedGoodDeed: true,
         },
     });
 
@@ -212,7 +212,7 @@ export async function getUserDeedsHistory(
             }),
         },
         include: {
-            goodDeed: true,
+            predefinedGoodDeed: true,
         },
         orderBy: {
             completedAt: 'desc',
@@ -256,7 +256,7 @@ export async function createUserGoal(params: {
             endDate: params.endDate,
         },
         include: {
-            goodDeed: true,
+            predefinedGoodDeed: true,
         },
     });
 }
@@ -275,7 +275,7 @@ export async function getUserGoals(
             isCompleted: false,
         },
         include: {
-            goodDeed: true,
+            predefinedGoodDeed: true,
         },
         orderBy: {
             createdAt: 'desc',

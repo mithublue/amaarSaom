@@ -91,7 +91,7 @@ export interface CompletedDeed {
     notes?: string | null;
     isStreakBonus: boolean;
     isPowerDay: boolean;
-    goodDeed?: PredefinedGoodDeed | null;
+    predefinedGoodDeed?: PredefinedGoodDeed | null;
 }
 
 // Goals
@@ -107,7 +107,7 @@ export interface UserGoal {
     endDate: Date;
     isCompleted: boolean;
     createdAt: Date;
-    goodDeed?: PredefinedGoodDeed | null;
+    predefinedGoodDeed?: PredefinedGoodDeed | null;
 }
 
 // Leaderboard
