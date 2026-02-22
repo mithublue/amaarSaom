@@ -136,7 +136,11 @@ export async function POST(req: NextRequest) {
     });
     // Index: userId → { rank, points }
     const boardIndex = new Map<number, { rank: number; points: number }>();
-    for (const r of weeklyBoard) boardIndex.set(r.userId, { rank: r.rank, points: r.totalPoints });
+    for (const r of weeklyBoard) {
+        if (r.rank !== null) {
+            boardIndex.set(r.userId, { rank: r.rank, points: r.totalPoints });
+        }
+    }
 
     // ── Prayer time cache: city+country → times (avoid re-fetching same city) ──
     const prayerCache = new Map<string, Record<PrayerName, string> | null>();
