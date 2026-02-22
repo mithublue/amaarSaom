@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
                     if (myEntry && myEntry.rank > 1) {
                         const above = weeklyBoard.find((r: any) => r.rank === myEntry.rank - 1 || r.rank === myEntry.rank - 2);
                         if (above) {
-                            const pointDiff = above.points - myEntry.points;
+                            const pointDiff = above.totalPoints - myEntry.points;
                             if (pointDiff > 0) {
                                 const competitor = users.find((u: any) => u.id === above.userId);
                                 const competitorName = competitor?.name || 'A fellow user';
