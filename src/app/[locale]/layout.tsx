@@ -37,6 +37,7 @@ export const viewport = {
 };
 
 import ErrorReporter from "@/components/error/ErrorReporter";
+import NotificationPrompt from "@/components/notifications/NotificationPrompt";
 
 export default async function LocaleLayout({
   children,
@@ -64,6 +65,7 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <ErrorReporter />
+          <NotificationPrompt />
           {children}
           <Toaster position="bottom-center" richColors theme="dark" />
         </NextIntlClientProvider>

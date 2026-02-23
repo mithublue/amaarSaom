@@ -32,7 +32,7 @@ export default function NotificationBell() {
                 }
             }
 
-            if (Notification.permission === 'granted' || Notification.permission === 'default') {
+            if (Notification.permission === 'granted') {
                 try {
                     const token = await requestNotificationPermission();
                     if (token) {
