@@ -16,15 +16,15 @@ export async function POST(req: NextRequest) {
 
         // ── Manual override ──────────────────────────────────────────────
         if (body.manual) {
-            const { goldPer22KGram, goldPer24KGram, goldPer21KGram, goldPer18KGram, silverPerGram, currency = 'BDT' } = body;
-            if (!goldPer22KGram) {
-                return NextResponse.json({ error: 'goldPer22KGram is required for manual entry' }, { status: 400 });
+            const { gold22kGram, gold24kGram, gold21kGram, gold18kGram, silverPerGram, currency = 'BDT' } = body;
+            if (!gold22kGram) {
+                return NextResponse.json({ error: 'gold22kGram is required for manual entry' }, { status: 400 });
             }
             const saved = await saveGoldPrices({
-                goldPer22KGram: parseFloat(goldPer22KGram),
-                goldPer24KGram: parseFloat(goldPer24KGram ?? goldPer22KGram * 1.095),
-                goldPer21KGram: parseFloat(goldPer21KGram ?? goldPer22KGram * 0.955),
-                goldPer18KGram: parseFloat(goldPer18KGram ?? goldPer22KGram * 0.818),
+                gold22kGram: parseFloat(gold22kGram),
+                gold24kGram: parseFloat(gold24kGram ?? gold22kGram * 1.095),
+                gold21kGram: parseFloat(gold21kGram ?? gold22kGram * 0.955),
+                gold18kGram: parseFloat(gold18kGram ?? gold22kGram * 0.818),
                 silverPerGram: parseFloat(silverPerGram ?? 145),
                 currency,
                 isManual: true,

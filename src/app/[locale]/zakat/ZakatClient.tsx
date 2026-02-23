@@ -14,10 +14,10 @@ const KARAT_RATIO: Record<string, number> = {
 };
 
 interface GoldPrice {
-    goldPer22KGram: number;
-    goldPer24KGram: number;
-    goldPer21KGram: number;
-    goldPer18KGram: number;
+    gold22kGram: number;
+    gold24kGram: number;
+    gold21kGram: number;
+    gold18kGram: number;
     silverPerGram: number;
     fetchedAt: string | null;
     source: string;
@@ -348,7 +348,7 @@ export default function ZakatCalculatorClient() {
                     if (d.region) setRegion(d.region);
                     setForm(f => ({
                         ...f,
-                        goldPricePerGram: String(parseFloat(String(p[`goldPer${f.goldKarat}KGram` as keyof GoldPrice])).toFixed(2)),
+                        goldPricePerGram: String(parseFloat(String(p[`gold${f.goldKarat}kGram` as keyof GoldPrice])).toFixed(2)),
                         silverPricePerGram: String(parseFloat(String(p.silverPerGram)).toFixed(2)),
                     }));
                 }
@@ -359,7 +359,7 @@ export default function ZakatCalculatorClient() {
     const handleKaratChange = useCallback((karat: string) => {
         setAny('goldKarat', karat as FormData['goldKarat']);
         if (prices) {
-            const goldKey = `goldPer${karat}KGram` as keyof GoldPrice;
+            const goldKey = `gold${karat}kGram` as keyof GoldPrice;
             setAny('goldPricePerGram', String(parseFloat(String(prices[goldKey])).toFixed(2)));
         }
     }, [prices]);
