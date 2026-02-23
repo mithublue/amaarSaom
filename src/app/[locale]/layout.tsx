@@ -38,6 +38,7 @@ export const viewport = {
 
 import ErrorReporter from "@/components/error/ErrorReporter";
 import NotificationPrompt from "@/components/notifications/NotificationPrompt";
+import ClientProviders from "@/components/providers/ClientProviders";
 
 export default async function LocaleLayout({
   children,
@@ -64,10 +65,12 @@ export default async function LocaleLayout({
         suppressHydrationWarning={true}
       >
         <NextIntlClientProvider messages={messages}>
-          <ErrorReporter />
-          <NotificationPrompt />
-          {children}
-          <Toaster position="bottom-center" richColors theme="dark" />
+          <ClientProviders>
+            <ErrorReporter />
+            <NotificationPrompt />
+            {children}
+            <Toaster position="bottom-center" richColors theme="dark" />
+          </ClientProviders>
         </NextIntlClientProvider>
         <Analytics />
       </body>
