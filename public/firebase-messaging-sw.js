@@ -18,15 +18,20 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Background message:', payload);
 
-    const notificationTitle = payload.notification?.title || 'Nuzul';
-    const notificationOptions = {
-        body: payload.notification?.body || '',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-192x192.png',
-        data: payload.data,
-    };
-
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    // If the payload already contains a 'notification' object, 
+    // the Firebase SDK will show it automatically in the background.
+    // We only call showNotification manually if there is NO notification block 
+    // (i.e. it's a data-only message).
+    if (!payload.notification) {
+        const notificationTitle = 'Nuzul';
+        const notificationOptions = {
+            body: payload.data?.body || '',
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-192x192.png',
+            data: payload.data,
+        };
+        self.registration.showNotification(notificationTitle, notificationOptions);
+    }
 });
 
 // Handle notification click
