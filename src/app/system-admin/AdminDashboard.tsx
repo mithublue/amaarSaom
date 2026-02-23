@@ -49,7 +49,7 @@ export default function AdminDashboard() {
         receiverEmails: '',
         title: "Prophet's Companion",
         content: '',
-        scheduledAt: new Date(Date.now() + 10 * 60 * 1000).toISOString().slice(0, 16) // Default 10 mins from now
+        scheduledAt: new Date(Date.now() + 10 * 60 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)
     });
     const [notifSaving, setNotifSaving] = useState(false);
     const [notifMsg, setNotifMsg] = useState('');
@@ -124,10 +124,16 @@ export default function AdminDashboard() {
         setNotifSaving(true);
         setNotifMsg('');
         try {
+            // Convert the local datetime-local string to a proper UTC ISO string
+            const payload = {
+                ...notifData,
+                scheduledAt: new Date(notifData.scheduledAt).toISOString()
+            };
+
             const res = await fetch('/api/admin/notifications/custom', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(notifData),
+                body: JSON.stringify(payload),
             });
             const data = await res.json();
             if (data.success) {
