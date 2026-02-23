@@ -2,7 +2,7 @@
  * POST /api/cron/master-notification
  *
  * Single master endpoint called by cron-job.org every 5 minutes.
- * Handles two conditions:
+ * Handles two conditions: 
  *   1. Prayer Reminder: check if any prayer was 15-20 min ago → send per-user push
  *   2. Leaderboard Motivation: check if it's the user's configured daily time → send competitive push
  *
