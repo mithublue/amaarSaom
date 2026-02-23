@@ -24,7 +24,7 @@ export default function NotificationBell() {
                     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                     console.log('[NotificationBell] SW Registered:', registration.scope);
 
-                    // Wait for SW to be active
+                    // Wait for SW to be active 
                     await navigator.serviceWorker.ready;
                     console.log('[NotificationBell] SW is ready.');
                 } catch (err) {
