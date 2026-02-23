@@ -159,3 +159,22 @@ export function buildAladhanUrl(loc: LocationData): string {
     return `https://api.aladhan.com/v1/timings/${ts}?latitude=${coords.lat}&longitude=${coords.lng}&method=1`;
 }
 
+/**
+ * Reverse geocode coordinates to city+country using Nominatim.
+ */
+export async function reverseGeocode(lat: number, lng: number): Promise<{ city: string; country: string } | null> {
+    try {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`,
+            { headers: { 'User-Agent': 'RamadanCompanion/1.0' } }
+        );
+        const data = await res.json();
+        if (data?.address) {
+            const city = data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.state || 'Unknown';
+            const country = data.address.country || 'Unknown';
+            return { city, country };
+        }
+    } catch { }
+    return null;
+}
+

@@ -179,12 +179,16 @@ model PredefinedGoodDeed {
 }
 
 model PushSubscription {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  token     String   @unique @db.VarChar(512)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  token       String   @unique @db.VarChar(512)
+  cityName    String?  @map("city_name") @db.VarChar(100)
+  countryName String?  @map("country_name") @db.VarChar(100)
+  timezone    String?  @db.VarChar(50)
+  language    String?  @default("en") @db.VarChar(5)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("push_subscriptions")

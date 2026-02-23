@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import { requestNotificationPermission } from '@/lib/firebase/firebase';
 import { useSession } from 'next-auth/react';
+import { reverseGeocode, saveGpsLocation } from '@/lib/location';
 
 export default function NotificationPrompt() {
     const { data: session } = useSession();
     const [show, setShow] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Only show for logged-in users
-        if (!session?.user) return;
+        // Show for EVERYONE (logged in or out)
 
         // Check if we should show the prompt
         if (!('Notification' in window) || Notification.permission !== 'default') {
@@ -29,22 +30,64 @@ export default function NotificationPrompt() {
         }, 5000);
 
         return () => clearTimeout(timer);
-    }, [session]);
+    }, []);
 
     async function handleAllow() {
-        setShow(false);
+        setLoading(true);
         try {
+            let locationData = {
+                cityName: '',
+                countryName: '',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+
+            // 1. Request Geolocation
+            try {
+                const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+                });
+
+                const { latitude, longitude } = position.coords;
+                const geo = await reverseGeocode(latitude, longitude);
+
+                if (geo) {
+                    locationData.cityName = geo.city;
+                    locationData.countryName = geo.country;
+
+                    // Save locally for other components to use
+                    saveGpsLocation({
+                        city: geo.city,
+                        country: geo.country,
+                        lat: latitude,
+                        lng: longitude,
+                        useCoords: true
+                    });
+                }
+            } catch (geoErr) {
+                console.warn('[NotificationPrompt] Geolocation error or denied:', geoErr);
+                // Continue without exact location
+            }
+
+            // 2. Request Notification Permission
             const token = await requestNotificationPermission();
+
             if (token) {
-                // Sync token with server
+                // 3. Sync token + location with server
                 await fetch('/api/notifications/subscribe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token }),
+                    body: JSON.stringify({
+                        token,
+                        ...locationData,
+                        language: 'bn'
+                    }),
                 });
             }
+            setShow(false);
         } catch (err) {
             console.error('[NotificationPrompt] Error:', err);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -71,10 +114,10 @@ export default function NotificationPrompt() {
                     </div>
                     <div className="flex-1">
                         <h3 className="text-white font-bold text-xl leading-tight">
-                            পরকালের পাথেয় গুছিয়ে নিন! ✨
+                            জান্নাতের পাথেয় গুছিয়ে নিন! ✨
                         </h3>
                         <p className="text-gray-300 text-sm mt-2 leading-relaxed font-medium">
-                            নামাজের সঠিক সময়, প্রতিদিনের নেক আমলের রিমাইন্ডার এবং লিডারবোর্ডের নতুন আপডেট পেতে নোটিফিকেশন সচল করুন।
+                            আপনার লোকেশন অনুযায়ী নামাজের সঠিক সময় এবং প্রতিদিনের "নেক আমল" এর রিমাইন্ডার পেতে নোটিফিকেশন ও লোকেশন সচল করুন।
                         </p>
                     </div>
                 </div>
@@ -82,13 +125,15 @@ export default function NotificationPrompt() {
                 <div className="flex flex-col sm:flex-row items-center gap-3 mt-7">
                     <button
                         onClick={handleAllow}
-                        className="w-full sm:flex-1 bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3.5 rounded-2xl transition-all active:scale-[0.97] shadow-lg shadow-emerald-500/30 text-sm tracking-wide"
+                        disabled={loading}
+                        className="w-full sm:flex-1 bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3.5 rounded-2xl transition-all active:scale-[0.97] shadow-lg shadow-emerald-500/30 text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        হ্যাঁ, সচল করি
+                        {loading ? 'প্রসেসিং হচ্ছে...' : 'হ্যাঁ, সচল করি'}
                     </button>
                     <button
                         onClick={handleDecline}
-                        className="w-full sm:flex-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white font-semibold py-3.5 rounded-2xl transition-all active:scale-[0.97] text-sm"
+                        disabled={loading}
+                        className="w-full sm:flex-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white font-semibold py-3.5 rounded-2xl transition-all active:scale-[0.97] text-sm disabled:opacity-50"
                     >
                         পরে দেখবো
                     </button>

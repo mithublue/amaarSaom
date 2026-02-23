@@ -4,33 +4,43 @@ import { auth } from '@/lib/auth/config';
 
 export async function POST(req: Request) {
     const session = await auth();
-    if (!session?.user?.email) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     try {
-        const { token } = await req.json();
+        const { token, cityName, countryName, timezone, language } = await req.json();
 
         if (!token) {
             return NextResponse.json({ error: 'Token is required' }, { status: 400 });
         }
 
-        // Get user
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        let userId: number | null = null;
+        if (session?.user?.email) {
+            const user = await prisma.user.findUnique({
+                where: { email: session.user.email },
+            });
+            if (user) {
+                userId = user.id;
+            }
         }
 
         // Upsert subscription (avoid duplicates)
+        // If user is logged in, we link it. If not, userId is null.
         await prisma.pushSubscription.upsert({
             where: { token },
-            update: { userId: user.id, updatedAt: new Date() },
+            update: {
+                userId: userId as any,
+                cityName,
+                countryName,
+                timezone,
+                language: language || 'bn',
+                updatedAt: new Date()
+            },
             create: {
-                userId: user.id,
+                userId: userId as any,
                 token,
+                cityName,
+                countryName,
+                timezone,
+                language: language || 'bn',
             },
         });
 
