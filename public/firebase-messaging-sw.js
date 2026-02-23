@@ -1,7 +1,3 @@
-// Firebase Messaging Service Worker
-// Merged with PWA worker to avoid conflicts
-importScripts('/sw.js');
-
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
 
@@ -52,3 +48,6 @@ self.addEventListener('notificationclick', (event) => {
         })
     );
 });
+
+// Merged with PWA worker to avoid conflicts
+importScripts('/sw.js');

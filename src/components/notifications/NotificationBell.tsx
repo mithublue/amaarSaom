@@ -12,15 +12,23 @@ export default function NotificationBell() {
     useEffect(() => {
         // Silently request permission and register token on mount
         (async () => {
-            if (!('Notification' in window)) return;
+            console.log('[NotificationBell] Initializing...');
+            if (!('Notification' in window)) {
+                console.warn('[NotificationBell] Notifications not supported in this browser.');
+                return;
+            }
 
             // Ensure we have a valid Service Worker registration first
             if ('serviceWorker' in navigator) {
                 try {
                     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                    console.log('SW Registered:', registration.scope);
+                    console.log('[NotificationBell] SW Registered:', registration.scope);
+
+                    // Wait for SW to be active
+                    await navigator.serviceWorker.ready;
+                    console.log('[NotificationBell] SW is ready.');
                 } catch (err) {
-                    console.error('SW Registration failed:', err);
+                    console.error('[NotificationBell] SW Registration failed:', err);
                 }
             }
 
@@ -28,35 +36,46 @@ export default function NotificationBell() {
                 try {
                     const token = await requestNotificationPermission();
                     if (token) {
-                        console.log('FCM Token secured, syncing with DB...');
-                        await fetch('/api/notifications/subscribe', {
+                        console.log('[NotificationBell] FCM Token secured:', token.substring(0, 10) + '...');
+                        const res = await fetch('/api/notifications/subscribe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token }),
-                        }).catch(() => { });
+                        });
+                        if (res.ok) {
+                            console.log('[NotificationBell] Token synced with server successfully.');
+                        } else {
+                            console.error('[NotificationBell] Token sync failed:', res.status);
+                        }
+                    } else {
+                        console.warn('[NotificationBell] Failed to get FCM token.');
                     }
                 } catch (err) {
-                    console.error('Permission/Token error:', err);
+                    console.error('[NotificationBell] Permission/Token error:', err);
                 }
             }
         })();
 
         // Listen for foreground messages — show bell with red dot
         const unsubscribe = onForegroundMessage((payload) => {
+            console.log('[NotificationBell] Foreground message received:', payload);
+
             const title = payload.notification?.title || payload.data?.title || 'New notification';
             const body = payload.notification?.body || payload.data?.body || '';
+
             setNotifications((prev) => [...prev, { title, body }]);
 
             // If in foreground, manually trigger a system notification 
             // since the browser suppresses the service worker's automatic one.
             if ('serviceWorker' in navigator && Notification.permission === 'granted') {
                 navigator.serviceWorker.ready.then((registration) => {
+                    console.log('[NotificationBell] Triggering system notification in foreground...');
                     registration.showNotification(title, {
                         body: body,
                         icon: '/icons/icon-192x192.png',
                         badge: '/icons/icon-192x192.png',
                         tag: 'nuzul-notification',
-                    }).catch(err => console.error('Foreground notify error:', err));
+                    }).catch(err => console.error('[NotificationBell] Foreground notify error:', err));
                 });
             }
         });
