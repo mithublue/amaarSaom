@@ -13,32 +13,42 @@ export default function NotificationBell() {
         // Silently request permission and register token on mount
         (async () => {
             if (!('Notification' in window)) return;
-            if (Notification.permission === 'default' || Notification.permission === 'granted') {
+
+            // Ensure we have a valid Service Worker registration first
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    console.log('SW Registered:', registration.scope);
+                } catch (err) {
+                    console.error('SW Registration failed:', err);
+                }
+            }
+
+            if (Notification.permission === 'granted' || Notification.permission === 'default') {
                 try {
                     const token = await requestNotificationPermission();
                     if (token) {
+                        console.log('FCM Token secured, syncing with DB...');
                         await fetch('/api/notifications/subscribe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token }),
                         }).catch(() => { });
                     }
-                } catch {
-                    // Silently ignore — non-critical background task
+                } catch (err) {
+                    console.error('Permission/Token error:', err);
                 }
             }
         })();
-
-        // Register service worker for background notifications
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(() => { });
-        }
 
         // Listen for foreground messages — show bell with red dot
         const unsubscribe = onForegroundMessage((payload) => {
             const title = payload.notification?.title || 'New notification';
             const body = payload.notification?.body;
             setNotifications((prev) => [...prev, { title, body }]);
+
+            // Show an alert for immediate feedback during testing/foreground use
+            window.alert(`🔔 ${title}\n\n${body || ''}`);
         });
 
         return () => {

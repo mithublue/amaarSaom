@@ -1,5 +1,6 @@
 // Firebase Messaging Service Worker
-// This runs in the background to receive push notifications
+// Merged with PWA worker to avoid conflicts
+importScripts('/sw.js');
 
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
@@ -18,20 +19,21 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Background message:', payload);
 
-    // If the payload already contains a 'notification' object, 
-    // the Firebase SDK will show it automatically in the background.
-    // We only call showNotification manually if there is NO notification block 
-    // (i.e. it's a data-only message).
-    if (!payload.notification) {
-        const notificationTitle = 'Nuzul';
-        const notificationOptions = {
-            body: payload.data?.body || '',
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-192x192.png',
-            data: payload.data,
-        };
-        self.registration.showNotification(notificationTitle, notificationOptions);
-    }
+    // DEDUPLICATION STRATEGY:
+    // We always show the notification manually. By using a constant 'tag',
+    // the browser will automatically deduplicate and replace any existing 
+    // notification with the same tag, effectively fixing the "double push" 
+    // issue without risking "zero notifications".
+    const notificationTitle = payload.notification?.title || payload.data?.title || 'Nuzul';
+    const notificationOptions = {
+        body: payload.notification?.body || payload.data?.body || '',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png',
+        tag: 'nuzul-notification', // This handles deduplication at the OS level
+        data: payload.data,
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click

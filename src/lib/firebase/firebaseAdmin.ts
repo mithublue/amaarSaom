@@ -45,6 +45,7 @@ export async function sendPushNotification(
                 notification: {
                     icon: '/icons/icon-192x192.png',
                     badge: '/icons/icon-192x192.png',
+                    tag: 'nuzul-notification',
                 },
                 fcmOptions: {
                     link: '/',
