@@ -43,12 +43,22 @@ export default function NotificationBell() {
 
         // Listen for foreground messages — show bell with red dot
         const unsubscribe = onForegroundMessage((payload) => {
-            const title = payload.notification?.title || 'New notification';
-            const body = payload.notification?.body;
+            const title = payload.notification?.title || payload.data?.title || 'New notification';
+            const body = payload.notification?.body || payload.data?.body || '';
             setNotifications((prev) => [...prev, { title, body }]);
 
-            // Show an alert for immediate feedback during testing/foreground use
-            window.alert(`🔔 ${title}\n\n${body || ''}`);
+            // If in foreground, manually trigger a system notification 
+            // since the browser suppresses the service worker's automatic one.
+            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then((registration) => {
+                    registration.showNotification(title, {
+                        body: body,
+                        icon: '/icons/icon-192x192.png',
+                        badge: '/icons/icon-192x192.png',
+                        tag: 'nuzul-notification',
+                    }).catch(err => console.error('Foreground notify error:', err));
+                });
+            }
         });
 
         return () => {
