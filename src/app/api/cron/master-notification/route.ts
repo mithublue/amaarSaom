@@ -96,21 +96,25 @@ export async function POST(req: NextRequest) {
     const globalLeaderboardEnabled = sysSettings?.globalLeaderboardNotifications !== false;
 
     const dryRun = req.nextUrl.searchParams.get('dryRun') === 'true';
+    const isTest = req.nextUrl.searchParams.get('test') === 'true';
     const stats = { prayerSent: 0, leaderboardSent: 0, prayerSkipped: 0, leaderboardSkipped: 0 };
+    const debugLogs: string[] = [];
 
-    // ── Load all subscribed users + their prefs ──
-    const users = await prisma.user.findMany({
+    // ── Load all subscribed users ──
+    let users = await prisma.user.findMany({
         where: { pushSubscriptions: { some: {} } },
-        select: {
-            id: true,
-            name: true,
-            cityName: true,
-            countryName: true,
-            timezone: true,
-            preferredLanguage: true,
-            notificationPrefs: true,
-        },
+        include: { notificationPrefs: true },
     });
+
+    // ── Test Mode Filter: only send to admin in test mode ──
+    if (isTest && process.env.ADMIN_EMAIL) {
+        users = users.filter(u => u.email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase());
+        debugLogs.push(`Test mode: limited to admin (${process.env.ADMIN_EMAIL})`);
+    }
+
+    if (users.length === 0) {
+        return NextResponse.json({ success: true, message: isTest ? 'Admin user not found or not subscribed' : 'No users with push subscriptions found', usersProcessed: 0, ...stats, debugLogs });
+    }
 
     // ── Load random good deeds for CTA ──
     const deeds = await prisma.predefinedGoodDeed.findMany({
@@ -124,7 +128,7 @@ export async function POST(req: NextRequest) {
         return lang === 'bn' ? (d.nameBn ?? d.nameEn) : lang === 'ar' ? (d.nameAr ?? d.nameEn) : d.nameEn;
     };
 
-    // ── Fetch weekly leaderboard once ──
+    // ── Fetch weekly leaderboard ──
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
@@ -172,17 +176,21 @@ export async function POST(req: NextRequest) {
 
                 if (times) {
                     const prayer = getPrayerToRemind(times, tz);
-                    if (prayer) {
-                        const prefKey = PRAYER_PREF_KEY[prayer];
+                    // In test mode, we'll try to find ANY prayer to send if none is in the window
+                    const effectivePrayer = prayer || (isTest ? 'Dhuhr' : null);
+
+                    if (effectivePrayer) {
+                        const prefKey = PRAYER_PREF_KEY[effectivePrayer as PrayerName];
                         const enabled = !prefs || (prefs as any)[prefKey] !== false;
 
-                        if (enabled && !prayerWasSent(user.id, prayer)) {
-                            const { title, body } = getPrayerNotificationText(prayer, lang);
+                        if (enabled && (isTest || !prayerWasSent(user.id, effectivePrayer as PrayerName))) {
+                            const { title, body } = getPrayerNotificationText(effectivePrayer as PrayerName, lang);
                             if (!dryRun) {
-                                await sendPushToUser(user.id, title, body, { type: 'prayer_reminder', prayer });
-                                markPrayerSent(user.id, prayer);
+                                await sendPushToUser(user.id, title, body, { type: 'prayer_reminder', prayer: effectivePrayer });
+                                if (!isTest) markPrayerSent(user.id, effectivePrayer as PrayerName);
                             }
                             stats.prayerSent++;
+                            debugLogs.push(`Sent prayer(${effectivePrayer}) to ${user.email}`);
                         }
                     }
                 }
@@ -194,31 +202,38 @@ export async function POST(req: NextRequest) {
         // ── CONDITION 2: Leaderboard Motivation ──
         if (globalLeaderboardEnabled) {
             const leaderboardEnabled = !prefs || prefs.leaderboardMotivation;
-            if (leaderboardEnabled && !leaderboardWasSent(user.id)) {
+            if (leaderboardEnabled && (isTest || !leaderboardWasSent(user.id))) {
                 const { h, m } = localTime(tz);
                 const nowMin = h * 60 + m;
                 const prefH = prefs?.leaderboardHour ?? 20;
                 const prefM = prefs?.leaderboardMinute ?? 0;
                 const targetMin = prefH * 60 + prefM;
 
-                if (Math.abs(nowMin - targetMin) <= 7) {
+                if (isTest || Math.abs(nowMin - targetMin) <= 7) {
                     const myEntry = boardIndex.get(user.id);
-                    if (myEntry && myEntry.rank > 1) {
-                        const above = weeklyBoard.find((r: any) => r.rank === myEntry.rank - 1 || r.rank === myEntry.rank - 2);
-                        if (above) {
-                            const pointDiff = above.totalPoints - myEntry.points;
-                            if (pointDiff > 0) {
-                                const competitor = users.find((u: any) => u.id === above.userId);
-                                const competitorName = competitor?.name || 'A fellow user';
-                                const deed = randomDeed(lang);
-                                const { title, body } = buildLeaderboardMsg(competitorName, pointDiff, deed, lang);
+                    // In test mode, we want to send something even if the user is #1
+                    if (isTest || (myEntry && myEntry.rank > 1)) {
+                        let above = myEntry ? weeklyBoard.find((r: any) => r.rank === myEntry.rank - 1) : null;
 
-                                if (!dryRun) {
-                                    await sendPushToUser(user.id, title, body, { type: 'leaderboard_motivation' });
-                                    leaderboardSentCache.set(user.id, Date.now());
-                                }
-                                stats.leaderboardSent++;
+                        // Enhanced test fallback: find ANY user who isn't THIS user
+                        if (isTest && !above) {
+                            const otherUser = await prisma.user.findFirst({ where: { id: { not: user.id } } });
+                            if (otherUser) above = { userId: otherUser.id, totalPoints: 1000, rank: 1 } as any;
+                        }
+
+                        if (above) {
+                            const pointDiff = Math.max(10, (above.totalPoints || 100) - (myEntry?.points || 0));
+                            const competitor = await prisma.user.findUnique({ where: { id: above.userId }, select: { name: true } });
+                            const competitorName = competitor?.name || 'A fellow user';
+                            const deed = randomDeed(lang);
+                            const { title, body } = buildLeaderboardMsg(competitorName, pointDiff, deed, lang);
+
+                            if (!dryRun) {
+                                await sendPushToUser(user.id, title, body, { type: 'leaderboard_motivation' });
+                                if (!isTest) leaderboardSentCache.set(user.id, Date.now());
                             }
+                            stats.leaderboardSent++;
+                            debugLogs.push(`Sent leaderboard nudge to ${user.email}`);
                         }
                     }
                 }
@@ -262,5 +277,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, dryRun, ...stats, customNotifsSent: pendingNotifs.length });
 }
 
-// Allow GET as well for easy browser testing
 export { POST as GET };
