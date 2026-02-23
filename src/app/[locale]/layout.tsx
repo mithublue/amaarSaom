@@ -7,6 +7,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,6 +23,30 @@ export const metadata: Metadata = {
   title: "Nuzul - Your Spiritual Journey Partner",
   description: "Track prayers, complete good deeds, compete with your community, and strengthen your faith this Ramadan",
   manifest: "/manifest.json",
+  metadataBase: new URL('https://www.nuzul.xyz'),
+  openGraph: {
+    title: "Nuzul - Your Spiritual Journey Partner",
+    description: "Track prayers, complete good deeds, compete with your community, and strengthen your faith this Ramadan",
+    url: "https://www.nuzul.xyz",
+    siteName: "Nuzul",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Nuzul - Your Spiritual Journey Partner",
+      },
+    ],
+    locale: "bn_BD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nuzul - Your Spiritual Journey Partner",
+    description: "Track prayers, complete good deeds, compete with your community, and strengthen your faith this Ramadan",
+    images: ["/og-image.png"],
+    creator: "@nuzul_app",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -73,6 +98,7 @@ export default async function LocaleLayout({
           </ClientProviders>
         </NextIntlClientProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

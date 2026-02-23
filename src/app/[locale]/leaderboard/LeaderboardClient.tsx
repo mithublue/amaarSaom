@@ -65,7 +65,9 @@ export default function LeaderboardClient() {
                 {entry ? (
                     <>
                         <div className="relative mb-4">
-                            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/20 shadow-glass group-hover:scale-110 group-hover:border-accent-400 transition-all duration-500">
+                            <div className={`w-20 h-20 rounded-full overflow-hidden border-4 transition-all duration-500 shadow-glass ${data?.userRank?.userId === entry.userId
+                                ? 'border-accent-400 scale-110 shadow-gold-glow animate-pulse'
+                                : 'border-white/20 group-hover:scale-110 group-hover:border-accent-400'}`}>
                                 {entry.userImage ? (
                                     <img src={entry.userImage} alt={entry.userName} className="w-full h-full object-cover" />
                                 ) : (
@@ -78,7 +80,7 @@ export default function LeaderboardClient() {
                                 {icon}
                             </div>
                         </div>
-                        <div className="text-white font-bold text-xl mb-1 drop-shadow-md text-center group-hover:text-accent-300 transition-colors">{entry.userName}</div>
+                        <div className={`font-bold text-xl mb-1 drop-shadow-md text-center transition-colors ${data?.userRank?.userId === entry.userId ? 'text-accent-300' : 'text-white group-hover:text-accent-300'}`}>{entry.userName}</div>
                         <div className="text-accent-400 text-lg font-bold mb-4 drop-shadow-sm">{entry.totalPoints} <span className="text-xs uppercase tracking-widest text-primary-300">pts</span></div>
                     </>
                 ) : (
@@ -145,57 +147,64 @@ export default function LeaderboardClient() {
                     {/* Top 3 Podium */}
                     {data && data.entries.length > 0 && <TopThree entries={data.entries} />}
 
-                    {/* User Rank Card */}
+                    {/* User Rank Card (Always Sticky at the top when scrolling) */}
                     {data?.userRank && (
-                        <div className="sticky top-[100px] z-20 mb-10 bg-linear-to-r from-accent-600 to-primary-700 rounded-app-lg p-6 shadow-gold-glow border border-white/30 transform hover:scale-[1.01] transition-all group overflow-hidden">
-                            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                        <div className="sticky top-[90px] z-30 mb-8 bg-linear-to-r from-accent-600/90 to-primary-800/90 backdrop-blur-xl rounded-app-lg p-5 shadow-[0_0_30px_rgba(234,179,8,0.3)] border border-accent-400/50 transform hover:scale-[1.01] transition-all group overflow-hidden">
+                            <div className="absolute inset-0 bg-accent-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                             <div className="flex items-center gap-6 relative z-10">
-                                <div className="text-3xl font-heading font-black text-white/40 w-12">#{data.userRank.rank}</div>
-                                <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-white font-bold text-2xl overflow-hidden shadow-sm">
+                                <div className="text-3xl font-heading font-black text-white/50 w-12 drop-shadow-sm">#{data.userRank.rank}</div>
+                                <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-accent-400 flex items-center justify-center text-white font-bold text-2xl overflow-hidden shadow-gold-glow">
                                     {data.userRank.userImage ? <img src={data.userRank.userImage} className="w-full h-full object-cover" /> : (scope === 'district_ranking' ? '🏙️' : data.userRank.userName[0])}
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-white font-black text-2xl tracking-tight leading-none mb-1">
+                                    <div className="text-white font-black text-2xl tracking-tight leading-none mb-1 flex items-center gap-2">
                                         {scope === 'district_ranking' ? 'Your District' : 'You'}
+                                        <span className="text-[10px] bg-white text-accent-600 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Global Rank</span>
                                     </div>
-                                    <div className="text-white/80 text-sm font-medium uppercase tracking-widest opacity-80">
+                                    <div className="text-white/80 text-sm font-medium uppercase tracking-widest opacity-90 drop-shadow-sm">
                                         {scope === 'district_ranking' ? data.userRank.userName : (data.userRank.location || 'Global')}
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-white font-black text-3xl tabular-nums leading-none mb-1">{data.userRank.totalPoints}</div>
-                                    <div className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Points</div>
+                                    <div className="text-white font-black text-3xl tabular-nums leading-none mb-1 drop-shadow-md">{data.userRank.totalPoints}</div>
+                                    <div className="text-[10px] text-white/70 font-bold uppercase tracking-widest">Points</div>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {/* Leaderboard List */}
-                    <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass overflow-hidden divide-y divide-white/5 mb-20 animate-fade-in">
-                        {data?.entries.slice(3).map((entry) => (
-                            <div
-                                key={entry.userId}
-                                className="flex items-center gap-5 p-5 hover:bg-white/5 transition-all duration-300 group"
-                            >
-                                <div className="text-2xl font-black text-primary-500/50 w-10 text-center tracking-tighter group-hover:text-accent-400 group-hover:scale-110 transition-all">{entry.rank}</div>
+                    <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass overflow-hidden divide-y divide-white/5 mb-20 animate-fade-in relative">
+                        {data?.entries.slice(3).map((entry) => {
+                            const isMe = data?.userRank?.userId === entry.userId;
+                            return (
+                                <div
+                                    key={entry.userId}
+                                    className={`flex items-center gap-5 p-5 transition-all duration-300 group ${isMe
+                                        ? 'bg-accent-600/30 border-l-4 border-accent-400 z-10 relative shadow-[0_0_25px_rgba(234,179,8,0.2)]'
+                                        : 'hover:bg-white/5 border-l-4 border-transparent'}`}
+                                >
+                                    <div className={`text-2xl font-black w-10 text-center tracking-tighter group-hover:scale-110 transition-all ${isMe ? 'text-accent-400' : 'text-primary-500/50 group-hover:text-accent-400'}`}>{entry.rank}</div>
 
-                                <div className="w-12 h-12 rounded-full bg-primary-800/40 flex items-center justify-center text-white font-bold overflow-hidden border border-white/10 shadow-inner group-hover:border-accent-500/30 transition-all">
-                                    {entry.userImage ? <img src={entry.userImage} className="w-full h-full object-cover" /> : (scope === 'district_ranking' ? '🏙️' : entry.userName[0])}
-                                </div>
-
-                                <div className="flex-1">
-                                    <div className="text-white font-bold text-lg leading-none mb-1 group-hover:text-accent-300 transition-colors tracking-tight">
-                                        {entry.userName}
+                                    <div className={`w-12 h-12 rounded-full bg-primary-800/40 flex items-center justify-center text-white font-bold overflow-hidden border transition-all ${isMe ? 'border-accent-500 shadow-gold-glow scale-110' : 'border-white/10 shadow-inner group-hover:border-accent-500/30'}`}>
+                                        {entry.userImage ? <img src={entry.userImage} className="w-full h-full object-cover" /> : (scope === 'district_ranking' ? '🏙️' : entry.userName[0])}
                                     </div>
-                                    {entry.location && <div className="text-primary-400 text-xs font-medium opacity-80 uppercase tracking-wider">{entry.location}</div>}
-                                </div>
 
-                                <div className="text-right">
-                                    <div className="text-white font-black text-xl tabular-nums group-hover:text-accent-400 transition-colors">{entry.totalPoints}</div>
-                                    <div className="text-[10px] text-primary-500 font-bold uppercase tracking-tighter">Points</div>
+                                    <div className="flex-1">
+                                        <div className={`font-bold text-lg leading-none mb-1 transition-colors tracking-tight flex items-center gap-2 ${isMe ? 'text-accent-300' : 'text-white group-hover:text-accent-300'}`}>
+                                            {entry.userName}
+                                            {isMe && <span className="text-[10px] bg-accent-600 text-white px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse">You</span>}
+                                        </div>
+                                        {entry.location && <div className="text-primary-400 text-xs font-medium opacity-80 uppercase tracking-wider">{entry.location}</div>}
+                                    </div>
+
+                                    <div className="text-right">
+                                        <div className={`font-black text-xl tabular-nums transition-colors ${isMe ? 'text-accent-400' : 'text-white group-hover:text-accent-400'}`}>{entry.totalPoints}</div>
+                                        <div className="text-[10px] text-primary-500 font-bold uppercase tracking-tighter">Points</div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {data?.entries.length === 0 && (
                             <div className="text-center py-20 px-4">
@@ -208,7 +217,8 @@ export default function LeaderboardClient() {
                         )}
                     </div>
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }
