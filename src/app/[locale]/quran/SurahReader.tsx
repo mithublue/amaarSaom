@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import { Chapter, Verse } from '@/lib/services/quranService';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 
 interface SurahReaderProps {
     surah: Chapter;
@@ -10,6 +11,7 @@ interface SurahReaderProps {
 }
 
 export default function SurahReader({ surah, verses }: SurahReaderProps) {
+    const locale = useLocale();
     const [playingVerse, setPlayingVerse] = useState<number | null>(null);
     const [continuousPlay, setContinuousPlay] = useState(false);
     const [continuousFrom, setContinuousFrom] = useState<number | null>(null); // verse index
@@ -98,7 +100,7 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
     };
 
     const shareVerse = (verseKey: string) => {
-        const url = `${window.location.origin}/quran/${surah.id}#ayah-${verseKey}`;
+        const url = `${window.location.origin}/${locale}/quran/${surah.id}#ayah-${verseKey}`;
         navigator.clipboard.writeText(url);
         alert('Verse link copied to clipboard!');
     };
