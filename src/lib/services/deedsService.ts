@@ -223,6 +223,32 @@ export async function getUserDeedsHistory(
 }
 
 /**
+ * Delete a completed deed
+ */
+export async function deleteCompletedDeed(id: number, userId: number): Promise<boolean> {
+    try {
+        const deed = await prisma.completedDeed.findUnique({
+            where: { id },
+            select: { userId: true, date: true }
+        });
+
+        if (!deed || deed.userId !== userId) return false;
+
+        await prisma.completedDeed.delete({
+            where: { id }
+        });
+
+        // Update leaderboard cache as well (async)
+        updateLeaderboardCache(userId, deed.date).catch(console.error);
+
+        return true;
+    } catch (error) {
+        console.error('Error deleting completed deed:', error);
+        return false;
+    }
+}
+
+/**
  * Get user's total points
  */
 export async function getUserTotalPoints(

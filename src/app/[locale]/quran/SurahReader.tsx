@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Chapter, Verse } from '@/lib/services/quranService';
 import { Link } from '@/i18n/routing';
-import { Facebook, Twitter, Send, ChevronDown } from 'lucide-react';
+import { Facebook, Twitter, Send, ChevronDown, Play, Pause, Bookmark, Share2 } from 'lucide-react';
 
 interface SurahReaderProps {
     surah: Chapter;
@@ -13,6 +13,7 @@ interface SurahReaderProps {
 
 export default function SurahReader({ surah, verses }: SurahReaderProps) {
     const locale = useLocale();
+    const t = useTranslations('Quran');
     const [playingVerse, setPlayingVerse] = useState<number | null>(null);
     const [continuousPlay, setContinuousPlay] = useState(false);
     const [continuousFrom, setContinuousFrom] = useState<number | null>(null); // verse index
@@ -188,27 +189,32 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
             )}
 
             {/* ── Continuous Play Toolbar ─────────────────────────────────── */}
-            <div className="flex items-center gap-3 justify-end mb-6 flex-wrap">
-                {playingVerse !== null ? (
-                    <button
-                        onClick={stopPlay}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-600/90 hover:bg-red-500 text-white text-sm font-medium transition-all shadow-md"
-                    >
-                        ⏹ Stop Playing
-                    </button>
-                ) : (
-                    <button
-                        onClick={() => startContinuousPlay(0)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent-600/90 hover:bg-accent-500 text-white text-sm font-medium transition-all shadow-md"
-                    >
-                        ▶▶ Play All
-                    </button>
-                )}
-                {continuousFrom !== null && playingVerse !== null && (
-                    <span className="text-xs text-accent-300 px-3 py-1 bg-accent-900/30 rounded-full border border-accent-500/20 animate-pulse">
-                        🔊 Playing continuously...
-                    </span>
-                )}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                <div className="flex flex-wrap items-center gap-4">
+                    {continuousFrom !== null ? (
+                        <button
+                            onClick={stopPlay}
+                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold hover:bg-red-500/20 transition-all shadow-lg"
+                        >
+                            <Pause size={18} /> {t('stopPlaying')}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => startContinuousPlay(0)}
+                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent-600 border border-accent-400 text-white font-bold hover:bg-accent-500 transition-all shadow-gold-glow"
+                        >
+                            <Play size={18} /> {t('playAll')}
+                        </button>
+                    )
+                    }
+
+                    {continuousFrom !== null && (
+                        <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-400 animate-pulse">
+                            <div className="w-2 h-2 rounded-full bg-accent-500"></div>
+                            <span className="text-sm font-medium">{t('playingContinuously')}</span>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Verses List */}

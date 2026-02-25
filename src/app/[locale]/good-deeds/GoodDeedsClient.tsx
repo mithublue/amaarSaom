@@ -1,38 +1,39 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
+import {
+    Search,
+    Filter,
+    ChevronRight,
+    PanelRight,
+    Trophy,
+    X,
+    Trash2,
+    CheckCircle2,
+    Sparkles,
+    Clock,
+    LayoutGrid,
+    History,
+    Calendar,
+    Flame
+} from 'lucide-react';
 
 interface PredefinedDeed {
     id: number;
     name: string;
-    nameEn?: string;
-    nameBn?: string | null;
-    nameAr?: string | null;
     description: string | null;
-    descriptionEn?: string | null;
-    descriptionBn?: string | null;
-    descriptionAr?: string | null;
     points: number;
     tier: 'easy' | 'medium' | 'hard';
     category: string | null;
-    categoryEn?: string | null;
-    categoryBn?: string | null;
-    categoryAr?: string | null;
 }
 
 interface CompletedDeed {
     id: number;
-    completedAt: Date;
+    completedAt: string;
     totalPoints: number;
     predefinedGoodDeed?: {
-        name: string; // nameEn is mapped to name in DB? No, in DB it's nameEn.
-        // Wait, schema has nameEn. 
-        // The service returns the raw DB object.
-        // So it has nameEn, nameBn, nameAr.
-        // But the type definition here was likely simplified or based on previous assumption.
-        // I should add the potential fields.
         nameEn: string;
         nameBn?: string | null;
         nameAr?: string | null;
@@ -49,6 +50,7 @@ export default function GoodDeedsClient() {
     const [completedDeeds, setCompletedDeeds] = useState<CompletedDeed[]>([]);
     const [totalPoints, setTotalPoints] = useState(0);
     const [selectedTier, setSelectedTier] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'all'>('today');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -56,6 +58,7 @@ export default function GoodDeedsClient() {
     const [showCustomForm, setShowCustomForm] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     useEffect(() => {
         fetchPredefinedDeeds();
@@ -72,9 +75,6 @@ export default function GoodDeedsClient() {
             const data = await response.json();
             if (data.success) {
                 const mappedDeeds = data.data.map((deed: any) => {
-                    // Logic to pick correct language
-                    // Assuming 'locale' is available in the component via useLocale()
-                    // But wait, I need to get locale hook first.
                     const name = locale === 'bn' ? (deed.nameBn || deed.nameEn) :
                         locale === 'ar' ? (deed.nameAr || deed.nameEn) : deed.nameEn;
 
@@ -115,8 +115,6 @@ export default function GoodDeedsClient() {
 
     const completeDeed = async (goodDeedId?: number, customName?: string) => {
         setSubmitting(true);
-        setSuccessMessage('');
-
         try {
             const response = await fetch('/api/deeds', {
                 method: 'POST',
@@ -124,12 +122,11 @@ export default function GoodDeedsClient() {
                 body: JSON.stringify({
                     goodDeedId,
                     customDeedName: customName,
-                    ramadanDayNumber: new Date().getDate(), // Makeshift day number
+                    ramadanDayNumber: new Date().getDate(),
                 }),
             });
 
             const data = await response.json();
-
             if (data.success) {
                 setSuccessMessage(t('success'));
                 setCustomDeedName('');
@@ -139,24 +136,43 @@ export default function GoodDeedsClient() {
             }
         } catch (error) {
             console.error('Error completing deed:', error);
-            alert('Failed to log deed. Please try again.');
         } finally {
             setSubmitting(false);
         }
     };
 
+    const deleteDeed = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this log?')) return;
+
+        try {
+            const response = await fetch(`/api/deeds?id=${id}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (data.success) {
+                fetchHistory();
+            }
+        } catch (error) {
+            console.error('Error deleting deed:', error);
+        }
+    };
+
+    const categories = useMemo(() => {
+        const cats = Array.from(new Set(predefinedDeeds.map(d => d.category).filter(Boolean)));
+        return ['all', ...cats];
+    }, [predefinedDeeds]);
+
     const filteredDeeds = predefinedDeeds.filter(d => {
         const matchesTier = selectedTier === 'all' || d.tier === selectedTier;
+        const matchesCategory = selectedCategory === 'all' || d.category === selectedCategory;
         const matchesSearch = (d.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (d.description && d.description.toLowerCase().includes(searchQuery.toLowerCase()));
-        return matchesTier && matchesSearch;
+        return matchesTier && matchesCategory && matchesSearch;
     });
 
     const getTierColor = (tier: string) => {
         switch (tier) {
-            case 'easy': return 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30';
-            case 'medium': return 'text-amber-300 bg-amber-500/20 border-amber-500/30';
-            case 'hard': return 'text-rose-300 bg-rose-500/20 border-rose-500/30';
+            case 'easy': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+            case 'medium': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+            case 'hard': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
             default: return 'text-primary-300';
         }
     };
@@ -171,223 +187,307 @@ export default function GoodDeedsClient() {
     };
 
     return (
-        <div className="w-full">
-            {/* Success Message */}
-            {successMessage && (
-                <div className="mb-8 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl p-4 text-center animate-fade-in backdrop-blur-sm">
-                    <p className="text-emerald-200 text-lg font-semibold flex items-center justify-center gap-2">
-                        ✅ {successMessage}
-                    </p>
-                </div>
-            )}
+        <div className="relative min-h-screen pb-20">
+            {/* --- Main Content Area --- */}
+            <div className={`max-w-7xl mx-auto px-4 transition-all duration-300 ${isDrawerOpen ? 'mr-[400px]' : ''}`}>
 
-            {/* Top Actions Bar */}
-            <div className="flex justify-center mb-8">
-                <Link href="/leaderboard" className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-xl font-bold shadow-gold-glow hover:shadow-lg hover:scale-105 transition flex items-center gap-3">
-                    🏆 {t('viewLeaderboard')}
-                </Link>
-            </div>
+                {/* Large Search Section */}
+                <div className="pt-10 pb-16 text-center">
+                    <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4 drop-shadow-md">
+                        {t('title')} <span className="text-accent-400">✨</span>
+                    </h1>
+                    <p className="text-primary-300 mb-10 max-w-2xl mx-auto">{t('subtitle')}</p>
 
-            {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
-                <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 text-center group hover:bg-primary-900/60 transition-all duration-300">
-                    <div className="w-16 h-16 mx-auto bg-accent-500/20 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                        🌟
-                    </div>
-                    <h3 className="text-4xl font-heading font-bold text-accent-400 mb-1 drop-shadow-sm">{totalPoints}</h3>
-                    <p className="text-primary-200 font-medium">{t('totalPoints')}</p>
-                </div>
-                <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 text-center group hover:bg-primary-900/60 transition-all duration-300">
-                    <div className="w-16 h-16 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                        ✅
-                    </div>
-                    <h3 className="text-4xl font-heading font-bold text-white mb-1 drop-shadow-sm">{completedDeeds.length}</h3>
-                    <p className="text-primary-200 font-medium">{t('deedsCompleted')}</p>
-                </div>
-                <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 text-center group hover:bg-primary-900/60 transition-all duration-300">
-                    <div className="w-16 h-16 mx-auto bg-indigo-500/20 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                        🔥
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2 capitalize">
-                        {period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')}
-                    </h3>
-                    <p className="text-primary-200 font-medium">{t('period')}</p>
-                </div>
-            </div>
-
-            {/* Period Selector */}
-            <div className="mb-8 flex justify-center gap-3 flex-wrap">
-                {(['today', 'week', 'month', 'all'] as const).map((p) => (
-                    <button
-                        key={p}
-                        onClick={() => setPeriod(p)}
-                        className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 ${period === p
-                            ? 'bg-accent-600 text-white shadow-gold-glow scale-105'
-                            : 'bg-primary-900/40 text-primary-300 border border-white/10 hover:bg-white/10 hover:text-white'
-                            }`}
-                    >
-                        {p === 'today' ? t('today') : p === 'week' ? t('week') : p === 'month' ? t('month') : t('allTime')}
-                    </button>
-                ))}
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-8">
-                {/* Available Deeds */}
-                <div className="bg-primary-900/20 backdrop-blur-sm rounded-3xl p-6 border border-white/5">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                            ✨ {t('availableDeeds')}
-                        </h2>
-                        <button
-                            onClick={() => setShowCustomForm(!showCustomForm)}
-                            className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition border border-white/10 text-sm font-medium"
-                        >
-                            {showCustomForm ? t('cancel') : `+ ${t('customDeed')}`}
-                        </button>
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className="relative mb-6">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400">🔍</span>
+                    <div className="relative max-w-3xl mx-auto group">
+                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-400 group-focus-within:text-accent-400 transition-colors" size={24} />
                         <input
                             type="text"
                             placeholder={t('searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-primary-800 text-white border border-white/10 rounded-xl focus:outline-none focus:border-accent-500 placeholder-primary-500 transition shadow-inner"
+                            className="w-full pl-16 pr-6 py-5 bg-primary-900/50 backdrop-blur-xl text-white text-xl border-2 border-white/5 rounded-full focus:outline-none focus:border-accent-500/50 placeholder-primary-500 transition-all shadow-2xl group-hover:bg-primary-900/70"
                         />
                     </div>
+                </div>
 
-                    {/* Custom Deed Form */}
-                    {showCustomForm && (
-                        <div className="mb-6 bg-primary-800/50 rounded-2xl border border-accent-500/30 p-6 animate-fade-in">
-                            <h3 className="text-white font-bold mb-3">{t('logCustomDeed')}</h3>
-                            <input
-                                type="text"
-                                value={customDeedName}
-                                onChange={(e) => setCustomDeedName(e.target.value)}
-                                placeholder={t('customDeedPlaceholder')}
-                                className="w-full px-4 py-3 rounded-xl bg-primary-950 text-white border border-white/10 focus:outline-none focus:border-accent-500 mb-4"
-                            />
-                            <button
-                                onClick={() => completeDeed(undefined, customDeedName)}
-                                disabled={!customDeedName || submitting}
-                                className="w-full px-6 py-3 bg-accent-600 text-white rounded-xl hover:bg-accent-500 transition disabled:opacity-50 font-bold shadow-lg"
-                            >
-                                {submitting ? t('logging') : t('logButton')}
-                            </button>
+                {/* Filters Section */}
+                <div className="mb-12 space-y-8">
+                    {/* Tier Filters */}
+                    <div className="flex flex-col items-center gap-4">
+                        <span className="text-primary-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                            <Filter size={14} /> {t('difficulty')}
+                        </span>
+                        <div className="flex gap-2 flex-wrap justify-center">
+                            {(['all', 'easy', 'medium', 'hard'] as const).map((tier) => (
+                                <button
+                                    key={tier}
+                                    onClick={() => setSelectedTier(tier)}
+                                    className={`px-8 py-2.5 rounded-full font-bold transition-all duration-300 text-sm border-2 ${selectedTier === tier
+                                        ? 'bg-accent-600 border-accent-400 text-white shadow-gold-glow scale-105'
+                                        : 'bg-primary-900/40 border-white/5 text-primary-300 hover:bg-white/10'
+                                        }`}
+                                >
+                                    {getTierEmoji(tier)} {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                                </button>
+                            ))}
                         </div>
-                    )}
+                    </div>
 
-                    {/* Tier Filter */}
-                    <div className="flex gap-2 mb-6 flex-wrap">
-                        {(['all', 'easy', 'medium', 'hard'] as const).map((tier) => (
+                    {/* Category Filters */}
+                    <div className="flex flex-col items-center gap-4">
+                        <span className="text-primary-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                            <LayoutGrid size={14} /> {t('categories')}
+                        </span>
+                        <div className="flex gap-2 flex-wrap justify-center max-w-4xl">
+                            {categories.filter(c => c !== null).map((cat) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setSelectedCategory(cat!)}
+                                    className={`px-5 py-2 rounded-xl font-medium transition-all text-xs border ${selectedCategory === cat
+                                        ? 'bg-white text-primary-900 border-white shadow-lg'
+                                        : 'bg-primary-800/40 text-primary-400 border-white/5 hover:bg-white/5 hover:text-white'
+                                        }`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Deeds Grid */}
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20 gap-4">
+                        <div className="w-12 h-12 border-4 border-accent-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-primary-400 font-medium animate-pulse">Fetching deeds...</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {/* Custom Deed Card */}
+                        <div
+                            className={`bg-primary-900/30 backdrop-blur-md rounded-3xl border-2 border-dashed border-white/10 p-6 flex flex-col items-center justify-center text-center hover:bg-primary-800/40 hover:border-accent-500/30 transition-all group min-h-[220px] cursor-pointer ${showCustomForm ? 'ring-2 ring-accent-500/50' : ''}`}
+                            onClick={() => setShowCustomForm(!showCustomForm)}
+                        >
+                            {!showCustomForm ? (
+                                <>
+                                    <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">➕</div>
+                                    <h3 className="text-white font-bold text-lg mb-1">{t('customDeed')}</h3>
+                                    <p className="text-primary-400 text-sm">Add your own good deed</p>
+                                </>
+                            ) : (
+                                <div className="w-full space-y-3" onClick={e => e.stopPropagation()}>
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        placeholder={t('customDeedPlaceholder')}
+                                        value={customDeedName}
+                                        onChange={e => setCustomDeedName(e.target.value)}
+                                        className="w-full bg-primary-950 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-accent-500"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => completeDeed(undefined, customDeedName)}
+                                            disabled={!customDeedName || submitting}
+                                            className="flex-1 bg-accent-600 text-white rounded-xl py-2 font-bold text-sm shadow-lg hover:bg-accent-500 transition text-balance"
+                                        >
+                                            {submitting ? '...' : 'Add'}
+                                        </button>
+                                        <button
+                                            onClick={() => setShowCustomForm(false)}
+                                            className="bg-white/10 text-white rounded-xl px-3 py-2 hover:bg-white/20"
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {filteredDeeds.map((deed) => (
+                            <div
+                                key={deed.id}
+                                className="bg-primary-900/40 backdrop-blur-md rounded-3xl border border-white/10 p-6 hover:shadow-2xl hover:bg-primary-800/60 transition-all duration-300 group flex flex-col"
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className={`px-2 py-1 rounded-lg text-[10px] font-bold border uppercase tracking-widest ${getTierColor(deed.tier)}`}>
+                                        {deed.tier}
+                                    </div>
+                                    <div className="text-accent-400 font-bold flex items-center gap-1 bg-accent-500/10 px-2 py-1 rounded-lg border border-accent-500/20">
+                                        <Sparkles size={14} /> +{deed.points}
+                                    </div>
+                                </div>
+                                <h3 className="text-white font-bold text-xl mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-accent-300 transition-colors">
+                                    {deed.name}
+                                </h3>
+                                {deed.description && (
+                                    <p className="text-primary-300 text-sm mb-4 line-clamp-2 opacity-80 group-hover:opacity-100 transition-opacity flex-1">
+                                        {deed.description}
+                                    </p>
+                                )}
+                                <div className="mt-auto pt-4 flex items-center justify-between">
+                                    {deed.category && (
+                                        <span className="text-[10px] text-primary-500 font-bold uppercase tracking-tighter bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                                            {deed.category}
+                                        </span>
+                                    )}
+                                    <button
+                                        onClick={() => completeDeed(deed.id)}
+                                        disabled={submitting}
+                                        className="p-2.5 bg-accent-600 text-white rounded-2xl hover:bg-accent-500 transition-all shadow-gold-glow-sm group-hover:scale-110 active:scale-95 disabled:opacity-50"
+                                    >
+                                        <CheckCircle2 size={24} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* --- Side Controls Area --- */}
+            <div className="fixed right-6 bottom-10 flex flex-col gap-4 z-40">
+                <button
+                    onClick={() => setIsDrawerOpen(true)}
+                    className="w-16 h-16 bg-accent-600 text-white rounded-full flex items-center justify-center shadow-gold-glow hover:scale-110 transition active:scale-95 group relative"
+                >
+                    <PanelRight size={28} />
+                    <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-primary-950">
+                        {completedDeeds.length}
+                    </span >
+                </button>
+                <Link
+                    href="/leaderboard"
+                    className="w-16 h-16 bg-primary-800 text-accent-400 border border-accent-500/30 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition active:scale-95"
+                >
+                    <Trophy size={28} />
+                </Link>
+            </div>
+
+            {/* --- Side Drawer Panel --- */}
+            <div
+                className={`fixed inset-y-0 right-0 w-full max-w-[400px] bg-primary-950/95 backdrop-blur-2xl border-l border-white/10 z-50 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] transform transition-transform duration-500 ease-in-out flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            >
+                {/* Drawer Header */}
+                <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <History className="text-accent-400" /> {t('history')}
+                    </h2>
+                    <button
+                        onClick={() => setIsDrawerOpen(false)}
+                        className="p-2 text-primary-400 hover:text-white hover:bg-white/10 rounded-full transition"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                    {/* Drawer Stats Cards */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white/5 rounded-3xl p-5 border border-white/5 text-center">
+                            <div className="text-accent-400 mb-1"><Sparkles size={20} className="mx-auto" /></div>
+                            <div className="text-2xl font-bold text-white leading-none mb-1">{totalPoints}</div>
+                            <div className="text-[10px] text-primary-400 uppercase font-bold tracking-widest">{t('totalPoints')}</div>
+                        </div>
+                        <div className="bg-white/5 rounded-3xl p-5 border border-white/5 text-center">
+                            <div className="text-emerald-400 mb-1"><CheckCircle2 size={20} className="mx-auto" /></div>
+                            <div className="text-2xl font-bold text-white leading-none mb-1">{completedDeeds.length}</div>
+                            <div className="text-[10px] text-primary-400 uppercase font-bold tracking-widest">{t('deedsCompleted')}</div>
+                        </div>
+                        <div className="bg-white/5 rounded-3xl p-5 border border-white/5 text-center col-span-2">
+                            <div className="text-indigo-400 mb-1"><Calendar size={20} className="mx-auto" /></div>
+                            <div className="text-lg font-bold text-white mb-0.5">
+                                {period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')}
+                            </div>
+                            <div className="text-[10px] text-primary-400 uppercase font-bold tracking-widest">{t('period')}</div>
+                        </div>
+                    </div>
+
+                    {/* Drawer Period Selector */}
+                    <div className="flex p-1 bg-black/40 rounded-2xl border border-white/5">
+                        {(['today', 'week', 'month', 'all'] as const).map((p) => (
                             <button
-                                key={tier}
-                                onClick={() => setSelectedTier(tier)}
-                                className={`px-4 py-2 rounded-lg font-medium transition text-sm ${selectedTier === tier
-                                    ? 'bg-white text-primary-900 shadow-md transform scale-105'
-                                    : 'bg-primary-900/40 text-primary-300 border border-white/5 hover:bg-white/10'
+                                key={p}
+                                onClick={() => setPeriod(p)}
+                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${period === p
+                                    ? 'bg-accent-600 text-white shadow-lg'
+                                    : 'text-primary-400 hover:text-white'
                                     }`}
                             >
-                                {getTierEmoji(tier)} {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                                {p === 'today' ? 'Today' : p === 'week' ? 'Week' : p === 'month' ? 'Month' : 'All'}
                             </button>
                         ))}
                     </div>
 
-                    {/* Deeds List */}
-                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                        {loading ? (
-                            <div className="text-center py-12">
-                                <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-accent-500 border-t-transparent"></div>
-                            </div>
-                        ) : filteredDeeds.length === 0 ? (
-                            <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/5">
-                                <p className="text-primary-400">{t('noDeeds')}</p>
+                    {/* Task Log (History) */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-primary-400 uppercase tracking-widest flex items-center gap-2">
+                            <Clock size={16} /> Task Log
+                        </h3>
+
+                        {completedDeeds.length === 0 ? (
+                            <div className="py-10 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
+                                <History size={40} className="mx-auto text-primary-700 mb-3" />
+                                <p className="text-primary-500 text-sm">No deeds logged yet</p>
                             </div>
                         ) : (
-                            filteredDeeds.map((deed) => (
-                                <div
-                                    key={deed.id}
-                                    className="bg-primary-900/40 backdrop-blur-sm rounded-2xl border border-white/5 p-5 hover:border-accent-500/30 hover:bg-primary-800/40 transition-all duration-300 group shadow-sm"
-                                >
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="flex-1">
-                                            <h3 className="text-white font-bold text-lg group-hover:text-accent-300 transition-colors">{deed.name}</h3>
-                                            {deed.description && (
-                                                <p className="text-primary-300 text-sm mt-1">{deed.description}</p>
-                                            )}
-                                            {deed.category && (
-                                                <span className="inline-block mt-2 px-2 py-0.5 bg-white/5 rounded text-[10px] text-primary-400 uppercase tracking-wider border border-white/5">
-                                                    {deed.category}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ml-3 whitespace-nowrap ${getTierColor(deed.tier)}`}>
-                                            {getTierEmoji(deed.tier)} +{deed.points}
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={() => completeDeed(deed.id)}
-                                        disabled={submitting}
-                                        className="w-full mt-2 px-4 py-2.5 bg-white/5 text-accent-300 rounded-xl hover:bg-accent-600 hover:text-white transition-all disabled:opacity-50 font-semibold border border-white/5 hover:border-accent-500 group-hover:shadow-gold-glow"
+                            <div className="space-y-3">
+                                {completedDeeds.map((deed) => (
+                                    <div
+                                        key={deed.id}
+                                        className="bg-white/5 rounded-2xl border border-white/5 p-4 flex justify-between items-center group relative overflow-hidden"
                                     >
-                                        {submitting ? t('logging') : t('completeButton')}
-                                    </button>
-                                </div>
-                            ))
+                                        <div className="flex-1 pr-4">
+                                            <h4 className="text-white font-semibold text-sm leading-tight mb-1">
+                                                {deed.predefinedGoodDeed ? (
+                                                    locale === 'bn' ? (deed.predefinedGoodDeed.nameBn || deed.predefinedGoodDeed.nameEn) :
+                                                        locale === 'ar' ? (deed.predefinedGoodDeed.nameAr || deed.predefinedGoodDeed.nameEn) :
+                                                            deed.predefinedGoodDeed.nameEn
+                                                ) : deed.customDeedName}
+                                            </h4>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-accent-400 text-xs font-bold">+{deed.totalPoints} pts</span>
+                                                <span className="text-primary-500 text-[10px]">{new Date(deed.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => deleteDeed(deed.id)}
+                                            className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                        <div className="absolute left-0 inset-y-0 w-1 bg-accent-500 transform -translate-x-full group-hover:translate-x-0 transition-transform"></div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </div>
 
-                {/* Completed Deeds History */}
-                <div className="bg-primary-900/20 backdrop-blur-sm rounded-3xl p-6 border border-white/5">
-                    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                        📜 {t('history')}
-                        <span className="text-sm font-normal text-primary-400 ml-auto bg-white/5 px-3 py-1 rounded-full">
-                            {period === 'today' ? t('today') : period === 'week' ? t('week') : period === 'month' ? t('month') : t('allTime')}
-                        </span>
-                    </h2>
-
-                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                        {completedDeeds.length === 0 ? (
-                            <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/5 border-dashed">
-                                <span className="text-6xl mb-4 block opacity-20">📝</span>
-                                <p className="text-primary-300 font-medium">{t('noHistory')}</p>
-                                <p className="text-primary-500 text-sm mt-2">{t('startCompleting')}</p>
-                            </div>
-                        ) : (
-                            completedDeeds.map((deed) => (
-                                <div
-                                    key={deed.id}
-                                    className="bg-white/5 rounded-2xl border border-white/5 p-4 hover:bg-white/10 transition flex justify-between items-center group"
-                                >
-                                    <div>
-                                        <h4 className="text-white font-semibold flex items-center gap-2">
-                                            {deed.predefinedGoodDeed ? (
-                                                locale === 'bn' ? (deed.predefinedGoodDeed.nameBn || deed.predefinedGoodDeed.nameEn) :
-                                                    locale === 'ar' ? (deed.predefinedGoodDeed.nameAr || deed.predefinedGoodDeed.nameEn) :
-                                                        deed.predefinedGoodDeed.nameEn
-                                            ) : deed.customDeedName}
-                                        </h4>
-                                        <p className="text-primary-400 text-xs mt-1">
-                                            {new Date(deed.completedAt).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                            })}
-                                        </p>
-                                    </div>
-                                    <span className="text-accent-400 font-bold text-lg bg-black/20 px-3 py-1 rounded-lg border border-white/5 group-hover:border-accent-500/30 transition-colors">
-                                        +{deed.totalPoints}
-                                    </span>
-                                </div>
-                            ))
-                        )}
-                    </div>
+                {/* Drawer Footer */}
+                <div className="p-6 border-t border-white/10 bg-primary-950">
+                    <button
+                        onClick={() => setIsDrawerOpen(false)}
+                        className="w-full bg-white/5 text-white font-bold py-4 rounded-2xl hover:bg-white/10 transition border border-white/10"
+                    >
+                        Close Panel
+                    </button>
                 </div>
             </div>
+
+            {/* Overlay for Drawer */}
+            {isDrawerOpen && (
+                <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] animate-fade-in"
+                    onClick={() => setIsDrawerOpen(false)}
+                />
+            )}
+
+            {/* Success Notification */}
+            {successMessage && (
+                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] bg-emerald-500 text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 animate-bounce-in">
+                    <CheckCircle2 size={24} /> {successMessage}
+                </div >
+            )}
         </div>
     );
 }

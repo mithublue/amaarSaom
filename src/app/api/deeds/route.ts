@@ -103,3 +103,52 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+/**
+ * DELETE /api/deeds
+ * Delete a completed deed record
+ */
+export async function DELETE(request: NextRequest) {
+    let session;
+    try {
+        session = await auth();
+
+        if (!session?.user?.id) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        const searchParams = request.nextUrl.searchParams;
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json(
+                { error: 'Deed ID is required' },
+                { status: 400 }
+            );
+        }
+
+        const { deleteCompletedDeed } = await import('@/lib/services/deedsService');
+        const success = await deleteCompletedDeed(parseInt(id), parseInt(session.user.id));
+
+        if (!success) {
+            return NextResponse.json(
+                { error: 'Failed to delete deed or unauthorized' },
+                { status: 400 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: 'Deed deleted successfully',
+        });
+    } catch (error) {
+        console.error('Error deleting deed:', error);
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        );
+    }
+}

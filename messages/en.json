@@ -180,7 +180,19 @@
             "surah": "Surah",
             "ayah": "Ayah",
             "viewVerse": "View Verse"
-        }
+        },
+        "transliteration": "Phonetic Pronunciation",
+        "clearQuran": "English - The Clear Quran",
+        "taisirulQuran": "Bengali - Taisirul Quran",
+        "jumpTo": "Jump to:",
+        "selectAyah": "Select Ayah",
+        "ayah": "Ayah",
+        "verses": "Verses",
+        "stopPlaying": "Stop Playing",
+        "playAll": "Play All",
+        "playingContinuously": "Playing continuously...",
+        "nextSurah": "Next Surah",
+        "prevSurah": "Previous Surah"
     },
     "Navigation": {
         "home": "Home",
@@ -205,6 +217,8 @@
         "customDeed": "➕ Custom",
         "cancel": "❌ Cancel",
         "searchPlaceholder": "Search deeds...",
+        "difficulty": "Difficulty",
+        "categories": "Categories",
         "logCustomDeed": "Log Custom Good Deed",
         "customDeedPlaceholder": "Enter deed name (e.g., Helped a neighbor)",
         "logButton": "✨ Log Custom Deed (+5 points)",

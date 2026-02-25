@@ -153,7 +153,19 @@
             "surah": "سورة",
             "ayah": "آية",
             "viewVerse": "عرض الآية"
-        }
+        },
+        "transliteration": "النطق الصوتي",
+        "clearQuran": "الإنجليزية - القرآن واضح",
+        "taisirulQuran": "البنغالية - تيسير القرآن",
+        "jumpTo": "انتقل إلى:",
+        "selectAyah": "اختر الآية",
+        "ayah": "آية",
+        "verses": "آيات",
+        "stopPlaying": "إيقاف التشغيل",
+        "playAll": "تشغيل الكل",
+        "playingContinuously": "تشغيل مستمر...",
+        "nextSurah": "السورة التالية",
+        "prevSurah": "السورة السابقة"
     },
     "Navigation": {
         "home": "الرئيسية",
@@ -178,6 +190,8 @@
         "customDeed": "➕ مخصص",
         "cancel": "❌ إلغاء",
         "searchPlaceholder": "بحث عن الأعمال...",
+        "difficulty": "الصعوبة",
+        "categories": "الفئات",
         "logCustomDeed": "سجل عمل صالح مخصص",
         "customDeedPlaceholder": "أدخل اسم العمل (مثال: مساعدة جار)",
         "logButton": "✨ سجل عمل مخصص (+5 نقاط)",
