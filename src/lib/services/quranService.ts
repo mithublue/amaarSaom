@@ -157,10 +157,14 @@ export async function getAllJuzs(): Promise<Juz[]> {
         if (!response.ok) throw new Error('Failed to fetch Juzs');
 
         const data = await response.json();
-        const juzs = data.juzs as Juz[];
+        const rawJuzs = data.juzs as Juz[];
 
-        await setCache(cacheKey, juzs, CACHE_TTL_SURAHS);
-        return juzs;
+        // Filter out duplicates (API returns multiple IDs for same juz_number)
+        const uniqueJuzs = Array.from(new Map(rawJuzs.map(item => [item.juz_number, item])).values())
+            .sort((a, b) => a.juz_number - b.juz_number);
+
+        await setCache(cacheKey, uniqueJuzs, CACHE_TTL_SURAHS);
+        return uniqueJuzs;
     } catch (error) {
         console.error('Error fetching Juzs:', error);
         return [];

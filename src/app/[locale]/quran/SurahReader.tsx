@@ -92,6 +92,16 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
         setContinuousFrom(null);
     };
 
+    useEffect(() => {
+        // Auto-scroll to Ayah if hash exists in URL
+        const hash = window.location.hash;
+        if (hash) {
+            const verseKey = hash.replace('#ayah-', '');
+            // Small delay to ensure rendering is complete
+            setTimeout(() => scrollToAyah(verseKey), 500);
+        }
+    }, []);
+
     const toggleBookmark = (verseKey: string) => {
         const next = bookmarks.includes(verseKey)
             ? bookmarks.filter(b => b !== verseKey)
