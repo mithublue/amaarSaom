@@ -17,6 +17,17 @@ export interface Chapter {
     };
 }
 
+export interface Juz {
+    id: number;
+    juz_number: number;
+    verse_mapping: {
+        [key: string]: string;
+    };
+    first_verse_id: number;
+    last_verse_id: number;
+    verses_count: number;
+}
+
 export interface Verse {
     id: number;
     verse_key: string;
@@ -29,6 +40,11 @@ export interface Verse {
     audio?: {
         url: string;
     };
+    transliterations?: {
+        id: number;
+        resource_id: number;
+        text: string;
+    }[];
 }
 
 const API_BASE_URL = 'https://api.quran.com/api/v4';
@@ -70,7 +86,8 @@ export async function getAllChapters(): Promise<Chapter[]> {
  */
 export async function getChapterVerses(id: number, offset = 0, limit = 10): Promise<Verse[]> {
     // English (131 - The Clear Quran) and Bengali (161 - Taisirul Quran)
-    const translations = '131,161';
+    // English Transliteration (57)
+    const translations = '131,161,57';
     const cacheKey = `quran:verses:${id}:${offset}:${limit}`;
 
     // Check cache first
@@ -122,4 +139,30 @@ export async function getChapterVerses(id: number, offset = 0, limit = 10): Prom
 export async function getChapterDetails(id: number): Promise<Chapter | null> {
     const chapters = await getAllChapters();
     return chapters.find(c => c.id === id) || null;
+}
+
+/**
+ * Fetch all Juz
+ */
+export async function getAllJuzs(): Promise<Juz[]> {
+    const cacheKey = 'quran:juzs';
+    const cached = await getCached<Juz[]>(cacheKey);
+    if (cached) return cached;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/juzs`, {
+            cache: 'force-cache'
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch Juzs');
+
+        const data = await response.json();
+        const juzs = data.juzs as Juz[];
+
+        await setCache(cacheKey, juzs, CACHE_TTL_SURAHS);
+        return juzs;
+    } catch (error) {
+        console.error('Error fetching Juzs:', error);
+        return [];
+    }
 }

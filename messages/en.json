@@ -177,6 +177,8 @@
             "startReading": "Start Reading",
             "surah": "Surah",
             "ayah": "Ayah",
+            "juz": "Juz",
+            "para": "Para",
             "viewVerse": "View Verse"
         }
     },

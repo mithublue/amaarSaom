@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/routing';
-import { getAllChapters } from '@/lib/services/quranService';
+import { getAllChapters, getAllJuzs } from '@/lib/services/quranService';
 import SurahListClient from './SurahListClient';
+import JuzListClient from './JuzListClient';
 import QuranStats from './QuranStats';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -12,9 +13,16 @@ export const metadata = {
     description: 'Read and listen to the Holy Quran',
 };
 
-export default async function QuranPage({ params }: { params: Promise<{ locale: string }> }) {
-    const chapters = await getAllChapters();
+export default async function QuranPage({ params, searchParams }: {
+    params: Promise<{ locale: string }>,
+    searchParams: Promise<{ tab?: string }>
+}) {
+    const [chapters, juzs] = await Promise.all([
+        getAllChapters(),
+        getAllJuzs()
+    ]);
     const { locale } = await params;
+    const { tab = 'surah' } = await searchParams;
     const session = await auth();
     const t = await getTranslations({ locale, namespace: 'Quran' });
 
@@ -40,8 +48,30 @@ export default async function QuranPage({ params }: { params: Promise<{ locale: 
                     {/* Stats Section */}
                     <QuranStats locale={locale} />
 
-                    {/* Surah List */}
-                    <SurahListClient chapters={chapters} locale={locale} />
+                    {/* Navigation Tabs */}
+                    <div className="flex justify-center gap-4 mb-8">
+                        <Link
+                            href="?tab=surah"
+                            scroll={false}
+                            className={`px-8 py-3 rounded-full font-bold transition-all ${tab === 'surah' ? 'bg-accent-600 text-white shadow-gold-glow scale-105' : 'bg-primary-900/50 text-primary-300 hover:bg-white/10'}`}
+                        >
+                            {t('surah')}
+                        </Link>
+                        <Link
+                            href="?tab=juz"
+                            scroll={false}
+                            className={`px-8 py-3 rounded-full font-bold transition-all ${tab === 'juz' ? 'bg-accent-600 text-white shadow-gold-glow scale-105' : 'bg-primary-900/50 text-primary-300 hover:bg-white/10'}`}
+                        >
+                            {t('bookmarks.para')}
+                        </Link>
+                    </div>
+
+                    {/* Content Section */}
+                    {tab === 'surah' ? (
+                        <SurahListClient chapters={chapters} locale={locale} />
+                    ) : (
+                        <JuzListClient juzs={juzs} locale={locale} />
+                    )}
                 </div>
             </main>
 

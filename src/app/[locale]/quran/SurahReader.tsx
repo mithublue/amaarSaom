@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import { Chapter, Verse } from '@/lib/services/quranService';
 import { Link } from '@/i18n/routing';
+import { Facebook, Twitter, Send, ChevronDown } from 'lucide-react';
 
 interface SurahReaderProps {
     surah: Chapter;
@@ -105,8 +106,55 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
         alert('Verse link copied to clipboard!');
     };
 
+    const shareOnSocial = (platform: 'facebook' | 'whatsapp' | 'twitter', verseKey: string) => {
+        const url = `${window.location.origin}/${locale}/quran/${surah.id}#ayah-${verseKey}`;
+        const text = `Read Surah ${surah.name_simple}, Ayah ${verseKey} on Nuzul`;
+
+        let shareUrl = '';
+        if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        else if (platform === 'whatsapp') shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`;
+        else if (platform === 'twitter') shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    };
+
+    const scrollToAyah = (verseKey: string) => {
+        const element = document.getElementById(`ayah-${verseKey}`);
+        if (element) {
+            const offset = 120; // accounting for sticky headers
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    };
+
     return (
-        <div className="max-w-4xl mx-auto animate-fade-in">
+        <div className="max-w-4xl mx-auto animate-fade-in relative">
+            {/* Ayah Navigator - Sticky */}
+            <div className="sticky top-24 z-20 flex justify-center mb-8 pointer-events-none">
+                <div className="bg-primary-900/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 shadow-glass pointer-events-auto flex items-center gap-3">
+                    <span className="text-xs text-primary-400 font-bold uppercase tracking-widest hidden sm:inline">Jump to:</span>
+                    <div className="relative group">
+                        <select
+                            onChange={(e) => scrollToAyah(e.target.value)}
+                            className="bg-transparent text-white font-bold text-sm focus:outline-none cursor-pointer appearance-none pr-6 pl-2"
+                        >
+                            <option value="">Select Ayah</option>
+                            {verses.map((v) => (
+                                <option key={v.id} value={v.verse_key} className="bg-primary-900 text-white">
+                                    Ayah {v.verse_key.split(':')[1]}
+                                </option>
+                            ))}
+                        </select>
+                        <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-400 pointer-events-none" />
+                    </div>
+                </div>
+            </div>
+
             {/* Surah Header */}
             <div className="text-center mb-12 pt-6">
                 <div className="inline-block bg-primary-900/60 backdrop-blur-sm border border-white/10 shadow-sm rounded-full px-5 py-1.5 mb-6 text-accent-300 text-sm font-medium tracking-wide">
@@ -189,6 +237,29 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                                 >
                                     🔖
                                 </button>
+                                <div className="h-6 w-px bg-white/10 mx-1 self-center"></div>
+                                {/* Social Shares */}
+                                <button
+                                    onClick={() => shareOnSocial('whatsapp', verse.verse_key)}
+                                    title="Share on WhatsApp"
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-[#25D366] hover:bg-[#25D366]/20 transition-all"
+                                >
+                                    <Send className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => shareOnSocial('facebook', verse.verse_key)}
+                                    title="Share on Facebook"
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-[#1877F2] hover:bg-[#1877F2]/20 transition-all"
+                                >
+                                    <Facebook className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => shareOnSocial('twitter', verse.verse_key)}
+                                    title="Share on X"
+                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-white hover:bg-white/10 transition-all"
+                                >
+                                    <Twitter className="w-4 h-4" />
+                                </button>
                                 <button
                                     onClick={() => shareVerse(verse.verse_key)}
                                     className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-primary-200 hover:bg-white/10 hover:text-white transition-all"
@@ -198,16 +269,22 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                             </div>
                         </div>
 
-                        {/* Arabic Text */}
+                        {/* Arabic Text & Transliteration */}
                         <div className="text-right mb-8">
-                            <p className="font-arabic text-3xl md:text-4xl text-white leading-[2.2] md:leading-[2.5] drop-shadow-sm">
+                            <p className="font-arabic text-3xl md:text-4xl text-white leading-[2.2] md:leading-[2.5] drop-shadow-sm mb-4">
                                 {verse.text_uthmani}
                             </p>
+                            {/* Transliteration */}
+                            {verse.translations?.find(t => t.resource_id === 57) && (
+                                <p className="text-left text-accent-400/90 text-sm md:text-base font-medium italic leading-relaxed border-l-2 border-accent-500/20 pl-4 mt-4 animate-fade-in">
+                                    {verse.translations.find(t => t.resource_id === 57)?.text.replace(/<sup.*?<\/sup>/g, '')}
+                                </p>
+                            )}
                         </div>
 
                         {/* Translations */}
                         <div className="space-y-6">
-                            {verse.translations?.map((translation) => (
+                            {verse.translations?.filter(t => t.resource_id !== 57).map((translation) => (
                                 <div key={translation.id} className="text-primary-100 border-l-2 border-accent-500/30 pl-4">
                                     <p className={`text-lg leading-relaxed ${translation.resource_id === 161 ? 'font-bengali' : 'font-sans'}`}>
                                         {translation.text.replace(/<sup.*?<\/sup>/g, '')}
