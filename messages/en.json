@@ -39,9 +39,9 @@
                 "title": "Leaderboard",
                 "desc": "Compete with your community"
             },
-            "zakat": {
-                "title": "Zakat Calculator",
-                "desc": "Calculate your Zakat easily"
+            "referral": {
+                "title": "Refer & Earn",
+                "desc": "Invite friends and earn points together"
             }
         }
     },
@@ -303,5 +303,33 @@
         "familyLoan": "Family / Personal Loan",
         "outstandingSalary": "Outstanding Employee Salary",
         "outstandingRent": "Outstanding Shop Rent / Other dues"
+    },
+    "Referrals": {
+        "badge": "REFER & EARN REWARDS",
+        "title": "Invite Friends,",
+        "titleHighlight": "Earn Blessings",
+        "subtitle": "Share the light of Iman. Earn <b>50 points</b> for every sign-up and <b>50% passive points</b> from their good deeds.",
+        "yourCode": "YOUR UNIQUE CODE",
+        "copyLink": "Copy Invitation Link",
+        "linkCopied": "Link Copied!",
+        "statTotalReferred": "Total Referred",
+        "statTotalReferredSuffix": "Members",
+        "statPointsEarned": "Points Earned",
+        "statPointsEarnedSuffix": "Pts",
+        "statActiveToday": "Active Today",
+        "statActiveTodaySuffix": "Users",
+        "statWeeklyActive": "Weekly Active",
+        "statWeeklyActiveSuffix": "Users",
+        "myReferrals": "My Referrals",
+        "joined": "Joined",
+        "colUser": "User",
+        "colJoinedDate": "Joined Date",
+        "colPointsShared": "Points Earned For You",
+        "colStatus": "Status",
+        "noReferrals": "No referrals yet",
+        "noReferralsDesc": "Start sharing your link to earn points!",
+        "activeToday": "Active Today",
+        "offline": "Offline",
+        "backToDashboard": "Back to Dashboard"
     }
 }

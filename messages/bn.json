@@ -39,9 +39,9 @@
                 "title": "লিডারবোর্ড",
                 "desc": "কমিউনিটির সাথে প্রতিযোগিতা করুন"
             },
-            "zakat": {
-                "title": "যাকাত ক্যালকুলেটর",
-                "desc": "সহজেই আপনার যাকাত হিসাব করুন"
+            "referral": {
+                "title": "রেফার ও এনজয়",
+                "desc": "বন্ধুদের ইনভাইট করুন এবং একসাথে পয়েন্ট অর্জন করুন"
             }
         }
     },
@@ -303,6 +303,34 @@
         "bankLoanHint": "শুধু এই মাসে পরিশোধযোগ্য পরিমাণ",
         "familyLoan": "পারিবারিক / ব্যক্তিগত ঋণ",
         "outstandingSalary": "কর্মচারীদের বকেয়া বেতন",
-        "outstandingRent": "দোকান ভাড়া বা অন্যান্য বকেয়া"
+        "outstandingRent": "দোকান ভাড়া বা অন্যান্য বকেয়া"
+    },
+    "Referrals": {
+        "badge": "রেফার ও ইনাম পান",
+        "title": "বন্ধুদের আমন্ত্রণ করুন,",
+        "titleHighlight": "বরকত অর্জন করুন",
+        "subtitle": "ইমানের আলো ছড়িয়ে দিন। প্রতিটি রেজিস্ট্রেশনে <b>৫০ পয়েন্ট</b> এবং তাদের নেক আমল থেকে <b>৫০% প্যাসিভ পয়েন্ট</b> পান।",
+        "yourCode": "আপনার অনন্য কোড",
+        "copyLink": "আমন্ত্রণ লিংক কপি করুন",
+        "linkCopied": "লিংক কপি হয়েছে!",
+        "statTotalReferred": "মোট রেফার",
+        "statTotalReferredSuffix": "সদস্য",
+        "statPointsEarned": "অর্জিত পয়েন্ট",
+        "statPointsEarnedSuffix": "পয়েন্ট",
+        "statActiveToday": "আজ সক্রিয়",
+        "statActiveTodaySuffix": "ব্যবহারকারী",
+        "statWeeklyActive": "সাপ্তাহিক সক্রিয়",
+        "statWeeklyActiveSuffix": "ব্যবহারকারী",
+        "myReferrals": "আমার রেফারেলগুলো",
+        "joined": "যোগ দিয়েছেন",
+        "colUser": "ব্যবহারকারী",
+        "colJoinedDate": "যোগদানের তারিখ",
+        "colPointsShared": "আপনার জন্য অর্জিত পয়েন্ট",
+        "colStatus": "অবস্থা",
+        "noReferrals": "এখনো কোনো রেফারেল নেই",
+        "noReferralsDesc": "পয়েন্ট পেতে আপনার লিংক শেয়ার শুরু করুন!",
+        "activeToday": "আজ সক্রিয়",
+        "offline": "অফলাইন",
+        "backToDashboard": "ড্যাশবোর্ডে ফিরুন"
     }
 }

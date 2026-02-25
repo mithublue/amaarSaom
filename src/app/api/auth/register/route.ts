@@ -8,7 +8,7 @@ import { reportErrorToSlack } from '@/lib/slack';
 
 export async function POST(req: Request) {
     try {
-        const { name, email, password } = await req.json();
+        const { name, email, password, referralCode } = await req.json();
 
         // Validate
         if (!name || !email || !password) {
@@ -47,16 +47,27 @@ export async function POST(req: Request) {
         // Hash password
         const passwordHash = await bcrypt.hash(password, 12);
 
+        // Import referral service
+        const { generateReferralCode, processRegistrationReward } = await import('@/lib/services/referralService');
+
         // Create user
-        await prisma.user.create({
+        const user = await prisma.user.create({
             data: {
                 email: email.toLowerCase().trim(),
                 name: name.trim(),
                 passwordHash,
                 emailVerified: false,
                 preferredLanguage: 'en',
+                referralCode: generateReferralCode(),
             },
         });
+
+        // Process referral if provided
+        if (referralCode) {
+            await processRegistrationReward(user.id, referralCode).catch(err => {
+                console.error('Referral processing error:', err);
+            });
+        }
 
         // Generate verification token
         const token = crypto.randomBytes(32).toString('hex');

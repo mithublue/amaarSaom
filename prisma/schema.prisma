@@ -43,6 +43,7 @@ model CompletedDeed {
   isPowerDay         Boolean               @default(false) @map("is_power_day")
   predefinedGoodDeed PredefinedGoodDeed?   @relation(fields: [goodDeedId], references: [id])
   user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referralRewards    ReferralReward[]
 
   @@index([date])
   @@index([goodDeedId], map: "completed_deeds_good_deed_id_fkey")
@@ -245,6 +246,8 @@ model User {
   lastLoginAt            DateTime?                @map("last_login_at")
   emailVerified          Boolean                  @default(false) @map("email_verified")
   passwordHash           String?                  @map("password_hash") @db.Text
+  referralCode           String?                  @unique @map("referral_code") @db.VarChar(10)
+  referredById           Int?                     @map("referred_by_id")
   accounts               Account[]
   completedDeeds         CompletedDeed[]
   leaderboardCache       LeaderboardCache[]
@@ -252,6 +255,10 @@ model User {
   prayerSettings         PrayerSettings?
   pushSubscriptions      PushSubscription[]
   userGoals              UserGoal[]
+  referredBy             User?                    @relation("UserToReferral", fields: [referredById], references: [id])
+  referrals              User[]                   @relation("UserToReferral")
+  referralRewardsGiven   ReferralReward[]         @relation("ReferralGiver")
+  referralRewardsEarned  ReferralReward[]         @relation("ReferralEarner")
   country                Country?                 @relation(fields: [countryId], references: [id])
   district               District?                @relation(fields: [districtId], references: [id])
   division               Division?                @relation(fields: [divisionId], references: [id])
@@ -285,4 +292,22 @@ model CustomNotification {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("custom_notifications")
+}
+
+model ReferralReward {
+  id              Int            @id @default(autoincrement())
+  referrerId      Int            @map("referrer_id")
+  referredUserId  Int            @map("referred_user_id")
+  type            String         @db.VarChar(20) // 'registration' | 'deed_commission'
+  points          Int
+  deedId          Int?           @map("deed_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  referrer        User           @relation("ReferralEarner", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser    User           @relation("ReferralGiver", fields: [referredUserId], references: [id], onDelete: Cascade)
+  completedDeed   CompletedDeed? @relation(fields: [deedId], references: [id])
+
+  @@index([referrerId])
+  @@index([referredUserId])
+  @@index([type])
+  @@map("referral_rewards")
 }

@@ -59,6 +59,12 @@ export default async function DashboardPage() {
             description: tHome('features.quran.desc'),
             href: '/dashboard/quran',
         },
+        {
+            icon: '🎁',
+            title: tHome('features.referral.title'),
+            description: tHome('features.referral.desc'),
+            href: '/dashboard/referrals',
+        },
     ];
 
     return (

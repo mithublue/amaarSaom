@@ -1,18 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 export default function RegisterPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [referralCode, setReferralCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+
+    // Capture referral code from URL
+    useEffect(() => {
+        const ref = searchParams.get('ref');
+        if (ref) {
+            setReferralCode(ref);
+        }
+    }, [searchParams]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -33,7 +43,7 @@ export default function RegisterPage() {
             const res = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({ name, email, password, referralCode }),
             });
             const data = await res.json();
 
@@ -145,11 +155,21 @@ export default function RegisterPage() {
                                 className="w-full bg-primary-800/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-primary-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition"
                             />
                         </div>
+                        <div>
+                            <label className="block text-sm text-primary-300 mb-1.5">Referral Code (Optional)</label>
+                            <input
+                                type="text"
+                                value={referralCode}
+                                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                                placeholder="Enter code if you have one"
+                                className="w-full bg-primary-800/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-primary-500 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition"
+                            />
+                        </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/20"
+                            className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                         >
                             {loading ? '⏳ Creating Account...' : '✨ Create Account'}
                         </button>

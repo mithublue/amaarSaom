@@ -175,6 +175,11 @@ export async function completeDeed(params: {
     // Update leaderboard cache (async, don't wait)
     updateLeaderboardCache(userId, date).catch(console.error);
 
+    // Process referral commission (async, don't wait)
+    import('./referralService').then(service => {
+        service.processDeedCommission(userId, completedDeed.id, completedDeed.totalPoints).catch(console.error);
+    });
+
     return completedDeed;
 }
 
