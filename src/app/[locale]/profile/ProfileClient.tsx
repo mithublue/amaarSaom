@@ -8,11 +8,12 @@ import Footer from '@/components/layout/Footer';
 import { countries, commonCities } from '@/lib/locations';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 
 // Lazy load the notification panel (uses Firebase client which needs browser)
 const NotificationSettingsPanel = dynamic(() => import('./NotificationSettingsPanel'), { ssr: false });
 
-type Tab = 'profile' | 'notifications';
+type Tab = 'profile' | 'notifications' | 'referrals';
 
 interface ProfileClientProps {
     user: User;
@@ -21,6 +22,7 @@ interface ProfileClientProps {
 
 export default function ProfileClient({ user, locale }: ProfileClientProps) {
     const t = useTranslations('Profile');
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<Tab>('profile');
 
     // State
@@ -101,7 +103,7 @@ export default function ProfileClient({ user, locale }: ProfileClientProps) {
                     </div>
 
                     {/* Tab Bar */}
-                    <div className="flex rounded-xl bg-primary-900/40 border border-white/5 p-1 mb-8 max-w-sm mx-auto">
+                    <div className="flex rounded-xl bg-primary-900/40 border border-white/5 p-1 mb-8 max-w-lg mx-auto">
                         <button
                             onClick={() => setActiveTab('profile')}
                             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'profile' ? 'bg-accent-700 text-white shadow' : 'text-primary-400 hover:text-white'}`}
@@ -113,6 +115,12 @@ export default function ProfileClient({ user, locale }: ProfileClientProps) {
                             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'notifications' ? 'bg-accent-700 text-white shadow' : 'text-primary-400 hover:text-white'}`}
                         >
                             🔔 Notifications
+                        </button>
+                        <button
+                            onClick={() => router.push(`/${locale}/profile/referrals`)}
+                            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'referrals' ? 'bg-accent-700 text-white shadow' : 'text-primary-400 hover:text-white'}`}
+                        >
+                            🎁 Referrals
                         </button>
                     </div>
 

@@ -63,7 +63,7 @@ export default async function DashboardPage() {
             icon: '🎁',
             title: tHome('features.referral.title'),
             description: tHome('features.referral.desc'),
-            href: '/dashboard/referrals',
+            href: '/profile/referrals',
         },
     ];
 

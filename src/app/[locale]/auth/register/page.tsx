@@ -16,11 +16,17 @@ export default function RegisterPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
-    // Capture referral code from URL
+    // Capture referral code from URL param, then fallback to cookie
     useEffect(() => {
-        const ref = searchParams.get('ref');
-        if (ref) {
-            setReferralCode(ref);
+        const refFromUrl = searchParams.get('ref');
+        if (refFromUrl) {
+            setReferralCode(refFromUrl.toUpperCase());
+            return;
+        }
+        // Fallback: read from cookie set by ReferralTracker
+        const match = document.cookie.match(/(?:^|;\s*)ref_code=([^;]+)/);
+        if (match) {
+            setReferralCode(match[1].toUpperCase());
         }
     }, [searchParams]);
 
@@ -48,6 +54,8 @@ export default function RegisterPage() {
             const data = await res.json();
 
             if (data.success) {
+                // Clear referral cookie so it's not reused
+                document.cookie = 'ref_code=; Max-Age=0; Path=/';
                 setSuccess(true);
             } else {
                 setError(data.error || 'Registration failed');

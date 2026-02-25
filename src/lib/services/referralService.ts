@@ -1,57 +1,83 @@
 import { prisma } from '../db/prisma';
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { randomBytes } from 'crypto';
 
 /**
  * Referral Service
- * Handles referral code generation, reward processing, and statistics
+ * Handles referral code generation, reward processing, and statistics.
+ *
+ * Points model:
+ *  - Referred user earns their FULL deed points (no deduction).
+ *  - Referrer earns an ADDITIONAL 50% bonus on top.
  */
 
 const REGISTRATION_REWARD_POINTS = 50;
 const DEED_COMMISSION_PERCENTAGE = 0.5;
 
 /**
- * Generate a unique referral code for a user
+ * Generate a cryptographically secure unique 8-character referral code.
+ * Uses Node's crypto module instead of Math.random().
  */
 export function generateReferralCode(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+    const bytes = randomBytes(8);
+    return Array.from(bytes)
+        .map(b => chars[b % chars.length])
+        .join('');
 }
 
 /**
- * Process registration reward for a new user
+ * Process registration reward for a new user.
+ * Normalizes the code to uppercase server-side to prevent bypass via lowercase input.
  */
 export async function processRegistrationReward(referredUserId: number, referralCode: string) {
+    // Normalize to uppercase (defense against lowercase input)
+    const normalizedCode = referralCode.trim().toUpperCase();
+
+    // Validate format before hitting the database
+    if (!/^[A-Z0-9]{6,12}$/.test(normalizedCode)) return null;
+
     // Find the referrer
     const referrer = await prisma.user.findUnique({
-        where: { referralCode },
+        where: { referralCode: normalizedCode },
         select: { id: true }
     });
 
     if (!referrer || referrer.id === referredUserId) return null;
 
-    // Link the user to the referrer
-    await prisma.user.update({
+    // Check: has this user already been linked to a referrer?
+    const alreadyLinked = await prisma.user.findUnique({
         where: { id: referredUserId },
-        data: { referredById: referrer.id }
+        select: { referredById: true }
     });
+    if (alreadyLinked?.referredById) return null; // Prevent double-linking
 
-    // Create the registration reward
-    return await prisma.referralReward.create({
-        data: {
-            referrerId: referrer.id,
-            referredUserId,
-            type: 'registration',
-            points: REGISTRATION_REWARD_POINTS
-        }
-    });
+    // Atomically link the user to the referrer and create the reward
+    const [, reward] = await prisma.$transaction([
+        prisma.user.update({
+            where: { id: referredUserId },
+            data: { referredById: referrer.id }
+        }),
+        prisma.referralReward.create({
+            data: {
+                referrerId: referrer.id,
+                referredUserId,
+                type: 'registration',
+                points: REGISTRATION_REWARD_POINTS
+            }
+        })
+    ]);
+
+    return reward;
 }
 
 /**
- * Process commission reward for a referrer when a referral completes a deed
+ * Process commission reward for a referrer when a referral completes a deed.
+ * The referred user keeps their FULL points.
+ * The referrer receives an ADDITIONAL 50% as a bonus.
+ *
+ * Deduplication: uses upsert with a unique constraint on (referrerId, deedId)
+ * so even if this is called twice, only one reward is ever created.
  */
 export async function processDeedCommission(referredUserId: number, deedId: number, points: number) {
     const user = await prisma.user.findUnique({
@@ -59,10 +85,21 @@ export async function processDeedCommission(referredUserId: number, deedId: numb
         select: { referredById: true }
     });
 
-    if (!user || !user.referredById) return null;
+    if (!user?.referredById) return null;
 
     const commissionPoints = Math.floor(points * DEED_COMMISSION_PERCENTAGE);
     if (commissionPoints <= 0) return null;
+
+    // Idempotent: skip silently if this deed's commission was already recorded
+    const existing = await prisma.referralReward.findFirst({
+        where: {
+            referrerId: user.referredById,
+            deedId,
+            type: 'deed_commission'
+        },
+        select: { id: true }
+    });
+    if (existing) return null;
 
     return await prisma.referralReward.create({
         data: {
@@ -89,34 +126,24 @@ export async function getReferralStats(userId: number) {
         })
     ]);
 
-    // Track active referrals
     const today = startOfDay(now);
     const thisWeek = startOfWeek(now);
     const thisMonth = startOfMonth(now);
 
-    const activeToday = await prisma.completedDeed.groupBy({
-        by: ['userId'],
-        where: {
-            user: { referredById: userId },
-            completedAt: { gte: today }
-        }
-    });
-
-    const activeThisWeek = await prisma.completedDeed.groupBy({
-        by: ['userId'],
-        where: {
-            user: { referredById: userId },
-            completedAt: { gte: thisWeek }
-        }
-    });
-
-    const activeThisMonth = await prisma.completedDeed.groupBy({
-        by: ['userId'],
-        where: {
-            user: { referredById: userId },
-            completedAt: { gte: thisMonth }
-        }
-    });
+    const [activeToday, activeThisWeek, activeThisMonth] = await Promise.all([
+        prisma.completedDeed.groupBy({
+            by: ['userId'],
+            where: { user: { referredById: userId }, completedAt: { gte: today } }
+        }),
+        prisma.completedDeed.groupBy({
+            by: ['userId'],
+            where: { user: { referredById: userId }, completedAt: { gte: thisWeek } }
+        }),
+        prisma.completedDeed.groupBy({
+            by: ['userId'],
+            where: { user: { referredById: userId }, completedAt: { gte: thisMonth } }
+        })
+    ]);
 
     return {
         totalReferrals,

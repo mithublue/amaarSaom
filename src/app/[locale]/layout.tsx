@@ -64,6 +64,8 @@ export const viewport = {
 import ErrorReporter from "@/components/error/ErrorReporter";
 import NotificationPrompt from "@/components/notifications/NotificationPrompt";
 import ClientProviders from "@/components/providers/ClientProviders";
+import { Suspense } from 'react';
+import ReferralTracker from '@/components/referral/ReferralTracker';
 
 export default async function LocaleLayout({
   children,
@@ -93,6 +95,9 @@ export default async function LocaleLayout({
           <ClientProviders>
             <ErrorReporter />
             <NotificationPrompt />
+            <Suspense fallback={null}>
+              <ReferralTracker />
+            </Suspense>
             {children}
             <Toaster position="bottom-center" richColors theme="dark" />
           </ClientProviders>
