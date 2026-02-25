@@ -11,7 +11,7 @@ export default function JuzListClient({ juzs, locale }: { juzs: Juz[], locale: s
         <div className="bg-primary-900/40 backdrop-blur-md rounded-app-lg border border-white/10 shadow-glass p-6 md:p-8 animate-fade-in">
             <div className="mb-8">
                 <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                    {t('bookmarks.para')} / {t('bookmarks.juz')} <span className="text-accent-400 text-lg">✨</span>
+                    {t('para')} / {t('juz')} <span className="text-accent-400 text-lg">✨</span>
                 </h3>
                 <p className="text-primary-400 text-sm mt-1">Explore the Quran by its 30 parts</p>
             </div>
@@ -34,7 +34,7 @@ export default function JuzListClient({ juzs, locale }: { juzs: Juz[], locale: s
                                 <div className="absolute inset-0 bg-accent-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>
                             <div className="text-white font-bold group-hover:text-accent-300 transition text-lg leading-tight uppercase tracking-widest">
-                                {t('bookmarks.para')} {juz.juz_number}
+                                {t('para')} {juz.juz_number}
                             </div>
                             <div className="text-primary-400 text-[10px] mt-2 font-medium uppercase tracking-tighter">
                                 {juz.verses_count} Ayahs

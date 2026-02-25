@@ -151,6 +151,8 @@
         "revelation": "অবতীর্ণ",
         "mecca": "মক্কী",
         "medina": "মাদানী",
+        "juz": "জুজ",
+        "para": "পারা",
         "readButton": "পড়ুন",
         "startReading": "পড়া শুরু করুন",
         "stats": {
@@ -173,8 +175,6 @@
             "startReading": "পড়া শুরু করুন",
             "surah": "সূরা",
             "ayah": "আয়াত",
-            "juz": "জুজ",
-            "para": "পারা",
             "viewVerse": "আয়াত দেখুন"
         }
     },

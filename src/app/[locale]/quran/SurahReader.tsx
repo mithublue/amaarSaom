@@ -280,13 +280,13 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                         </div>
 
                         {/* Arabic Text & Transliteration */}
-                        <div className="text-right mb-8">
+                        <div className={`${locale === 'ar' ? 'text-right' : 'text-right'} mb-8`}>
                             <p className="font-arabic text-3xl md:text-4xl text-white leading-[2.2] md:leading-[2.5] drop-shadow-sm mb-4">
                                 {verse.text_uthmani}
                             </p>
-                            {/* Transliteration */}
+                            {/* Transliteration - English phonetics */}
                             {verse.translations?.find(t => t.resource_id === 57) && (
-                                <p className="text-left text-accent-400/90 text-sm md:text-base font-medium italic leading-relaxed border-l-2 border-accent-500/20 pl-4 mt-4 animate-fade-in">
+                                <p className={`text-left text-accent-400/90 text-sm md:text-base font-medium italic leading-relaxed ${locale === 'ar' ? 'border-r-2 pr-4 border-l-0' : 'border-l-2 pl-4'} border-accent-500/20 mt-4 animate-fade-in`}>
                                     {verse.translations.find(t => t.resource_id === 57)?.text.replace(/<sup.*?<\/sup>/g, '')}
                                 </p>
                             )}
@@ -295,12 +295,12 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                         {/* Translations */}
                         <div className="space-y-6">
                             {verse.translations?.filter(t => t.resource_id !== 57).map((translation) => (
-                                <div key={translation.id} className="text-primary-100 border-l-2 border-accent-500/30 pl-4">
+                                <div key={translation.id} className={`text-primary-100 ${locale === 'ar' ? 'border-r-2 pr-4 text-right' : 'border-l-2 pl-4 text-left'} border-accent-500/30`}>
                                     <p className={`text-lg leading-relaxed ${translation.resource_id === 161 ? 'font-bengali' : 'font-sans'}`}>
                                         {translation.text.replace(/<sup.*?<\/sup>/g, '')}
                                     </p>
                                     <p className="text-xs text-primary-400 mt-2 uppercase tracking-wider font-semibold">
-                                        {translation.resource_id === 131 ? 'English - The Clear Quran' : 'Bengali - Taisirul Quran'}
+                                        {translation.resource_id === 131 ? (locale === 'ar' ? 'الإنجليزية - ترجمة' : 'English - The Clear Quran') : (locale === 'ar' ? 'البنغالية - تيسير القرآن' : 'Bengali - Taisirul Quran')}
                                     </p>
                                 </div>
                             ))}

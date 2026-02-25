@@ -62,7 +62,7 @@ export default async function QuranPage({ params, searchParams }: {
                             scroll={false}
                             className={`px-8 py-3 rounded-full font-bold transition-all ${tab === 'juz' ? 'bg-accent-600 text-white shadow-gold-glow scale-105' : 'bg-primary-900/50 text-primary-300 hover:bg-white/10'}`}
                         >
-                            {t('bookmarks.para')}
+                            {t('para')}
                         </Link>
                     </div>
 

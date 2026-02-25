@@ -155,6 +155,8 @@
         "revelation": "Revelation",
         "mecca": "Meccan",
         "medina": "Medinan",
+        "juz": "Juz",
+        "para": "Para",
         "readButton": "Read",
         "startReading": "Start Reading",
         "stats": {
@@ -177,8 +179,6 @@
             "startReading": "Start Reading",
             "surah": "Surah",
             "ayah": "Ayah",
-            "juz": "Juz",
-            "para": "Para",
             "viewVerse": "View Verse"
         }
     },
