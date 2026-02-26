@@ -48,11 +48,11 @@ export default function LanguageSwitcher() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary-100 transition-all duration-200 shadow-sm"
+                className="flex items-center gap-1.5 md:gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary-100 transition-all duration-200 shadow-sm"
             >
-                <span className={`fi fi-${currentFlag} rounded-sm shadow-sm opacity-90`} />
-                <span className="text-sm font-medium">{currentLangLabel}</span>
-                <span className="text-xs opacity-60">▼</span>
+                <span className={`fi fi-${currentFlag} rounded-sm shadow-sm opacity-90 scale-90 md:scale-100`} />
+                <span className="text-xs md:text-sm font-medium">{currentLangLabel}</span>
+                <span className="text-[10px] md:text-xs opacity-60">▼</span>
             </button>
 
             {isOpen && (

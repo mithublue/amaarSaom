@@ -44,9 +44,9 @@ export default function UserMenu({ session, locale }: UserMenuProps) {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary-100 transition-all duration-200 shadow-sm"
+                className="flex items-center gap-1.5 md:gap-2 px-1.5 py-1 md:px-3 md:py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary-100 transition-all duration-200 shadow-sm"
             >
-                <div className="w-8 h-8 rounded-full bg-linear-to-br from-accent-500 to-accent-600 flex items-center justify-center text-white shadow-inner">
+                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-linear-to-br from-accent-500 to-accent-600 flex items-center justify-center text-white shadow-inner">
                     {session.user?.image ? (
                         <img
                             src={session.user.image}
@@ -54,7 +54,7 @@ export default function UserMenu({ session, locale }: UserMenuProps) {
                             className="w-full h-full rounded-full object-cover"
                         />
                     ) : (
-                        <span className="text-sm font-bold">
+                        <span className="text-[10px] md:text-sm font-bold">
                             {session.user?.name?.charAt(0).toUpperCase() || 'U'}
                         </span>
                     )}
@@ -64,7 +64,7 @@ export default function UserMenu({ session, locale }: UserMenuProps) {
                     {session.user?.name || 'User'}
                 </span>
 
-                <ChevronDown className={`w-4 h-4 text-primary-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 md:w-4 md:h-4 text-primary-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (

@@ -204,7 +204,8 @@
         "good-deeds": "Good Deeds",
         "quran": "Quran",
         "leaderboard": "Leaderboard",
-        "profile": "Profile"
+        "profile": "Profile",
+        "duas": "Dua"
     },
     "LanguageSwitcher": {
         "label": "Language"
