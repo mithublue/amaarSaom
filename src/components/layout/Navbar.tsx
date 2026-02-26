@@ -129,19 +129,21 @@ export default function Navbar({ session, locale }: NavbarProps) {
                     </div>
 
                     {/* Desktop Navigation Links - Hidden on Mobile */}
-                    <div className="hidden md:flex items-center gap-1 text-xs lg:text-sm">
+                    <div className="hidden md:flex items-center gap-2 lg:gap-4 text-xs lg:text-sm">
                         {desktopNavItems.map((item) => {
                             const active = isActive(item.href);
+                            const Icon = item.icon;
                             return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`px-4 py-2 rounded-xl font-medium transition-all ${active
-                                            ? 'text-accent-400 bg-accent-400/10'
-                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    className={`flex flex-col items-center justify-center min-w-[70px] px-2 py-1 transition-all ${active
+                                        ? 'text-accent-400 scale-105 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]'
+                                        : 'text-gray-400 hover:text-white hover:scale-105'
                                         }`}
                                 >
-                                    {item.name}
+                                    <Icon className={`w-5 h-5 mb-1.5 ${active ? 'animate-pulse' : ''}`} />
+                                    <span className="font-semibold tracking-wide text-[11px] lg:text-xs">{item.name}</span>
                                 </Link>
                             );
                         })}
@@ -191,8 +193,8 @@ export default function Navbar({ session, locale }: NavbarProps) {
                                     key={item.href}
                                     href={item.href}
                                     className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${active
-                                            ? 'bg-accent-600/20 text-accent-400 border border-accent-600/20'
-                                            : 'text-gray-300 hover:bg-white/5 border border-transparent'
+                                        ? 'bg-accent-600/20 text-accent-400 border border-accent-600/20'
+                                        : 'text-gray-300 hover:bg-white/5 border border-transparent'
                                         }`}
                                 >
                                     <div className={`p-2 rounded-xl ${active ? 'bg-accent-600/10' : 'bg-primary-900'}`}>

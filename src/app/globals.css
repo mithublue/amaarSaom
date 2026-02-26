@@ -65,6 +65,50 @@ body::before {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Infinite Scroll Animations */
+@keyframes scroll-up {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-50%);
+    }
+}
+
+@keyframes scroll-left {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-scroll-up {
+    animation: scroll-up 40s linear infinite;
+}
+
+.animate-scroll-left {
+    animation: scroll-left 30s linear infinite;
+}
+
+.pause-on-hover:hover {
+    animation-play-state: paused;
+}
+
+/* Glowing Effects */
+.glow-emerald {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    border: 1px solid rgba(16, 185, 129, 0.5) !important;
+}
+
+.glow-accent {
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+    border: 1px solid rgba(234, 179, 8, 0.5) !important;
+}
+
 /* Typography Overrides */
 h1,
 h2,

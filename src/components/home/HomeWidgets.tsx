@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { resolveAladhanUrl } from '@/lib/location';
+import CircularTimer from './CircularTimer';
 
 interface PrayerTimes {
     Fajr: string;
@@ -32,6 +33,19 @@ const DEED_SUGGESTIONS: DeedSuggestion[] = [
     { namebn: 'সন্ধ্যার যিকর', href: '/duas' },
     { namebn: 'দৈনিক হাদিস পড়া', href: '/hadith' },
     { namebn: 'তাহাজ্জুদ নামাজ', href: '/prayer-times' },
+    { namebn: 'পিতামাতার জন্য দোয়া', href: '/duas' },
+    { namebn: '৫ ওয়াক্ত জামাতে নামাজ', href: '/prayer-times' },
+    { namebn: 'ইসলামিক বই পড়া', href: '/' },
+    { namebn: 'কাউকে হাসিমুখে সালাম দেওয়া', href: '/' },
+    { namebn: 'অসহায়কে খাদ্য দান', href: '/zakat' },
+    { namebn: 'গাছ লাগানো', href: '/' },
+    { namebn: 'পানি পান করানো', href: '/' },
+    { namebn: 'ধৈর্য ধারণ করা', href: '/' },
+    { namebn: 'একটি ভালো কথা বলা', href: '/' },
+    { namebn: 'সুন্নাতে রাসূল (সা.) পালন', href: '/' },
+    { namebn: 'তওবা ও ইস্তেগফার করা', href: '/duas' },
+    { namebn: 'কুরআনের অর্থ বোঝা', href: '/quran' },
+    { namebn: 'প্রতিবেশীর খোঁজ নেওয়া', href: '/' },
 ];
 
 function toMin(timeStr: string): number {
@@ -47,11 +61,6 @@ function formatCountdown(totalSeconds: number): string {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-/**
- * Returns:
- * - currentWaqtName: Bengali name of the current waqt
- * - currentWaqtEndMin: minute at which current waqt ends (= start of next prayer)
- */
 function getCurrentWaqtInfo(times: PrayerTimes, nowMin: number): { name: string; endMin: number } {
     const fajr = toMin(times.Fajr);
     const sunrise = toMin(times.Sunrise);
@@ -61,7 +70,6 @@ function getCurrentWaqtInfo(times: PrayerTimes, nowMin: number): { name: string;
     const isha = toMin(times.Isha);
 
     if (nowMin >= isha || nowMin < fajr) {
-        // Isha waqt – ends at tomorrow's Fajr
         const endMin = fajr + (nowMin >= isha ? 24 * 60 : 0);
         return { name: 'এশার ওয়াক্ত', endMin };
     }
@@ -69,58 +77,37 @@ function getCurrentWaqtInfo(times: PrayerTimes, nowMin: number): { name: string;
     if (nowMin >= asr) return { name: 'আসরের ওয়াক্ত', endMin: maghrib };
     if (nowMin >= dhuhr) return { name: 'জোহরের ওয়াক্ত', endMin: asr };
     if (nowMin >= sunrise) return { name: 'চাশতের সময়', endMin: dhuhr };
-    // fajr → sunrise
     return { name: 'ফজরের ওয়াক্ত', endMin: sunrise };
 }
 
-/**
- * Iftar/Sehri logic:
- * - Fajr..Maghrib  → Iftari countdown (Maghrib)
- * - Maghrib..(Fajr-150min) → Sehri শুরু হতে X বাকি
- * - (Fajr-150min)..Fajr → সেহরী শেষ হতে X বাকি
- */
-const SEHRI_WINDOW_MIN = 150; // 2.5 hours = sehri window before Fajr
-
-function getIftarSehriInfo(times: PrayerTimes, nowMin: number): { label: string; targetMin: number; nextDay: boolean } {
+function getIftarSehriInfo(times: PrayerTimes, nowMin: number): { label: string; targetMin: number } {
     const fajr = toMin(times.Fajr);
     const maghrib = toMin(times.Maghrib);
-    const sehriStart = fajr - SEHRI_WINDOW_MIN;
+    const sehriStart = fajr - 150;
 
-    // Daytime: Fajr → Maghrib → show iftar
     if (nowMin >= fajr && nowMin < maghrib) {
-        return { label: 'ইফতার', targetMin: maghrib, nextDay: false };
+        return { label: 'ইফতার', targetMin: maghrib };
     }
-    // Sehri window (before Fajr, within 2.5 hrs)
     if (nowMin >= sehriStart && nowMin < fajr) {
-        return { label: 'সেহরী শেষ', targetMin: fajr, nextDay: false };
+        return { label: 'সেহরী শেষ', targetMin: fajr };
     }
-    // Post-Maghrib / before sehri window → show sehri start countdown
-    // sehriStart is in next morning → need +24h offset if now > midnight relative to fajr
     if (nowMin >= maghrib) {
-        // sehriStart is tomorrow (small hours)
-        return { label: 'সেহরী শুরু', targetMin: sehriStart + 24 * 60, nextDay: true };
+        const end = sehriStart + 24 * 60;
+        return { label: 'সেহরী শুরু', targetMin: end };
     }
-    // nowMin < sehriStart && nowMin < fajr (early morning, before sehri window)
-    return { label: 'সেহরী শুরু', targetMin: sehriStart, nextDay: false };
+    return { label: 'সেহরী শুরু', targetMin: sehriStart };
 }
 
 export default function HomeWidgets({ userName, locale }: { userName?: string; locale: string }) {
     const t = useTranslations('HomeWidgets');
+    const patterns = t.raw('patterns') as string[];
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
     const [now, setNow] = useState(new Date());
-    const [prayerInfo, setPrayerInfo] = useState({ name: '', countdown: '' });
-    const [iftarSehri, setIftarSehri] = useState({ label: '', countdown: '' });
+    const [prayerInfo, setPrayerInfo] = useState({ name: '', countdown: '', hPercent: 0, mPercent: 0 });
+    const [iftarSehri, setIftarSehri] = useState({ label: '', countdown: '', hPercent: 0, mPercent: 0 });
     const [todayDeeds, setTodayDeeds] = useState(0);
     const [nearbyUser, setNearbyUser] = useState<NearbyUser | null>(null);
-    const [deeds, setDeeds] = useState<DeedSuggestion[]>(DEED_SUGGESTIONS.slice(0, 4));
 
-    // Pick random deeds only on client to avoid hydration mismatch
-    useEffect(() => {
-        const shuffled = [...DEED_SUGGESTIONS].sort(() => Math.random() - 0.5);
-        setDeeds(shuffled.slice(0, 4));
-    }, []);
-
-    // Fetch prayer times: GPS localStorage → Nominatim geocode → locale default
     useEffect(() => {
         (async () => {
             try {
@@ -128,13 +115,10 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 const r = await fetch(url);
                 const d = await r.json();
                 if (d?.data?.timings) setPrayerTimes(d.data.timings);
-            } catch (err) {
-                console.error('[HomeWidgets] Failed to fetch prayer times:', err);
-            }
+            } catch (err) { }
         })();
     }, [locale]);
 
-    // Fetch today's deeds
     useEffect(() => {
         (async () => {
             try {
@@ -145,7 +129,6 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
         })();
     }, []);
 
-    // Fetch leaderboard for nearby user
     useEffect(() => {
         (async () => {
             try {
@@ -164,175 +147,224 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
         })();
     }, []);
 
-    // Tick clock
     useEffect(() => {
         const id = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(id);
     }, []);
 
-    // Compute countdowns every second
     useEffect(() => {
         if (!prayerTimes) return;
         const nowMin = now.getHours() * 60 + now.getMinutes();
         const nowSec = now.getSeconds();
 
-        // Current waqt remaining
         const waqt = getCurrentWaqtInfo(prayerTimes, nowMin);
-        let waqtRemSec: number;
-        if (waqt.endMin >= nowMin) {
-            waqtRemSec = (waqt.endMin - nowMin) * 60 - nowSec;
-        } else {
-            // Wraps midnight (Isha → next Fajr)
-            waqtRemSec = (waqt.endMin - nowMin + 24 * 60) * 60 - nowSec;
-        }
-        setPrayerInfo({ name: waqt.name, countdown: formatCountdown(waqtRemSec) });
+        let waqtRemSec = (waqt.endMin >= nowMin ? waqt.endMin - nowMin : waqt.endMin + 24 * 60 - nowMin) * 60 - nowSec;
+        const hRem = Math.floor(waqtRemSec / 3600);
+        const mRem = Math.floor((waqtRemSec % 3600) / 60);
 
-        // Iftar/Sehri
+        setPrayerInfo({
+            name: waqt.name,
+            countdown: formatCountdown(waqtRemSec),
+            hPercent: (hRem / 24) * 100, // Hour line (decants relative to 24h)
+            mPercent: (mRem / 60) * 100  // Minute line (decants relative to 60m)
+        });
+
         const is = getIftarSehriInfo(prayerTimes, nowMin);
-        let isRemSec: number;
-        if (is.targetMin >= nowMin) {
-            isRemSec = (is.targetMin - nowMin) * 60 - nowSec;
-        } else {
-            isRemSec = (is.targetMin + 24 * 60 - nowMin) * 60 - nowSec;
-        }
-        // Map internal label to translation key
-        let labelKey = 'iftar';
-        if (is.label === 'সেহরী শেষ') labelKey = 'sehriEnds';
-        else if (is.label === 'সেহরী শুরু') labelKey = 'sehriStarts';
+        let isRemSec = (is.targetMin >= nowMin ? is.targetMin - nowMin : is.targetMin + 24 * 60 - nowMin) * 60 - nowSec;
+        const isHRem = Math.floor(isRemSec / 3600);
+        const isMRem = Math.floor((isRemSec % 3600) / 60);
 
-        setIftarSehri({ label: t(labelKey), countdown: formatCountdown(Math.max(0, isRemSec)) });
-    }, [now, prayerTimes, t]); // Added t dependency
+        let labelKey = is.label === 'ইফতার' ? 'iftar' : (is.label === 'সেহরী শেষ' ? 'sehriEnds' : 'sehriStarts');
+        setIftarSehri({
+            label: t(labelKey),
+            countdown: formatCountdown(Math.max(0, isRemSec)),
+            hPercent: (isHRem / 24) * 100,
+            mPercent: (isMRem / 60) * 100
+        });
+    }, [now, prayerTimes, t]);
 
     const loading = !prayerTimes;
 
-    // 4 motivational messages using translations
-    const motivationWidgets = [
-        {
-            key: 'msg1',
-            text: nearbyUser
-                ? <>{nearbyUser.name} {t.rich('motivation.default1', { deed: () => <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link> })}</>
-                : <>{t.rich('motivation.default1', { deed: () => <Link href={deeds[0].href} className="text-emerald-400 font-semibold hover:underline">{deeds[0].namebn}</Link> })}</>,
-        },
-        {
-            key: 'msg2',
-            text: nearbyUser
-                ? <>{nearbyUser.name} ({nearbyUser.totalPoints}) - {t.rich('motivation.default2', { deed: () => <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> })}</>
-                : <>{t.rich('motivation.default2', { deed: () => <Link href={deeds[1].href} className="text-emerald-400 font-semibold hover:underline">{deeds[1].namebn}</Link> })}</>,
-        },
-        {
-            key: 'msg3',
-            text: <>{t.rich('motivation.default3', { deed: () => <Link href={deeds[2].href} className="text-emerald-400 font-semibold hover:underline">{deeds[2].namebn}</Link> })}</>,
-        },
-        {
-            key: 'msg4',
-            text: <>{t.rich('motivation.default4', { deed: () => <Link href={deeds[3].href} className="text-emerald-400 font-semibold hover:underline">{deeds[3].namebn}</Link> })}</>,
-        },
-    ];
+    const ActionCardList = useMemo(() => (
+        <div className="space-y-3">
+            {[...DEED_SUGGESTIONS, ...DEED_SUGGESTIONS].map((deed, i) => {
+                const pattern = patterns[i % patterns.length];
+                const parts = pattern.split('{deed}');
+                return (
+                    <div key={`${deed.namebn}-${i}`} className="bg-primary-900/40 backdrop-blur-md border border-white/5 rounded-xl px-4 py-3 shadow-glass group hover:bg-primary-900/60 transition-all duration-300">
+                        <p className="text-sm text-primary-100 leading-relaxed">
+                            {parts[0]} <Link href={deed.href} className="text-emerald-400 font-semibold hover:underline">{deed.namebn}</Link> {parts[1]}
+                        </p>
+                    </div>
+                );
+            })}
+        </div>
+    ), [patterns]);
 
     return (
-        <div className="w-full max-w-7xl mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Greeting */}
-            <h1 className="text-3xl md:text-4xl font-bold text-white text-center mb-2">
+            <h1 className="text-3xl md:text-5xl font-bold text-white text-center mb-8">
                 {t('greeting')}{userName ? <>, <span className="text-accent-400">{userName}!</span></> : ''} 👋
             </h1>
 
-            {/* Top row: 3 equal cards */}
-            <div className="grid grid-cols-3 gap-3 md:gap-4">
-                {/* Current Waqt Remaining */}
-                <Link href="/prayer-times" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">🕌</span>
-                        <span className="text-xs font-medium text-emerald-300 truncate">
-                            {prayerInfo.name || t('nextPrayer')}
-                        </span>
+            {/* Desktop: 1:3 layout (reduced left column slightly for wider grid) */}
+            <div className="hidden md:grid grid-cols-3 gap-6 items-stretch">
+
+                {/* Left Column: Action Cards Vertical Loop (33%) */}
+                <div className="col-span-1 h-[520px] relative overflow-hidden rounded-3xl border border-white/5 bg-primary-900/10 shadow-inner">
+                    <div className="absolute inset-0 z-10 pointer-events-none bg-linear-to-b from-primary-950/80 via-transparent to-primary-950/80" />
+                    <div className="animate-scroll-up pause-on-hover px-4 py-8">
+                        {ActionCardList}
                     </div>
-                    <div className="text-xl md:text-2xl font-mono font-bold text-white tracking-wider">
-                        {loading ? <span className="animate-pulse text-sm text-primary-400">{t('loading')}</span> : prayerInfo.countdown}
-                    </div>
-                    <p className="text-xs text-primary-400 mt-1">{t('endsIn')}</p>
-                </Link>
-
-                {/* Iftar / Sehri */}
-                <Link href="/iftar-sehri" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-accent-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent-500/5 to-transparent pointer-events-none" />
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">🌙</span>
-                        <span className="text-xs font-medium text-accent-300 truncate">{iftarSehri.label || t('iftar')}</span>
-                    </div>
-                    <div className="text-xl md:text-2xl font-mono font-bold text-white tracking-wider">
-                        {loading ? <span className="animate-pulse text-sm text-primary-400">{t('loading')}</span> : iftarSehri.countdown}
-                    </div>
-                    <p className="text-xs text-primary-400 mt-1">{t('timeRemaining')}</p>
-                </Link>
-
-                {/* Leaderboard */}
-                <Link href="/leaderboard" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 hover:border-yellow-500/40 rounded-2xl p-4 md:p-5 transition-all duration-300 hover:bg-primary-900/70 hover:-translate-y-0.5 shadow-glass">
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">🏆</span>
-                        <span className="text-xs font-medium text-yellow-300 truncate">Leaderboard</span>
-                    </div>
-                    {nearbyUser ? (
-                        <div>
-                            <p className="text-xs text-primary-300 leading-snug mb-1">
-                                Rank #{nearbyUser.rank} — <span className="text-white font-medium">{nearbyUser.name}</span>
-                            </p>
-                            <p className="text-lg font-bold text-yellow-400">{nearbyUser.totalPoints} pts</p>
-                        </div>
-                    ) : (
-                        <p className="text-xl md:text-2xl font-bold text-white">View</p>
-                    )}
-                    <p className="text-xs text-primary-400 mt-1 group-hover:text-yellow-400 transition-colors">See rankings →</p>
-                </Link>
-            </div>
-
-
-
-            {/* Bottom Section: Action Cards (2×2) + Today's Deeds (tall) */}
-            <div className="grid grid-cols-3 gap-3 md:gap-4 items-stretch">
-
-                {/* Left 2 columns: 4 action cards in 2×2 */}
-                <div className="col-span-2 grid grid-cols-2 gap-3 md:gap-4">
-                    {motivationWidgets.map((w) => (
-                        <div key={w.key} className="relative overflow-hidden bg-primary-900/40 backdrop-blur-md border border-white/8 rounded-2xl px-4 py-4 shadow-glass">
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-accent-600/5 pointer-events-none" />
-                            <p className="relative z-10 text-sm text-primary-100 leading-relaxed">
-                                {w.text}
-                            </p>
-                        </div>
-                    ))}
                 </div>
 
-                {/* Right column: Today's Deeds (spans full height) */}
-                <div className="col-span-1 relative overflow-hidden bg-primary-900/50 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-glass flex flex-col justify-between">
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent-600/8 via-transparent to-emerald-600/5 pointer-events-none" />
-                    <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-primary-300">{t('todaysDeeds')}</span>
-                            <span className="text-sm font-bold text-accent-400">{todayDeeds} / 10 ✨</span>
+                {/* Right Section: 2x2 Grid (66%) */}
+                <div className="col-span-2 grid grid-cols-2 gap-6 h-[520px]">
+
+                    {/* Top Row: Timers */}
+                    <Link href="/iftar-sehri" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-xl border border-white/10 rounded-[35px] p-8 transition-all duration-500 hover:scale-[1.02] shadow-glass flex items-center justify-center">
+                        <CircularTimer
+                            value={loading ? '--:--:--' : iftarSehri.countdown}
+                            hourPercent={iftarSehri.hPercent}
+                            minutePercent={iftarSehri.mPercent}
+                            label={iftarSehri.label || t('iftar')}
+                            color="accent"
+                        />
+                    </Link>
+
+                    <Link href="/prayer-times" className="group relative overflow-hidden bg-primary-900/50 backdrop-blur-xl border border-white/10 rounded-[35px] p-8 transition-all duration-500 hover:scale-[1.02] shadow-glass flex items-center justify-center">
+                        <CircularTimer
+                            value={loading ? '--:--:--' : prayerInfo.countdown}
+                            hourPercent={prayerInfo.hPercent}
+                            minutePercent={prayerInfo.mPercent}
+                            label={prayerInfo.name || t('nextPrayer')}
+                            color="emerald"
+                        />
+                    </Link>
+
+                    {/* Bottom Row: Square Widgets */}
+                    <div className="relative overflow-hidden bg-primary-900/40 backdrop-blur-xl border border-white/10 rounded-[35px] p-8 shadow-glass flex flex-col items-center justify-between group hover:bg-primary-900/50 transition-all duration-500">
+                        <div className="w-full">
+                            <div className="flex items-center justify-between mb-6">
+                                <span className="text-lg font-bold text-primary-100">{t('todaysDeeds')}</span>
+                                <span className="text-2xl font-black text-accent-400">{todayDeeds}/10</span>
+                            </div>
+                            {todayDeeds > 0 ? (
+                                <div className="grid grid-cols-5 gap-3 mb-8">
+                                    {Array.from({ length: 10 }).map((_, i) => (
+                                        <div key={i} className={`h-3 rounded-full transition-all duration-700 ${i < todayDeeds ? 'bg-accent-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'bg-primary-800/40'}`} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-primary-300 font-medium text-center mb-8 px-2">
+                                    আজ কোনো আমল যোগ করেননি, এখনই আমল শুরু করুন
+                                </p>
+                            )}
                         </div>
-                        <div className="w-full bg-primary-800/60 rounded-full h-2 overflow-hidden mb-4">
-                            <div
-                                className="h-full bg-gradient-to-r from-accent-600 to-emerald-500 rounded-full transition-all duration-700"
-                                style={{ width: `${Math.min((todayDeeds / 10) * 100, 100)}%` }}
-                            />
+                        <Link href="/good-deeds" className="w-full py-4 bg-accent-600/20 hover:bg-accent-600/30 border border-accent-500/30 rounded-2xl text-accent-300 font-bold text-center transition-all hover:scale-[1.02] active:scale-95">
+                            + {t('addDeed')}
+                        </Link>
+                    </div>
+
+                    <Link href="/leaderboard" className="relative overflow-hidden bg-primary-900/40 backdrop-blur-xl border border-white/10 rounded-[35px] p-8 shadow-glass flex flex-col items-center justify-center group hover:bg-primary-900/50 transition-all duration-500 hover:scale-[1.02]">
+                        <span className="text-sm font-bold text-yellow-300 uppercase tracking-widest mb-6 opacity-80 flex items-center gap-2">
+                            <span className="text-xl">🏆</span> Leaderboard Box
+                        </span>
+                        {nearbyUser ? (
+                            <div className="text-center">
+                                <p className="text-4xl font-black text-white mb-2">Rank #{nearbyUser.rank}</p>
+                                <p className="text-lg text-yellow-400 font-bold">{nearbyUser.name}</p>
+                                <p className="text-sm text-primary-300 mt-2">{nearbyUser.totalPoints} pts</p>
+                            </div>
+                        ) : (
+                            <p className="text-4xl font-black text-white">View Rankings</p>
+                        )}
+                        <span className="mt-8 text-yellow-500/80 group-hover:text-yellow-400 text-xs font-bold uppercase tracking-tighter transition-all">See full rankings →</span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Mobile View: Specifically ordered rows */}
+            <div className="md:hidden space-y-6">
+
+                {/* Row 1: Side by Side Timers */}
+                <div className="grid grid-cols-2 gap-3">
+                    <Link href="/prayer-times" className="p-4 bg-primary-900/60 backdrop-blur-lg border border-white/10 rounded-3xl flex items-center justify-center">
+                        <CircularTimer
+                            value={loading ? '--:--' : prayerInfo.countdown.substring(3)}
+                            hourPercent={prayerInfo.hPercent}
+                            minutePercent={prayerInfo.mPercent}
+                            label={prayerInfo.name?.split(' ')[0] || t('nextPrayer')}
+                            size="sm"
+                            color="emerald"
+                        />
+                    </Link>
+                    <Link href="/iftar-sehri" className="p-4 bg-primary-900/60 backdrop-blur-lg border border-white/10 rounded-3xl flex items-center justify-center">
+                        <CircularTimer
+                            value={loading ? '--:--' : iftarSehri.countdown.substring(3)}
+                            hourPercent={iftarSehri.hPercent}
+                            minutePercent={iftarSehri.mPercent}
+                            label={iftarSehri.label?.split(' ')[0] || t('iftar')}
+                            size="sm"
+                            color="accent"
+                        />
+                    </Link>
+                </div>
+
+                {/* Row 2: Inspiration Slider (Slower Horizontal) */}
+                <div className="relative h-28 overflow-hidden rounded-2xl bg-primary-900/20 border border-white/5">
+                    <div className="absolute inset-0 z-10 pointer-events-none bg-linear-to-r from-primary-950/60 via-transparent to-primary-950/60" />
+                    <div className="flex items-center gap-4 py-6 px-4 w-max whitespace-nowrap animate-scroll-left" style={{ animationDuration: '120s' }}>
+                        {[...DEED_SUGGESTIONS, ...DEED_SUGGESTIONS].map((deed, i) => {
+                            const pattern = patterns[i % patterns.length];
+                            const parts = pattern.split('{deed}');
+                            return (
+                                <div key={`m-${i}`} className="bg-primary-900/50 backdrop-blur-md border border-white/5 rounded-xl px-5 py-3 shadow-glass">
+                                    <p className="text-xs text-primary-100 leading-none">
+                                        {parts[0]} <Link href={deed.href} className="text-emerald-400 font-bold">{deed.namebn}</Link> {parts[1]}
+                                    </p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Row 3: Leaderboard */}
+                <Link href="/leaderboard" className="block p-5 bg-primary-900/40 border border-white/10 rounded-3xl shadow-glass">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <span className="text-[10px] font-bold text-yellow-300 uppercase tracking-widest opacity-80">Leaderboard Box</span>
+                            {nearbyUser ? (
+                                <>
+                                    <p className="text-2xl font-black text-white mt-1">Rank #{nearbyUser.rank}</p>
+                                    <p className="text-xs text-primary-300">{nearbyUser.name} • {nearbyUser.totalPoints} pts</p>
+                                </>
+                            ) : <p className="text-xl font-bold text-white mt-1">View Ranking</p>}
                         </div>
-                        {/* Deed count visual */}
-                        <div className="grid grid-cols-5 gap-1 mb-4">
+                        <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-xl">🏆</div>
+                    </div>
+                </Link>
+
+                {/* Row 4: Today's Deeds */}
+                <div className="p-5 bg-primary-900/40 border border-white/10 rounded-3xl shadow-glass">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-bold text-primary-100 uppercase tracking-widest">{t('todaysDeeds')}</span>
+                        <span className="text-lg font-black text-accent-400">{todayDeeds}/10 ✨</span>
+                    </div>
+                    {todayDeeds > 0 ? (
+                        <div className="grid grid-cols-10 gap-1.5 mb-5">
                             {Array.from({ length: 10 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`h-2 rounded-full transition-all duration-500 ${i < todayDeeds ? 'bg-emerald-500' : 'bg-primary-800/60'}`}
-                                />
+                                <div key={i} className={`h-2 rounded-full ${i < todayDeeds ? 'bg-accent-500' : 'bg-primary-800/40'}`} />
                             ))}
                         </div>
-                    </div>
-                    <Link
-                        href="/good-deeds"
-                        className="relative z-10 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-accent-600/20 hover:bg-accent-600/30 border border-accent-500/30 rounded-xl text-sm text-accent-300 font-medium transition-all hover:text-accent-200 w-full"
-                    >
-                        ✦ {t('addDeed')}
+                    ) : (
+                        <p className="text-xs text-primary-300 font-medium text-center mb-5">
+                            আজ কোনো আমল যোগ করেননি, এখনই আমল শুরু করুন
+                        </p>
+                    )}
+                    <Link href="/good-deeds" className="block w-full py-3 bg-accent-600/20 rounded-xl text-accent-300 font-bold text-center text-sm">
+                        + {t('addDeed')}
                     </Link>
                 </div>
             </div>

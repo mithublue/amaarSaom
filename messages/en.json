@@ -148,7 +148,13 @@
             "default2": "Do <deed>daily hadith reading</deed> now to stay ahead in today's leaderboard.",
             "default3": "Alhamdulillah, many prayed Tahajjud today. Complete <deed>Surah Mulk recitation</deed> to reach top 20%.",
             "default4": "Many are ahead in good deeds today! Get back on track with — <deed>evening dhikr</deed>"
-        }
+        },
+        "patterns": [
+            "Many are doing deeds today! Start with {deed} to stay ahead.",
+            "Don't miss out on rewards! Complete {deed} now.",
+            "A simple deed goes a long way. Recite {deed} and earn blessings.",
+            "Bless your day with goodness. Start with {deed} today."
+        ]
     },
     "Quran": {
         "title": "The Holy Quran",
@@ -222,7 +228,7 @@
         "month": "🗓️ Month",
         "allTime": "♾️ All",
         "availableDeeds": "Available Good Deeds",
-        "customDeed": "➕ Custom",
+        "customDeed": "Custom",
         "cancel": "❌ Cancel",
         "searchPlaceholder": "Search deeds...",
         "difficulty": "Difficulty",
