@@ -42,6 +42,10 @@
             "referral": {
                 "title": "Refer & Earn",
                 "desc": "Invite friends and earn points together"
+            },
+            "zakat": {
+                "title": "Zakat Calculator",
+                "desc": "Calculate your Zakat easily"
             }
         }
     },
@@ -197,6 +201,9 @@
     "Navigation": {
         "home": "Home",
         "dashboard": "Dashboard",
+        "good-deeds": "Good Deeds",
+        "quran": "Quran",
+        "leaderboard": "Leaderboard",
         "profile": "Profile"
     },
     "LanguageSwitcher": {
