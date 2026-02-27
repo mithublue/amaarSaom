@@ -284,19 +284,15 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                                     🔖
                                 </button>
                                 <div className="h-6 w-px bg-white/10 mx-1 self-center"></div>
-                                {/* Tafseer Drawer Link Conditionally Rendered */}
-                                {verse.tafsirs && verse.tafsirs.length > 0 && (
-                                    <>
-                                        <Link
-                                            href={`/quran/${surah.id}/tafseer/${verse.verse_key.split(':')[1]}`}
-                                            title="Read Tafseer"
-                                            className="px-3 h-9 flex items-center gap-1.5 justify-center rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 hover:text-emerald-200 transition-all font-bold text-xs"
-                                        >
-                                            <BookOpen className="w-3.5 h-3.5" /> Tafseer
-                                        </Link>
-                                        <div className="h-6 w-px bg-white/10 mx-1 self-center hidden sm:block"></div>
-                                    </>
-                                )}
+                                {/* Tafseer Drawer Link */}
+                                <Link
+                                    href={`/quran/${surah.id}/tafseer/${verse.verse_key.split(':')[1]}`}
+                                    title="Read Tafseer"
+                                    className="px-3 h-9 flex items-center gap-1.5 justify-center rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 hover:text-emerald-200 transition-all font-bold text-xs"
+                                >
+                                    <BookOpen className="w-3.5 h-3.5" /> Tafseer
+                                </Link>
+                                <div className="h-6 w-px bg-white/10 mx-1 self-center hidden sm:block"></div>
                                 {/* Social Shares */}
                                 <button
                                     onClick={() => shareOnSocial('whatsapp', verse.verse_key)}

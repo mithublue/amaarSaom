@@ -104,8 +104,8 @@ export async function getChapterVerses(id: number, offset = 0, limit = 10): Prom
         // Correct pagination logic: page starts at 1 
         const page = Math.floor(offset / limit) + 1;
 
-        // Construct URL with tafsirs 164 (BN) and 169 (EN) to check availability
-        const url = `${API_BASE_URL}/verses/by_chapter/${id}?language=en&words=false&translations=${translations}&page=${page}&per_page=${limit}&fields=text_uthmani,text_indopak&tafsirs=164,169`;
+        // Construct URL without tafsirs to prevent API payload truncation 
+        const url = `${API_BASE_URL}/verses/by_chapter/${id}?language=en&words=false&translations=${translations}&page=${page}&per_page=${limit}&fields=text_uthmani,text_indopak`;
 
         console.log(`[QuranService] Fetching verses for Surah ${id}: ${url}`);
 
@@ -126,19 +126,7 @@ export async function getChapterVerses(id: number, offset = 0, limit = 10): Prom
             return [];
         }
 
-        let verses = data.verses as Verse[];
-
-        // Optimize payload by stripping out the heavy HTML text from tafsirs
-        verses = verses.map(v => {
-            if (v.tafsirs) {
-                // Keep only the resource_id so the UI knows it exists, save MBs of bandwidth
-                v.tafsirs = v.tafsirs.map((t: any) => ({
-                    resource_id: t.resource_id,
-                    text: ''
-                }));
-            }
-            return v;
-        });
+        const verses = data.verses as Verse[];
 
         // Cache result
         await setCache(cacheKey, verses, CACHE_TTL_VERSES);
