@@ -24,28 +24,29 @@ interface NearbyUser {
 interface DeedSuggestion {
     namebn: string;
     href: string;
+    time?: 'morning' | 'evening' | 'night' | 'tahajjud' | 'any';
 }
 
 const DEED_SUGGESTIONS: DeedSuggestion[] = [
-    { namebn: 'সূরা মুলক তিলাওয়াত', href: '/quran' },
-    { namebn: '১০০ বার দরুদ পাঠ', href: '/duas' },
-    { namebn: 'সকালের যিকর', href: '/duas' },
-    { namebn: 'সন্ধ্যার যিকর', href: '/duas' },
-    { namebn: 'দৈনিক হাদিস পড়া', href: '/hadith' },
-    { namebn: 'তাহাজ্জুদ নামাজ', href: '/prayer-times' },
-    { namebn: 'পিতামাতার জন্য দোয়া', href: '/duas' },
-    { namebn: '৫ ওয়াক্ত জামাতে নামাজ', href: '/prayer-times' },
-    { namebn: 'ইসলামিক বই পড়া', href: '/' },
-    { namebn: 'কাউকে হাসিমুখে সালাম দেওয়া', href: '/' },
-    { namebn: 'অসহায়কে খাদ্য দান', href: '/zakat' },
-    { namebn: 'গাছ লাগানো', href: '/' },
-    { namebn: 'পানি পান করানো', href: '/' },
-    { namebn: 'ধৈর্য ধারণ করা', href: '/' },
-    { namebn: 'একটি ভালো কথা বলা', href: '/' },
-    { namebn: 'সুন্নাতে রাসূল (সা.) পালন', href: '/' },
-    { namebn: 'তওবা ও ইস্তেগফার করা', href: '/duas' },
-    { namebn: 'কুরআনের অর্থ বোঝা', href: '/quran' },
-    { namebn: 'প্রতিবেশীর খোঁজ নেওয়া', href: '/' },
+    { namebn: 'সূরা মুলক তিলাওয়াত', href: '/quran', time: 'night' },
+    { namebn: '১০০ বার দরুদ পাঠ', href: '/duas', time: 'any' },
+    { namebn: 'সকালের যিকর', href: '/duas', time: 'morning' },
+    { namebn: 'সন্ধ্যার যিকর', href: '/duas', time: 'evening' },
+    { namebn: 'দৈনিক হাদিস পড়া', href: '/hadith', time: 'any' },
+    { namebn: 'তাহাজ্জুদ নামাজ', href: '/prayer-times', time: 'tahajjud' },
+    { namebn: 'পিতামাতার জন্য দোয়া', href: '/duas', time: 'any' },
+    { namebn: '৫ ওয়াক্ত জামাতে নামাজ', href: '/prayer-times', time: 'any' },
+    { namebn: 'ইসলামিক বই পড়া', href: '/', time: 'any' },
+    { namebn: 'কাউকে হাসিমুখে সালাম দেওয়া', href: '/', time: 'any' },
+    { namebn: 'অসহায়কে খাদ্য দান', href: '/zakat', time: 'any' },
+    { namebn: 'গাছ লাগানো', href: '/', time: 'any' },
+    { namebn: 'পানি পান করানো', href: '/', time: 'any' },
+    { namebn: 'ধৈর্য ধারণ করা', href: '/', time: 'any' },
+    { namebn: 'একটি ভালো কথা বলা', href: '/', time: 'any' },
+    { namebn: 'সুন্নাতে রাসূল (সা.) পালন', href: '/', time: 'any' },
+    { namebn: 'তওবা ও ইস্তেগফার করা', href: '/duas', time: 'any' },
+    { namebn: 'কুরআনের অর্থ বোঝা', href: '/quran', time: 'any' },
+    { namebn: 'প্রতিবেশীর খোঁজ নেওয়া', href: '/', time: 'any' },
 ];
 
 function toMin(timeStr: string): number {
@@ -185,21 +186,47 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
 
     const loading = !prayerTimes;
 
-    const ActionCardList = useMemo(() => (
-        <div className="space-y-3">
-            {[...DEED_SUGGESTIONS, ...DEED_SUGGESTIONS].map((deed, i) => {
-                const pattern = patterns[i % patterns.length];
-                const parts = pattern.split('{deed}');
-                return (
-                    <div key={`${deed.namebn}-${i}`} className="bg-primary-900/40 backdrop-blur-md border border-white/5 rounded-xl px-4 py-3 shadow-glass group hover:bg-primary-900/60 transition-all duration-300">
-                        <p className="text-sm text-primary-100 leading-relaxed">
-                            {parts[0]} <Link href={deed.href} className="text-emerald-400 font-semibold hover:underline">{deed.namebn}</Link> {parts[1]}
-                        </p>
-                    </div>
-                );
-            })}
-        </div>
-    ), [patterns]);
+    const activeDeeds = useMemo(() => {
+        if (!prayerTimes) return DEED_SUGGESTIONS.filter(d => !d.time || d.time === 'any');
+
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const fajr = toMin(prayerTimes.Fajr);
+        const dhuhr = toMin(prayerTimes.Dhuhr);
+        const asr = toMin(prayerTimes.Asr);
+        const maghrib = toMin(prayerTimes.Maghrib);
+        const isha = toMin(prayerTimes.Isha);
+
+        return DEED_SUGGESTIONS.filter(deed => {
+            if (!deed.time || deed.time === 'any') return true;
+            if (deed.time === 'morning') return nowMin >= fajr && nowMin < dhuhr;
+            if (deed.time === 'evening') return nowMin >= asr && nowMin < isha;
+            if (deed.time === 'night') return nowMin >= maghrib || nowMin < fajr;
+            if (deed.time === 'tahajjud') return (nowMin >= isha + 60) || nowMin < fajr; // Isha+1hr to Fajr
+            return true;
+        });
+    }, [now, prayerTimes]);
+
+    const ActionCardList = useMemo(() => {
+        // Duplicate array so it fills the screen and animates seamlessly
+        const loopCount = activeDeeds.length < 5 ? 3 : 2;
+        const mappedDeeds = Array(loopCount).fill(activeDeeds).flat();
+
+        return (
+            <div className="space-y-3">
+                {mappedDeeds.map((deed, i) => {
+                    const pattern = patterns[i % patterns.length];
+                    const parts = pattern.split('{deed}');
+                    return (
+                        <div key={`${deed.namebn}-${i}-${Math.random()}`} className="bg-primary-900/40 backdrop-blur-md border border-white/5 rounded-xl px-4 py-3 shadow-glass group hover:bg-primary-900/60 transition-all duration-300">
+                            <p className="text-sm text-primary-100 leading-relaxed">
+                                {parts[0]} <Link href={deed.href} className="text-emerald-400 font-semibold hover:underline">{deed.namebn}</Link> {parts[1]}
+                            </p>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }, [patterns, activeDeeds]);
 
     return (
         <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">

@@ -280,10 +280,10 @@ export async function getHallOfFame(): Promise<any> {
                 SUM(CASE WHEN totalPoints >= 15000 THEN 1 ELSE 0 END) as level8,
                 COUNT(*) as totalUsers
             FROM (
-                SELECT SUM(cd.total_points) as totalPoints
-                FROM completed_deeds cd
-                WHERE DATE(cd.completed_at) >= '${monthStartStr}'
-                GROUP BY cd.user_id
+                SELECT u.id, COALESCE(SUM(cd.total_points), 0) as totalPoints
+                FROM users u
+                LEFT JOIN completed_deeds cd ON u.id = cd.user_id AND DATE(cd.completed_at) >= '${monthStartStr}'
+                GROUP BY u.id
             ) as user_scores
         `;
 
