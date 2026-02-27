@@ -128,14 +128,27 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
         alert('Verse link copied to clipboard!');
     };
 
-    const shareOnSocial = (platform: 'facebook' | 'whatsapp' | 'twitter', verseKey: string) => {
-        const url = `${window.location.origin}/${locale}/quran/${surah.id}#ayah-${verseKey}`;
-        const text = `Read Surah ${surah.name_simple}, Ayah ${verseKey} on Nuzul`;
+    const shareOnSocial = (platform: 'facebook' | 'whatsapp' | 'twitter', verse: Verse) => {
+        const url = `${window.location.origin}/${locale}/quran/${surah.id}#ayah-${verse.verse_key}`;
+
+        // Extract translation and strip HTML tags (like <sup>) used by Quran.com API
+        const translationText = verse.translations?.[0]?.text?.replace(/<[^>]*>?/gm, '') || '';
+
+        let text = `Read Surah ${surah.name_simple}, Ayah ${verse.verse_key} on Nuzul\n\n`;
+        text += `${verse.text_uthmani}\n\n`;
+        if (translationText) text += `${translationText}\n`;
 
         let shareUrl = '';
-        if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-        else if (platform === 'whatsapp') shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`;
-        else if (platform === 'twitter') shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        if (platform === 'facebook') {
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        } else if (platform === 'whatsapp') {
+            shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + '\n' + url)}`;
+        } else if (platform === 'twitter') {
+            // Twitter might hit character limits, so we truncate the translation if necessary
+            let twText = text;
+            if (twText.length > 200) twText = twText.substring(0, 197) + '...';
+            shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twText)}&url=${encodeURIComponent(url)}`;
+        }
 
         window.open(shareUrl, '_blank', 'width=600,height=400');
     };
@@ -295,21 +308,21 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                                 <div className="h-6 w-px bg-white/10 mx-1 self-center hidden sm:block"></div>
                                 {/* Social Shares */}
                                 <button
-                                    onClick={() => shareOnSocial('whatsapp', verse.verse_key)}
+                                    onClick={() => shareOnSocial('whatsapp', verse)}
                                     title="Share on WhatsApp"
                                     className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-[#25D366] hover:bg-[#25D366]/20 transition-all"
                                 >
                                     <Send className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => shareOnSocial('facebook', verse.verse_key)}
+                                    onClick={() => shareOnSocial('facebook', verse)}
                                     title="Share on Facebook"
                                     className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-[#1877F2] hover:bg-[#1877F2]/20 transition-all"
                                 >
                                     <Facebook className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => shareOnSocial('twitter', verse.verse_key)}
+                                    onClick={() => shareOnSocial('twitter', verse)}
                                     title="Share on X"
                                     className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-950/50 text-white hover:bg-white/10 transition-all"
                                 >
