@@ -18,7 +18,7 @@ export default function SurahListClient({ chapters, locale }: { chapters: Chapte
         setDisplayCount(15);
     }, [searchQuery]);
 
-    // Infinite scroll observer 
+    // Infinite scroll observer  
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
