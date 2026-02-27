@@ -32,6 +32,7 @@ export interface Verse {
     id: number;
     verse_key: string;
     text_uthmani: string;
+    text_indopak?: string;
     translations?: {
         id: number;
         resource_id: number;
@@ -42,6 +43,11 @@ export interface Verse {
     };
     transliterations?: {
         id: number;
+        resource_id: number;
+        text: string;
+    }[];
+    tafsirs?: {
+        id?: number;
         resource_id: number;
         text: string;
     }[];
@@ -98,8 +104,8 @@ export async function getChapterVerses(id: number, offset = 0, limit = 10): Prom
         // Correct pagination logic: page starts at 1 
         const page = Math.floor(offset / limit) + 1;
 
-        // Construct URL
-        const url = `${API_BASE_URL}/verses/by_chapter/${id}?language=en&words=false&translations=${translations}&page=${page}&per_page=${limit}&fields=text_uthmani`;
+        // Construct URL with tafsirs 164 (BN) and 169 (EN) to check availability
+        const url = `${API_BASE_URL}/verses/by_chapter/${id}?language=en&words=false&translations=${translations}&page=${page}&per_page=${limit}&fields=text_uthmani,text_indopak&tafsirs=164,169`;
 
         console.log(`[QuranService] Fetching verses for Surah ${id}: ${url}`);
 
@@ -120,7 +126,19 @@ export async function getChapterVerses(id: number, offset = 0, limit = 10): Prom
             return [];
         }
 
-        const verses = data.verses as Verse[];
+        let verses = data.verses as Verse[];
+
+        // Optimize payload by stripping out the heavy HTML text from tafsirs
+        verses = verses.map(v => {
+            if (v.tafsirs) {
+                // Keep only the resource_id so the UI knows it exists, save MBs of bandwidth
+                v.tafsirs = v.tafsirs.map((t: any) => ({
+                    resource_id: t.resource_id,
+                    text: ''
+                }));
+            }
+            return v;
+        });
 
         // Cache result
         await setCache(cacheKey, verses, CACHE_TTL_VERSES);
@@ -168,5 +186,41 @@ export async function getAllJuzs(): Promise<Juz[]> {
     } catch (error) {
         console.error('Error fetching Juzs:', error);
         return [];
+    }
+}
+
+// For individual tafseer fetch from `/tafsirs/:tafsirId/by_ayah` endpoint
+export interface Tafseer {
+    resource_id: number;
+    text: string;
+}
+
+export interface TafseerResponse {
+    tafsir: Tafseer;
+}
+
+/**
+ * Fetch Tafseer for a specific ayah.
+ */
+export async function getTafseer(verseKey: string, tafseerId: number = 164): Promise<TafseerResponse | null> {
+    const cacheKey = `quran:tafseer:${tafseerId}:${verseKey}`;
+    try {
+        const cached = await getCached<TafseerResponse>(cacheKey);
+        if (cached) return cached;
+
+        const url = `${API_BASE_URL}/tafsirs/${tafseerId}/by_ayah/${verseKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch tafseer: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        await setCache(cacheKey, data, CACHE_TTL_VERSES);
+
+        return data as TafseerResponse;
+    } catch (error) {
+        console.error('Error fetching tafseer:', error);
+        return null;
     }
 }

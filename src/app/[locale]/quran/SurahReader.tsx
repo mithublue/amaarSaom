@@ -4,7 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Chapter, Verse } from '@/lib/services/quranService';
 import { Link } from '@/i18n/routing';
-import { Facebook, Twitter, Send, ChevronDown, Play, Pause, Bookmark, Share2 } from 'lucide-react';
+import { Facebook, Twitter, Send, ChevronDown, Play, Pause, Bookmark, Share2, Type, BookOpen } from 'lucide-react';
+import { SURAH_NAMES_BN } from '@/lib/data/surahNamesBn';
 
 interface SurahReaderProps {
     surah: Chapter;
@@ -19,6 +20,7 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
     const [continuousFrom, setContinuousFrom] = useState<number | null>(null); // verse index
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [bookmarks, setBookmarks] = useState<string[]>([]);
+    const [scriptType, setScriptType] = useState<'indopak' | 'uthmani'>('indopak');
 
     useEffect(() => {
         const stored = localStorage.getItem('quran_bookmarks');
@@ -35,7 +37,16 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                 timestamp: Date.now()
             }));
         }
+        const savedScript = localStorage.getItem('quran_script_preference');
+        if (savedScript === 'uthmani' || savedScript === 'indopak') {
+            setScriptType(savedScript);
+        }
     }, [surah]);
+
+    const handleScriptChange = (type: 'indopak' | 'uthmani') => {
+        setScriptType(type);
+        localStorage.setItem('quran_script_preference', type);
+    };
 
     // Build audio URL for a verse
     const getAudioUrl = (verse: Verse) => {
@@ -171,8 +182,12 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                 <div className="inline-block bg-primary-900/60 backdrop-blur-sm border border-white/10 shadow-sm rounded-full px-5 py-1.5 mb-6 text-accent-300 text-sm font-medium tracking-wide">
                     {surah.revelation_place} • {surah.verses_count} Verses
                 </div>
-                <h1 className="text-5xl md:text-6xl font-heading font-bold text-white mb-3 drop-shadow-md">{surah.name_simple}</h1>
-                <p className="text-xl text-primary-200 mb-6 font-light">{surah.translated_name.name}</p>
+                <h1 className="text-5xl md:text-6xl font-heading font-bold text-white mb-3 drop-shadow-md">
+                    {locale === 'bn' && SURAH_NAMES_BN[surah.id] ? SURAH_NAMES_BN[surah.id] : surah.name_simple}
+                </h1>
+                <p className="text-xl text-primary-200 mb-6 font-light">
+                    {locale === 'bn' ? surah.name_simple : surah.translated_name.name}
+                </p>
                 <div className="font-arabic text-5xl text-accent-400 drop-shadow-sm">{surah.name_arabic}</div>
             </div>
 
@@ -188,8 +203,8 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                 </div>
             )}
 
-            {/* ── Continuous Play Toolbar ─────────────────────────────────── */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            {/* ── Continuous Play Toolbar & Script Settings ─────────────────────────────────── */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 bg-primary-900/40 p-4 border border-white/10 rounded-2xl">
                 <div className="flex flex-wrap items-center gap-4">
                     {continuousFrom !== null ? (
                         <button
@@ -214,6 +229,21 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                             <span className="text-sm font-medium">{t('playingContinuously')}</span>
                         </div>
                     )}
+                </div>
+
+                <div className="flex items-center gap-3 bg-primary-950/50 rounded-xl p-1.5 border border-white/5">
+                    <button
+                        onClick={() => handleScriptChange('indopak')}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${scriptType === 'indopak' ? 'bg-accent-600 text-white shadow-md' : 'text-primary-300 hover:text-white hover:bg-white/5'}`}
+                    >
+                        Indo-Pak
+                    </button>
+                    <button
+                        onClick={() => handleScriptChange('uthmani')}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${scriptType === 'uthmani' ? 'bg-accent-600 text-white shadow-md' : 'text-primary-300 hover:text-white hover:bg-white/5'}`}
+                    >
+                        Uthmani
+                    </button>
                 </div>
             </div>
 
@@ -254,6 +284,19 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                                     🔖
                                 </button>
                                 <div className="h-6 w-px bg-white/10 mx-1 self-center"></div>
+                                {/* Tafseer Drawer Link Conditionally Rendered */}
+                                {verse.tafsirs && verse.tafsirs.length > 0 && (
+                                    <>
+                                        <Link
+                                            href={`/quran/${surah.id}/tafseer/${verse.verse_key.split(':')[1]}`}
+                                            title="Read Tafseer"
+                                            className="px-3 h-9 flex items-center gap-1.5 justify-center rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 hover:text-emerald-200 transition-all font-bold text-xs"
+                                        >
+                                            <BookOpen className="w-3.5 h-3.5" /> Tafseer
+                                        </Link>
+                                        <div className="h-6 w-px bg-white/10 mx-1 self-center hidden sm:block"></div>
+                                    </>
+                                )}
                                 {/* Social Shares */}
                                 <button
                                     onClick={() => shareOnSocial('whatsapp', verse.verse_key)}
@@ -288,7 +331,7 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                         {/* Arabic Text & Transliteration */}
                         <div className={`${locale === 'ar' ? 'text-right' : 'text-right'} mb-8`}>
                             <p className="font-arabic text-3xl md:text-4xl text-white leading-[2.2] md:leading-[2.5] drop-shadow-sm mb-4">
-                                {verse.text_uthmani}
+                                {scriptType === 'indopak' && verse.text_indopak ? verse.text_indopak : verse.text_uthmani}
                             </p>
                             {/* Transliteration - English phonetics */}
                             {verse.translations?.find(t => t.resource_id === 57) && (

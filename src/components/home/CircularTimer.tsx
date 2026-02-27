@@ -121,7 +121,7 @@ export default function CircularTimer({
                     </span>
 
                     {/* Value - Time Text */}
-                    <div className={`font-mono font-black text-white leading-none ${isLarge ? 'text-5xl' : 'text-base'} drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]`}>
+                    <div className={`font-mono font-black text-white leading-none ${isLarge ? 'text-4xl md:text-5xl' : 'text-[12px] tracking-tighter'} drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]`}>
                         {value}
                     </div>
 

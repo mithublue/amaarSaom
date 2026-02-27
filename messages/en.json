@@ -140,8 +140,8 @@
         "sehriStarts": "Sehri Starts",
         "timeRemaining": "Time Remaining",
         "endsIn": "Ends In",
-        "todaysDeeds": "Today's Deeds",
-        "addDeed": "✨ Add Deed",
+        "todaysDeeds": "Your Deeds Today",
+        "addDeed": "✨ Add More Deeds",
         "loading": "Loading...",
         "motivation": {
             "default1": "Many are doing deeds today! Start with <deed>morning dhikr</deed>.",

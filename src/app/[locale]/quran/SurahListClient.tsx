@@ -5,6 +5,7 @@ import { Link } from '@/i18n/routing';
 import { Chapter } from '@/lib/services/quranService';
 import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { SURAH_NAMES_BN } from '@/lib/data/surahNamesBn';
 
 export default function SurahListClient({ chapters, locale }: { chapters: Chapter[], locale: string }) {
     const t = useTranslations('Quran');
@@ -35,11 +36,13 @@ export default function SurahListClient({ chapters, locale }: { chapters: Chapte
         return () => observer.disconnect();
     }, [chapters.length]);
 
-    const filteredChapters = chapters.filter(chapter =>
-        chapter.name_simple.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        chapter.translated_name.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        String(chapter.id).includes(searchQuery)
-    );
+    const filteredChapters = chapters.filter(chapter => {
+        const bdName = SURAH_NAMES_BN[chapter.id] || '';
+        return chapter.name_simple.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            chapter.translated_name.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            bdName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            String(chapter.id).includes(searchQuery);
+    });
 
     const visibleChapters = filteredChapters.slice(0, displayCount);
 
@@ -76,8 +79,12 @@ export default function SurahListClient({ chapters, locale }: { chapters: Chapte
                         <div className="flex-1">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h4 className="text-white font-bold group-hover:text-accent-300 transition">{chapter.name_simple}</h4>
-                                    <p className="text-primary-400 text-xs">{chapter.translated_name.name}</p>
+                                    <h4 className="text-white font-bold group-hover:text-accent-300 transition">
+                                        {locale === 'bn' && SURAH_NAMES_BN[chapter.id] ? SURAH_NAMES_BN[chapter.id] : chapter.name_simple}
+                                    </h4>
+                                    <p className="text-primary-400 text-xs">
+                                        {locale === 'bn' ? chapter.name_simple : chapter.translated_name.name}
+                                    </p>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-primary-200 font-arabic text-xl block leading-none mb-1 group-hover:text-white transition">{chapter.name_arabic}</span>

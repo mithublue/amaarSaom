@@ -90,8 +90,16 @@ body::before {
     animation: scroll-up 40s linear infinite;
 }
 
+.animate-scroll-up-slow {
+    animation: scroll-up 80s linear infinite;
+}
+
 .animate-scroll-left {
     animation: scroll-left 30s linear infinite;
+}
+
+.animate-scroll-left-slow {
+    animation: scroll-left 180s linear infinite;
 }
 
 .pause-on-hover:hover {

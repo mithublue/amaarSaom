@@ -107,7 +107,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     const [prayerInfo, setPrayerInfo] = useState({ name: '', countdown: '', hPercent: 0, mPercent: 0 });
     const [iftarSehri, setIftarSehri] = useState({ label: '', countdown: '', hPercent: 0, mPercent: 0 });
     const [todayDeeds, setTodayDeeds] = useState(0);
-    const [nearbyUser, setNearbyUser] = useState<NearbyUser | null>(null);
+    const [topUsers, setTopUsers] = useState<NearbyUser[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -133,16 +133,10 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     useEffect(() => {
         (async () => {
             try {
-                const r = await fetch('/api/leaderboard?scope=country&period=daily&limit=10');
+                const r = await fetch('/api/leaderboard?scope=country&period=overall&limit=3');
                 const d = await r.json();
-                if (d.success && d.data?.leaderboard?.length > 0) {
-                    const me = d.data.currentUser;
-                    if (me && me.rank > 1) {
-                        const above = d.data.leaderboard.find((u: any) => u.rank < me.rank);
-                        setNearbyUser(above || d.data.leaderboard[0]);
-                    } else {
-                        setNearbyUser(d.data.leaderboard[1] || d.data.leaderboard[0]);
-                    }
+                if (d.success && d.data?.entries?.length > 0) {
+                    setTopUsers(d.data.entries);
                 }
             } catch { }
         })();
@@ -241,7 +235,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 {/* Left Column: Action Cards Vertical Loop (33%) */}
                 <div className="col-span-1 h-[520px] relative overflow-hidden rounded-3xl border border-white/5 bg-primary-900/10 shadow-inner">
                     <div className="absolute inset-0 z-10 pointer-events-none bg-linear-to-b from-primary-950/80 via-transparent to-primary-950/80" />
-                    <div className="animate-scroll-up pause-on-hover px-4 py-8">
+                    <div className="animate-scroll-up-slow pause-on-hover px-4 py-8">
                         {ActionCardList}
                     </div>
                 </div>
@@ -295,19 +289,25 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     </div>
 
                     <Link href="/leaderboard" className="relative overflow-hidden bg-primary-900/40 backdrop-blur-xl border border-white/10 rounded-[35px] p-8 shadow-glass flex flex-col items-center justify-center group hover:bg-primary-900/50 transition-all duration-500 hover:scale-[1.02]">
-                        <span className="text-sm font-bold text-yellow-300 uppercase tracking-widest mb-6 opacity-80 flex items-center gap-2">
-                            <span className="text-xl">🏆</span> Leaderboard Box
+                        <span className="text-sm font-bold text-yellow-300 uppercase tracking-widest mb-4 opacity-80 flex items-center gap-2">
+                            <span className="text-xl">🏆</span> লিডারবোর্ড
                         </span>
-                        {nearbyUser ? (
-                            <div className="text-center">
-                                <p className="text-4xl font-black text-white mb-2">Rank #{nearbyUser.rank}</p>
-                                <p className="text-lg text-yellow-400 font-bold">{nearbyUser.name}</p>
-                                <p className="text-sm text-primary-300 mt-2">{nearbyUser.totalPoints} pts</p>
+                        {topUsers.length > 0 ? (
+                            <div className="w-full space-y-2 mb-4">
+                                {topUsers.map((u: any, i: number) => (
+                                    <div key={i} className="flex items-center justify-between text-white bg-white/5 rounded-xl px-4 py-2">
+                                        <div className="flex items-center gap-3">
+                                            <span className={`font-black ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>#{u.rank}</span>
+                                            <span className="font-bold text-sm truncate max-w-[100px]">{u.name}</span>
+                                        </div>
+                                        <span className="text-xs text-primary-300">{u.totalPoints} pts</span>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
-                            <p className="text-4xl font-black text-white">View Rankings</p>
+                            <p className="text-xl font-black text-white">View Rankings</p>
                         )}
-                        <span className="mt-8 text-yellow-500/80 group-hover:text-yellow-400 text-xs font-bold uppercase tracking-tighter transition-all">See full rankings →</span>
+                        <p className="text-xs text-primary-200 text-center leading-tight mt-2">আপনিও আমল করে লিডারবোর্ডে এগিয়ে যান!</p>
                     </Link>
                 </div>
             </div>
@@ -319,7 +319,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 <div className="grid grid-cols-2 gap-3">
                     <Link href="/prayer-times" className="p-4 bg-primary-900/60 backdrop-blur-lg border border-white/10 rounded-3xl flex items-center justify-center">
                         <CircularTimer
-                            value={loading ? '--:--' : prayerInfo.countdown.substring(3)}
+                            value={loading ? '--:--:--' : prayerInfo.countdown}
                             hourPercent={prayerInfo.hPercent}
                             minutePercent={prayerInfo.mPercent}
                             label={prayerInfo.name?.split(' ')[0] || t('nextPrayer')}
@@ -329,7 +329,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     </Link>
                     <Link href="/iftar-sehri" className="p-4 bg-primary-900/60 backdrop-blur-lg border border-white/10 rounded-3xl flex items-center justify-center">
                         <CircularTimer
-                            value={loading ? '--:--' : iftarSehri.countdown.substring(3)}
+                            value={loading ? '--:--:--' : iftarSehri.countdown}
                             hourPercent={iftarSehri.hPercent}
                             minutePercent={iftarSehri.mPercent}
                             label={iftarSehri.label?.split(' ')[0] || t('iftar')}
@@ -340,9 +340,9 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 </div>
 
                 {/* Row 2: Inspiration Slider (Slower Horizontal) */}
-                <div className="relative h-28 overflow-hidden rounded-2xl bg-primary-900/20 border border-white/5">
+                <div className="relative h-28 overflow-hidden rounded-2xl bg-primary-900/20 border border-white/5 group">
                     <div className="absolute inset-0 z-10 pointer-events-none bg-linear-to-r from-primary-950/60 via-transparent to-primary-950/60" />
-                    <div className="flex items-center gap-4 py-6 px-4 w-max whitespace-nowrap animate-scroll-left" style={{ animationDuration: '120s' }}>
+                    <div className="flex items-center gap-4 py-6 px-4 w-max whitespace-nowrap animate-scroll-left-slow group-hover:[animation-play-state:paused]">
                         {[...DEED_SUGGESTIONS, ...DEED_SUGGESTIONS].map((deed, i) => {
                             const pattern = patterns[i % patterns.length];
                             const parts = pattern.split('{deed}');
@@ -359,18 +359,24 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
 
                 {/* Row 3: Leaderboard */}
                 <Link href="/leaderboard" className="block p-5 bg-primary-900/40 border border-white/10 rounded-3xl shadow-glass">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <span className="text-[10px] font-bold text-yellow-300 uppercase tracking-widest opacity-80">Leaderboard Box</span>
-                            {nearbyUser ? (
-                                <>
-                                    <p className="text-2xl font-black text-white mt-1">Rank #{nearbyUser.rank}</p>
-                                    <p className="text-xs text-primary-300">{nearbyUser.name} • {nearbyUser.totalPoints} pts</p>
-                                </>
-                            ) : <p className="text-xl font-bold text-white mt-1">View Ranking</p>}
-                        </div>
-                        <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-xl">🏆</div>
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-bold text-yellow-300 uppercase tracking-widest opacity-80">লিডারবোর্ড</span>
+                        <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-sm">🏆</div>
                     </div>
+                    {topUsers.length > 0 ? (
+                        <div className="w-full space-y-1.5 mb-3">
+                            {topUsers.map((u: any, i: number) => (
+                                <div key={i} className="flex items-center justify-between text-white bg-white/5 rounded-lg px-3 py-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`font-black text-xs ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>#{u.rank}</span>
+                                        <span className="font-bold text-xs truncate max-w-[120px]">{u.name}</span>
+                                    </div>
+                                    <span className="text-[10px] text-primary-300">{u.totalPoints} pts</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : <p className="text-sm font-bold text-white mb-3">View Ranking</p>}
+                    <p className="text-[10px] text-primary-200 text-center leading-tight">আপনিও আমল করে লিডারবোর্ডে এগিয়ে যান!</p>
                 </Link>
 
                 {/* Row 4: Today's Deeds */}

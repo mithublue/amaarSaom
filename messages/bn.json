@@ -136,8 +136,8 @@
         "sehriStarts": "সেহরী শুরু",
         "timeRemaining": "বাকি সময়",
         "endsIn": "শেষ হতে বাকি",
-        "todaysDeeds": "আজকের আমল",
-        "addDeed": "✨ আমল যোগ করুন",
+        "todaysDeeds": "আপনার আজকের আমল",
+        "addDeed": "✨ আরো আমল যোগ করুন",
         "loading": "লোড হচ্ছে...",
         "motivation": {
             "default1": "অনেকেই আজ আমল করছেন! আপনিও <deed>সকালের যিকির</deed> দিয়ে শুরু করুন।",
