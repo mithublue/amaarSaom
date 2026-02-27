@@ -1,7 +1,8 @@
 import { getTafseer, getChapterDetails } from '@/lib/services/quranService';
 import { Link } from '@/i18n/routing';
-import { X, Share2, AlertCircle } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { SURAH_NAMES_BN } from '@/lib/data/surahNamesBn';
+import TafseerShareButtons from './TafseerShareButtons';
 
 interface PageProps {
     params: Promise<{ locale: string; surahId: string; ayahId: string }>;
@@ -39,7 +40,13 @@ export default async function TafseerPage({ params }: PageProps) {
                             {locale === 'bn' ? 'তাফসীর আহসানুল বয়ান' : 'Tafsir Ibn Kathir'}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center">
+                        <TafseerShareButtons
+                            surahId={surahId}
+                            ayahId={ayahId}
+                            surahName={surahName}
+                            tafseerText={tafseer?.text || ''}
+                        />
                         <Link
                             href={`/quran/${surahId}#ayah-${verseKey}`}
                             className="p-2 rounded-full hover:bg-white/10 text-primary-200 hover:text-white transition"
