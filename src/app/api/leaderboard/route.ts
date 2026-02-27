@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeaderboard, getDistrictLeaderboard } from '@/lib/services/leaderboardService';
+import { getLeaderboard, getDistrictLeaderboard, getHallOfFame } from '@/lib/services/leaderboardService';
 import { auth } from '@/lib/auth/config';
 import { prisma } from '@/lib/db/prisma';
 
@@ -40,6 +40,32 @@ export async function GET(request: NextRequest) {
                     entries: allDistricts.slice(0, 50),
                     userRank: myDistrictRank,
                     totalUsers: allDistricts.length
+                }
+            });
+        }
+
+        // Special case for Hall of Fame
+        if (scope === 'hall_of_fame') {
+            const hallOfFame = await getHallOfFame();
+
+            // Also get current user's level
+            let userLevel = null;
+            if (session?.user?.id) {
+                const { getUserTotalPoints } = await import('@/lib/services/deedsService');
+                const userPoints = await getUserTotalPoints(parseInt(session.user.id), 'month');
+
+                const { calculateUserLevel } = await import('@/lib/gamification');
+                userLevel = calculateUserLevel(userPoints);
+            }
+
+            return NextResponse.json({
+                success: true,
+                data: {
+                    distribution: hallOfFame,
+                    userLevel: userLevel ? {
+                        level: userLevel.level,
+                        nameKey: userLevel.nameKey
+                    } : null
                 }
             });
         }

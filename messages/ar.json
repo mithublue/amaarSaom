@@ -313,5 +313,37 @@
         "familyLoan": "القرض العائلي / الشخصي",
         "outstandingSalary": "الرواتب المتأخرة للموظفين",
         "outstandingRent": "إيجار المحل أو المدفوعات المتأخرة"
+    },
+    "Gamification": {
+        "levels": {
+            "1": "النية",
+            "2": "المحب",
+            "3": "السالك",
+            "4": "الجاد",
+            "5": "المستقيم",
+            "6": "المفوض",
+            "7": "المحسن",
+            "8": "المخلص"
+        },
+        "levelDesc": {
+            "1": "Intention",
+            "2": "The Devoted",
+            "3": "The Traveler",
+            "4": "The Purposeful",
+            "5": "The Steadfast",
+            "6": "The Surrendered",
+            "7": "The Excellent",
+            "8": "The Sincere"
+        },
+        "trophyAward": "الحمد لله! لقد أنهيت شهر {month} في المستوى {level}: {levelName}. إليك كأس {month} الخاص بك!",
+        "hallOfFame": "قاعة المشاهير",
+        "communityProgress": "تقدم المجتمع",
+        "earnedThis": "أنت و {count} آخرون كسبوا هذا",
+        "totalAkhirahSavings": "إجمالي مدخرات الآخرة",
+        "trophyRoom": "غرفة الكؤوس",
+        "currentLevel": "المستوى الحالي",
+        "nextLevel": "المستوى التالي: {levelName}",
+        "pointsToNext": "{points} نقطة للمستوى التالي",
+        "maxLevelReached": "تم الوصول إلى أعلى مستوى!"
     }
 }

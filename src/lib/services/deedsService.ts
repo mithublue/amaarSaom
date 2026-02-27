@@ -172,6 +172,16 @@ export async function completeDeed(params: {
         },
     });
 
+    // Increment lifetime points for the user
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            lifetimePoints: {
+                increment: pointCalc.totalPoints
+            }
+        }
+    });
+
     // Update leaderboard cache (async, don't wait)
     updateLeaderboardCache(userId, date).catch(console.error);
 
@@ -234,10 +244,20 @@ export async function deleteCompletedDeed(id: number, userId: number): Promise<b
     try {
         const deed = await prisma.completedDeed.findUnique({
             where: { id },
-            select: { userId: true, date: true }
+            select: { userId: true, date: true, totalPoints: true }
         });
 
         if (!deed || deed.userId !== userId) return false;
+
+        // Decrement lifetime points for safety
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                lifetimePoints: {
+                    decrement: deed.totalPoints
+                }
+            }
+        });
 
         await prisma.completedDeed.delete({
             where: { id }
@@ -335,6 +355,7 @@ async function updateLeaderboardCache(userId: number, date: Date): Promise<void>
     // Calculate points for different periods
     const dailyPoints = await getUserTotalPoints(userId, 'today');
     const weeklyPoints = await getUserTotalPoints(userId, 'week');
+    const monthlyPoints = await getUserTotalPoints(userId, 'month');
     const overallPoints = await getUserTotalPoints(userId, 'all');
 
     // Update caches for different scopes
@@ -390,6 +411,30 @@ async function updateLeaderboardCache(userId: number, date: Date): Promise<void>
                 scopeType: scope.type,
                 scopeId: scope.id || 0,
                 totalPoints: weeklyPoints,
+                date: dateOnly,
+            },
+        });
+
+        // Monthly
+        await prisma.leaderboardCache.upsert({
+            where: {
+                userId_period_scopeType_scopeId_date: {
+                    userId: user.id,
+                    period: 'monthly',
+                    scopeType: scope.type,
+                    scopeId: scope.id || 0,
+                    date: dateOnly,
+                },
+            },
+            update: {
+                totalPoints: monthlyPoints,
+            },
+            create: {
+                userId: user.id,
+                period: 'monthly',
+                scopeType: scope.type,
+                scopeId: scope.id || 0,
+                totalPoints: monthlyPoints,
                 date: dateOnly,
             },
         });

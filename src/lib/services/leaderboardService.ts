@@ -257,3 +257,56 @@ export async function getDistrictLeaderboard(limit: number = 20): Promise<any[]>
         return [];
     }
 }
+
+/**
+ * Get Hall of Fame (Level Distribution for current month)
+ */
+export async function getHallOfFame(): Promise<any> {
+    try {
+        const now = new Date();
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const monthStart = startOfMonth(now);
+        const monthStartStr = `${monthStart.getFullYear()}-${pad(monthStart.getMonth() + 1)}-${pad(monthStart.getDate())}`;
+
+        const query = `
+            SELECT 
+                SUM(CASE WHEN totalPoints < 500 THEN 1 ELSE 0 END) as level1,
+                SUM(CASE WHEN totalPoints >= 500 AND totalPoints < 1500 THEN 1 ELSE 0 END) as level2,
+                SUM(CASE WHEN totalPoints >= 1500 AND totalPoints < 3000 THEN 1 ELSE 0 END) as level3,
+                SUM(CASE WHEN totalPoints >= 3000 AND totalPoints < 5000 THEN 1 ELSE 0 END) as level4,
+                SUM(CASE WHEN totalPoints >= 5000 AND totalPoints < 7500 THEN 1 ELSE 0 END) as level5,
+                SUM(CASE WHEN totalPoints >= 7500 AND totalPoints < 10000 THEN 1 ELSE 0 END) as level6,
+                SUM(CASE WHEN totalPoints >= 10000 AND totalPoints < 15000 THEN 1 ELSE 0 END) as level7,
+                SUM(CASE WHEN totalPoints >= 15000 THEN 1 ELSE 0 END) as level8,
+                COUNT(*) as totalUsers
+            FROM (
+                SELECT SUM(cd.total_points) as totalPoints
+                FROM completed_deeds cd
+                WHERE DATE(cd.completed_at) >= '${monthStartStr}'
+                GROUP BY cd.user_id
+            ) as user_scores
+        `;
+
+        const result = await prisma.$queryRawUnsafe<any[]>(query);
+
+        if (result && result.length > 0) {
+            const row = result[0];
+            return {
+                1: Number(row.level1 || 0),
+                2: Number(row.level2 || 0),
+                3: Number(row.level3 || 0),
+                4: Number(row.level4 || 0),
+                5: Number(row.level5 || 0),
+                6: Number(row.level6 || 0),
+                7: Number(row.level7 || 0),
+                8: Number(row.level8 || 0),
+                totalUsers: Number(row.totalUsers || 0)
+            };
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching hall of fame:', error);
+        return null;
+    }
+}

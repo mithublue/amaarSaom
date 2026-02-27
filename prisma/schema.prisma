@@ -248,6 +248,7 @@ model User {
   passwordHash           String?                  @map("password_hash") @db.Text
   referralCode           String?                  @unique @map("referral_code") @db.VarChar(10)
   referredById           Int?                     @map("referred_by_id")
+  lifetimePoints         Int                      @default(0) @map("lifetime_points")
   accounts               Account[]
   completedDeeds         CompletedDeed[]
   leaderboardCache       LeaderboardCache[]
@@ -255,6 +256,7 @@ model User {
   prayerSettings         PrayerSettings?
   pushSubscriptions      PushSubscription[]
   userGoals              UserGoal[]
+  trophies               UserTrophy[]
   referredBy             User?                    @relation("UserToReferral", fields: [referredById], references: [id])
   referrals              User[]                   @relation("UserToReferral")
   referralRewardsGiven   ReferralReward[]         @relation("ReferralGiver")
@@ -310,4 +312,18 @@ model ReferralReward {
   @@index([referredUserId])
   @@index([type])
   @@map("referral_rewards")
+}
+
+model UserTrophy {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  level     Int
+  monthName String   @map("month_name") @db.VarChar(100)
+  monthDate DateTime @map("month_date") @db.Date
+  points    Int
+  awardedAt DateTime @default(now()) @map("awarded_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_trophies")
 }

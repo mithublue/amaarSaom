@@ -346,5 +346,37 @@
         "activeToday": "আজ সক্রিয়",
         "offline": "অফলাইন",
         "backToDashboard": "ড্যাশবোর্ডে ফিরুন"
+    },
+    "Gamification": {
+        "levels": {
+            "1": "নিয়ত",
+            "2": "অনুরাগী",
+            "3": "পথিক",
+            "4": "উদ্যমী",
+            "5": "অবিচল",
+            "6": "সমর্পিত",
+            "7": "কল্যাণকামী",
+            "8": "বিশুদ্ধচিত্ত (মুখলিস)"
+        },
+        "levelDesc": {
+            "1": "Intention",
+            "2": "The Devoted",
+            "3": "The Traveler",
+            "4": "The Purposeful",
+            "5": "The Steadfast",
+            "6": "The Surrendered",
+            "7": "The Excellent",
+            "8": "The Sincere"
+        },
+        "trophyAward": "আলহামদুলিল্লাহ! আপনি লেভেল {level}: '{levelName}'-এ থেকে {month} মাসটি সম্পন্ন করেছেন। আপনার জন্য {month} ট্রফি!",
+        "hallOfFame": "হল অফ ফেম",
+        "communityProgress": "কমিউনিটির অগ্রগতি",
+        "earnedThis": "আপনি সহ আরও {count} জন এটি অর্জন করেছেন",
+        "totalAkhirahSavings": "সর্বমোট আখিরাত সঞ্চয় (পয়েন্ট)",
+        "trophyRoom": "ট্রফি রুম",
+        "currentLevel": "বর্তমান লেভেল",
+        "nextLevel": "পরবর্তী লেভেল: {levelName}",
+        "pointsToNext": "পরবর্তী লেভেলের জন্য আর {points} পয়েন্ট প্রয়োজন",
+        "maxLevelReached": "আপনি সর্বোচ্চ লেভেলে পৌঁছেছেন!"
     }
 }

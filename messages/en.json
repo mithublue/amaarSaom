@@ -345,5 +345,37 @@
         "activeToday": "Active Today",
         "offline": "Offline",
         "backToDashboard": "Back to Dashboard"
+    },
+    "Gamification": {
+        "levels": {
+            "1": "Niyyah",
+            "2": "Muhib",
+            "3": "Salik",
+            "4": "Jaad",
+            "5": "Mustaqim",
+            "6": "Mufawwid",
+            "7": "Muhsin",
+            "8": "Mukhlis"
+        },
+        "levelDesc": {
+            "1": "Intention",
+            "2": "The Devoted",
+            "3": "The Traveler",
+            "4": "The Purposeful",
+            "5": "The Steadfast",
+            "6": "The Surrendered",
+            "7": "The Excellent",
+            "8": "The Sincere"
+        },
+        "trophyAward": "Alhamdulillah! You finished the month of {month} at Level {level}: {levelName}. Here is your {month} Trophy!",
+        "hallOfFame": "Hall of Fame",
+        "communityProgress": "Community Progress",
+        "earnedThis": "You & {count} others earned this",
+        "totalAkhirahSavings": "Total Akhirah Savings",
+        "trophyRoom": "Trophy Room",
+        "currentLevel": "Current Level",
+        "nextLevel": "Next Level: {levelName}",
+        "pointsToNext": "{points} pts to next level",
+        "maxLevelReached": "Max Level Reached!"
     }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/config';
 import { prisma } from '@/lib/db/prisma';
 import { reportErrorToSlack } from '@/lib/slack';
+import { getUserTotalPoints } from '@/lib/services/deedsService';
 
 /**
  * GET /api/user/profile
@@ -25,6 +26,9 @@ export async function GET() {
                 district: true,
                 division: true,
                 country: true,
+                trophies: {
+                    orderBy: { monthDate: 'desc' }
+                }
             },
         });
 
@@ -35,10 +39,13 @@ export async function GET() {
             );
         }
 
+        const seasonPoints = await getUserTotalPoints(user.id, 'month');
+
         return NextResponse.json({
             success: true,
             data: {
                 ...user,
+                seasonPoints,
                 anonymousName: `Servant of Allah ${user.id.toString().padStart(4, '0')}`
             },
         });
