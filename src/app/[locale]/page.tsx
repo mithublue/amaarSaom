@@ -19,7 +19,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         { key: 'hadith', href: '/hadith', icon: '📜', color: 'bg-cyan-600' },
         { key: 'duas', href: '/duas', icon: '🤲', color: 'bg-sky-600' },
         { key: 'leaderboard', href: '/leaderboard', icon: '🏆', color: 'bg-yellow-600' },
-        { key: 'zakat', href: '/zakat', icon: '💰', color: 'bg-green-600' },
+        { key: 'zakat', href: 'https://assunnahfoundation.org/zakat-calculator', icon: '💰', color: 'bg-green-600' },
     ];
 
     const firstName = session?.user?.name?.split(' ')[0];
@@ -70,23 +70,31 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <section className="py-12 px-4 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {features.map((feature, idx) => (
-                            <Link
-                                key={feature.key}
-                                href={feature.href}
-                                className="group bg-primary-900/40 backdrop-blur-md border border-white/5 hover:border-accent-500/30 rounded-2xl p-6 transition-all duration-300 hover:bg-primary-900/60 hover:-translate-y-1 shadow-glass hover:shadow-glow"
-                            >
-                                <div className={`w-12 h-12 rounded-xl ${feature.color} bg-opacity-20 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                                    {feature.icon}
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-accent-400 transition-colors">
-                                    {t(`features.${feature.key}.title`)}
-                                </h3>
-                                <p className="text-primary-300 text-sm leading-relaxed">
-                                    {t(`features.${feature.key}.desc`)}
-                                </p>
-                            </Link>
-                        ))}
+                        {features.map((feature, idx) => {
+                            const isExternal = feature.href.startsWith('http');
+                            const Comp = isExternal ? 'a' : Link;
+                            const props = isExternal
+                                ? { href: feature.href, target: "_blank", rel: "noopener noreferrer" } as any
+                                : { href: feature.href };
+
+                            return (
+                                <Comp
+                                    key={feature.key}
+                                    {...props}
+                                    className="group bg-primary-900/40 backdrop-blur-md border border-white/5 hover:border-accent-500/30 rounded-2xl p-6 transition-all duration-300 hover:bg-primary-900/60 hover:-translate-y-1 shadow-glass hover:shadow-glow"
+                                >
+                                    <div className={`w-12 h-12 rounded-xl ${feature.color} bg-opacity-20 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
+                                        {feature.icon}
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-accent-400 transition-colors">
+                                        {t(`features.${feature.key}.title`)}
+                                    </h3>
+                                    <p className="text-primary-300 text-sm leading-relaxed">
+                                        {t(`features.${feature.key}.desc`)}
+                                    </p>
+                                </Comp>
+                            );
+                        })}
                     </div>
                 </div>
             </section>

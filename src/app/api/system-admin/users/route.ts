@@ -43,3 +43,34 @@ export async function GET() {
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: Request) {
+    const session = await requireAdmin();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    try {
+        const { searchParams } = new URL(request.url);
+        const idParam = searchParams.get('id');
+        if (!idParam) {
+            return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+        }
+
+        const userId = parseInt(idParam, 10);
+
+        // Prevent deleting oneself
+        if (session.user?.id && userId === parseInt(session.user.id)) {
+            return NextResponse.json({ error: 'Cannot delete your own admin account' }, { status: 400 });
+        }
+
+        await prisma.user.delete({
+            where: { id: userId }
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Admin user delete error:', error);
+        return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    }
+}

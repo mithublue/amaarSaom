@@ -120,6 +120,24 @@ export default function AdminDashboard() {
         setTimeout(() => setSaveMsg(''), 3000);
     }
 
+    async function deleteUser(id: number, name: string) {
+        if (!confirm(`Are you sure you want to completely remove user: ${name}? This action cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`/api/system-admin/users?id=${id}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (data.success) {
+                setUsers(users.filter((u) => u.id !== id));
+            } else {
+                alert('Failed to delete user: ' + (data.error || 'Unknown error'));
+            }
+        } catch {
+            alert('Network error while trying to delete user.');
+        }
+    }
+
     async function saveCustomNotification() {
         setNotifSaving(true);
         setNotifMsg('');
@@ -316,6 +334,9 @@ export default function AdminDashboard() {
                                             <th className="text-center px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">
                                                 Deeds
                                             </th>
+                                            <th className="text-right px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                                Actions
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
@@ -382,11 +403,20 @@ export default function AdminDashboard() {
                                                         {user.totalDeeds}
                                                     </span>
                                                 </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => deleteUser(user.id, user.name)}
+                                                        className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                                        title="Remove User"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))}
                                         {filteredUsers.length === 0 && (
                                             <tr>
-                                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                                                     No users found.
                                                 </td>
                                             </tr>

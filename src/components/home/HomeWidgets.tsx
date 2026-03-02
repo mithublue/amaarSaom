@@ -17,7 +17,7 @@ interface PrayerTimes {
 
 interface NearbyUser {
     rank: number;
-    name: string;
+    userName: string;
     totalPoints: number;
 }
 
@@ -296,9 +296,11 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                             <div className="w-full space-y-2 mb-4">
                                 {topUsers.map((u: any, i: number) => (
                                     <div key={i} className="flex items-center justify-between text-white bg-white/5 rounded-xl px-4 py-2">
-                                        <div className="flex items-center gap-3">
-                                            <span className={`font-black ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>#{u.rank}</span>
-                                            <span className="font-bold text-sm truncate max-w-[100px]">{u.name}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`font-black text-lg drop-shadow-md ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>
+                                                {i === 0 ? '🏆' : i === 1 ? '🥈' : '🥉'}
+                                            </span>
+                                            <span className="font-bold text-sm truncate max-w-[100px]">{u.userName}</span>
                                         </div>
                                         <span className="text-xs text-primary-300">{u.totalPoints} pts</span>
                                     </div>
@@ -368,8 +370,10 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                             {topUsers.map((u: any, i: number) => (
                                 <div key={i} className="flex items-center justify-between text-white bg-white/5 rounded-lg px-3 py-1.5">
                                     <div className="flex items-center gap-2">
-                                        <span className={`font-black text-xs ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>#{u.rank}</span>
-                                        <span className="font-bold text-xs truncate max-w-[120px]">{u.name}</span>
+                                        <span className={`font-black text-sm drop-shadow-md ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>
+                                            {i === 0 ? '🏆' : i === 1 ? '🥈' : '🥉'}
+                                        </span>
+                                        <span className="font-bold text-xs truncate max-w-[120px]">{u.userName}</span>
                                     </div>
                                     <span className="text-[10px] text-primary-300">{u.totalPoints} pts</span>
                                 </div>

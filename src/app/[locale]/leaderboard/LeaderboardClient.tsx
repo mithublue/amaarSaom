@@ -35,7 +35,7 @@ export default function LeaderboardClient() {
     const gT = useTranslations('Gamification');
     const [data, setData] = useState<LeaderboardData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [period, setPeriod] = useState<'daily' | 'weekly' | 'overall'>('weekly');
+    const [period, setPeriod] = useState<'daily' | 'weekly' | 'overall'>('overall');
     const [scope, setScope] = useState<'global' | 'district' | 'division' | 'district_ranking' | 'hall_of_fame'>('global');
 
     useEffect(() => {

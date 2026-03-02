@@ -269,11 +269,11 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
                         className={`bg-primary-900/40 backdrop-blur-md rounded-app-lg border ${playingVerse === verse.id ? 'border-accent-500 ring-1 ring-accent-500/50 shadow-gold-glow' : 'border-white/5 hover:border-white/10 shadow-glass'} p-6 md:p-8 transition-all duration-300`}
                     >
                         {/* Actions Toolbar */}
-                        <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/5">
+                        <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b border-white/5">
                             <span className="bg-primary-950/50 text-accent-400 px-3 py-1.5 rounded-lg text-sm font-mono border border-white/5 tracking-wider">
                                 {verse.verse_key}
                             </span>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 {/* Single verse play */}
                                 <button
                                     onClick={() => playAudio(verse)}

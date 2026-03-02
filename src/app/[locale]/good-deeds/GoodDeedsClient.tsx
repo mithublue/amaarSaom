@@ -313,10 +313,10 @@ export default function GoodDeedsClient() {
                                         {deed.tier}
                                     </div>
                                     <div className="text-accent-400 font-bold flex items-center gap-1 bg-accent-500/10 px-2 py-1 rounded-lg border border-accent-500/20">
-                                        <Sparkles size={14} /> +{deed.points}
+                                        +{deed.points}
                                     </div>
                                 </div>
-                                <h3 className="text-white font-bold text-xl mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-accent-300 transition-colors">
+                                <h3 className="text-white font-bold text-xl mb-2 group-hover:text-accent-300 transition-colors">
                                     {deed.name}
                                 </h3>
                                 {deed.description && (
@@ -345,7 +345,7 @@ export default function GoodDeedsClient() {
             </div>
 
             {/* --- Side Controls Area --- */}
-            <div className="fixed right-6 bottom-10 flex flex-col gap-4 z-40">
+            <div className="fixed right-6 bottom-24 md:bottom-10 flex flex-col gap-4 z-40">
                 <button
                     onClick={() => setIsDrawerOpen(true)}
                     className="w-16 h-16 bg-accent-600 text-white rounded-full flex items-center justify-center shadow-gold-glow hover:scale-110 transition active:scale-95 group relative"

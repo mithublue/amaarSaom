@@ -61,7 +61,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
         { name: t('features.hadith.title'), href: '/hadith', icon: Scroll },
         { name: t('features.duas.title'), href: '/duas', icon: Hand },
         { name: t('features.leaderboard.title'), href: '/leaderboard', icon: Trophy },
-        { name: t('features.zakat.title'), href: '/zakat', icon: Coins },
+        { name: t('features.zakat.title'), href: 'https://assunnahfoundation.org/zakat-calculator', icon: Coins },
     ];
 
     // Desktop Navigation Items
@@ -195,10 +195,16 @@ export default function Navbar({ session, locale }: NavbarProps) {
                         {drawerItems.map((item) => {
                             const active = isActive(item.href);
                             const Icon = item.icon;
+                            const isExternal = item.href.startsWith('http');
+                            const Comp = isExternal ? 'a' : Link;
+                            const props = isExternal
+                                ? { href: item.href, target: "_blank", rel: "noopener noreferrer" } as any
+                                : { href: item.href };
+
                             return (
-                                <Link
+                                <Comp
                                     key={item.href}
-                                    href={item.href}
+                                    {...props}
                                     className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all ${active
                                         ? 'bg-accent-600/20 text-accent-400 border border-accent-600/20'
                                         : 'text-gray-300 hover:bg-white/5 border border-transparent'
@@ -208,7 +214,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
                                         <Icon className="w-5 h-5" />
                                     </div>
                                     <span className="font-medium">{item.name}</span>
-                                </Link>
+                                </Comp>
                             );
                         })}
                     </div>
