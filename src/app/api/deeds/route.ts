@@ -5,7 +5,7 @@ import { reportErrorToSlack } from '@/lib/slack';
 
 /**
  * GET /api/deeds/history
- * Get user's completed deeds history
+ * Get user's completed deeds history 
  * Query params: period (today|week|month|all)
  */
 export async function GET(request: NextRequest) {
