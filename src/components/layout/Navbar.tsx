@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import LanguageSwitcher from './LanguageSwitcher';
 import UserMenu from './UserMenu';
+import LordIcon from '@/components/ui/LordIcon';
 import {
     Home,
     BookOpen,
@@ -45,7 +46,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
 
     // Bottom Navigation Items (Mobile)
     const bottomNavItems = [
-        { name: nt('home'), href: '/', icon: Home },
+        { name: nt('home'), href: '/', icon: Home, lordIcon: 'home' },
         { name: nt('good-deeds'), href: '/good-deeds', icon: Sparkles },
         { name: nt('leaderboard'), href: '/leaderboard', icon: Trophy },
         { name: nt('duas'), href: '/duas', icon: Hand },
@@ -65,7 +66,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
 
     // Desktop Navigation Items
     const desktopNavItems = [
-        { name: nt('home'), href: '/', icon: Home },
+        { name: nt('home'), href: '/', icon: Home, lordIcon: 'home' },
         { name: nt('quran'), href: '/quran', icon: BookOpen },
         { name: nt('good-deeds'), href: '/good-deeds', icon: Sparkles },
         { name: nt('leaderboard'), href: '/leaderboard', icon: Trophy },
@@ -142,7 +143,13 @@ export default function Navbar({ session, locale }: NavbarProps) {
                                         : 'text-gray-400 hover:text-white hover:scale-105'
                                         }`}
                                 >
-                                    <Icon className={`w-5 h-5 mb-1.5 ${active ? 'animate-pulse' : ''}`} />
+                                    {item.lordIcon ? (
+                                        <div className="mb-1.5 flex items-center justify-center h-5">
+                                            <LordIcon src={item.lordIcon} size={24} colors={active ? "primary:#eab308,secondary:#ffffff" : "primary:#9ca3af,secondary:#ffffff"} trigger="hover" />
+                                        </div>
+                                    ) : (
+                                        <Icon className={`w-5 h-5 mb-1.5 ${active ? 'animate-pulse' : ''}`} />
+                                    )}
                                     <span className="font-semibold tracking-wide text-[11px] lg:text-xs">{item.name}</span>
                                 </Link>
                             );
@@ -231,7 +238,13 @@ export default function Navbar({ session, locale }: NavbarProps) {
                                 className={`flex flex-col items-center justify-center flex-1 h-full transition-all relative ${active ? 'text-accent-400' : 'text-gray-400 hover:text-gray-200'
                                     }`}
                             >
-                                <Icon className={`w-5 h-5 mb-1 ${active ? 'scale-110' : ''} transition-transform`} />
+                                {item.lordIcon ? (
+                                    <div className={`mb-1 flex items-center justify-center h-5 ${active ? 'scale-110' : ''} transition-transform`}>
+                                        <LordIcon src={item.lordIcon} size={24} colors={active ? "primary:#eab308,secondary:#ffffff" : "primary:#9ca3af,secondary:#ffffff"} trigger="hover" />
+                                    </div>
+                                ) : (
+                                    <Icon className={`w-5 h-5 mb-1 ${active ? 'scale-110' : ''} transition-transform`} />
+                                )}
                                 <span className="text-[10px] font-medium tracking-tight">
                                     {item.name}
                                 </span>
