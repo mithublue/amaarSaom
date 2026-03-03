@@ -24,6 +24,9 @@ export async function GET() {
         leaderboardMotivation: true,
         leaderboardHour: 20,
         leaderboardMinute: 0,
+        quizReminder: true,
+        quizHour: 8,
+        quizMinute: 0,
     };
 
     const prefs = user.notificationPrefs ? { ...defaults, ...user.notificationPrefs } : defaults;
@@ -43,9 +46,10 @@ export async function PUT(req: Request) {
     const {
         fajrReminder, dhuhrReminder, asrReminder, maghribReminder, ishaReminder,
         prayerReminder, leaderboardMotivation, leaderboardHour, leaderboardMinute,
+        quizReminder, quizHour, quizMinute,
     } = body;
 
-    const prefs = await prisma.notificationPreferences.upsert({
+    const prefs = await (prisma.notificationPreferences.upsert as any)({
         where: { userId: user.id },
         create: {
             userId: user.id,
@@ -58,6 +62,9 @@ export async function PUT(req: Request) {
             leaderboardMotivation: leaderboardMotivation ?? true,
             leaderboardHour: leaderboardHour ?? 20,
             leaderboardMinute: leaderboardMinute ?? 0,
+            quizReminder: quizReminder ?? true,
+            quizHour: quizHour ?? 8,
+            quizMinute: quizMinute ?? 0,
         },
         update: {
             ...(fajrReminder !== undefined && { fajrReminder }),
@@ -69,6 +76,9 @@ export async function PUT(req: Request) {
             ...(leaderboardMotivation !== undefined && { leaderboardMotivation }),
             ...(leaderboardHour !== undefined && { leaderboardHour }),
             ...(leaderboardMinute !== undefined && { leaderboardMinute }),
+            ...(quizReminder !== undefined && { quizReminder }),
+            ...(quizHour !== undefined && { quizHour }),
+            ...(quizMinute !== undefined && { quizMinute }),
         },
     });
 

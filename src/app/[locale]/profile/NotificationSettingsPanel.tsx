@@ -14,6 +14,9 @@ interface NotifPrefs {
     leaderboardMotivation: boolean;
     leaderboardHour: number;
     leaderboardMinute: number;
+    quizReminder: boolean;
+    quizHour: number;
+    quizMinute: number;
 }
 
 const DEFAULTS: NotifPrefs = {
@@ -26,6 +29,9 @@ const DEFAULTS: NotifPrefs = {
     leaderboardMotivation: true,
     leaderboardHour: 20,
     leaderboardMinute: 0,
+    quizReminder: true,
+    quizHour: 8,
+    quizMinute: 0,
 };
 
 const PRAYERS: { key: keyof Pick<NotifPrefs, 'fajrReminder' | 'dhuhrReminder' | 'asrReminder' | 'maghribReminder' | 'ishaReminder'>; label: string; emoji: string; time: string }[] = [
@@ -36,7 +42,7 @@ const PRAYERS: { key: keyof Pick<NotifPrefs, 'fajrReminder' | 'dhuhrReminder' | 
     { key: 'ishaReminder', label: 'Isha', emoji: '🌃', time: 'night' },
 ];
 
-type ToggleKey = keyof Pick<NotifPrefs, 'fajrReminder' | 'dhuhrReminder' | 'asrReminder' | 'maghribReminder' | 'ishaReminder' | 'prayerReminder' | 'leaderboardMotivation'>;
+type ToggleKey = keyof Pick<NotifPrefs, 'fajrReminder' | 'dhuhrReminder' | 'asrReminder' | 'maghribReminder' | 'ishaReminder' | 'prayerReminder' | 'leaderboardMotivation' | 'quizReminder'>;
 
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
     return (
@@ -188,6 +194,32 @@ export default function NotificationSettingsPanel() {
                             value={timeStr}
                             onChange={handleTimeChange}
                             className="bg-primary-900 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm outline-none focus:border-emerald-500/50"
+                        />
+                        <span className="text-xs text-primary-500">(your local timezone)</span>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Quiz Daily Reminder ── */}
+            <div className="bg-primary-800/30 p-5 rounded-xl border border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h4 className="text-white font-semibold">🧠 Daily Quiz Reminder</h4>
+                        <p className="text-xs text-primary-400 mt-1">Daily nudge to play the Brain Battle before you forget. Only sent if you haven&apos;t played yet.</p>
+                    </div>
+                    <Toggle on={prefs.quizReminder} onClick={() => toggle('quizReminder')} />
+                </div>
+                {prefs.quizReminder && (
+                    <div className="flex items-center gap-4 pt-2 border-t border-white/5">
+                        <label className="text-sm text-primary-300 font-medium whitespace-nowrap">Remind me at:</label>
+                        <input
+                            type="time"
+                            value={`${String(prefs.quizHour).padStart(2, '0')}:${String(prefs.quizMinute).padStart(2, '0')}`}
+                            onChange={(e) => {
+                                const [h, m] = e.target.value.split(':').map(Number);
+                                setPrefs(p => ({ ...p, quizHour: h ?? 8, quizMinute: m ?? 0 }));
+                            }}
+                            className="bg-primary-900 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm outline-none focus:border-blue-500/50"
                         />
                         <span className="text-xs text-primary-500">(your local timezone)</span>
                     </div>

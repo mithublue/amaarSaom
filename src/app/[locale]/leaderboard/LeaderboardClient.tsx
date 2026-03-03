@@ -49,6 +49,7 @@ const LEVEL_COLORS: Record<number, { hex: string, tw: string }> = {
 
 export default function LeaderboardClient() {
     const gT = useTranslations('Gamification');
+    const qT = useTranslations('quiz');
     const locale = useLocale();
     const isBn = locale === 'bn';
 
@@ -177,7 +178,7 @@ export default function LeaderboardClient() {
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${featureTab === 'quiz' ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                 >
                     <Brain className="w-4 h-4" />
-                    {isBn ? 'কুইজ মাস্টার্স' : 'Quiz Masters'} 🧠
+                    {qT('quizMasters')} 🧠
                 </button>
             </div>
 
@@ -304,7 +305,7 @@ export default function LeaderboardClient() {
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
                                     <Brain className="w-5 h-5 text-blue-400" />
-                                    <h2 className="text-white font-black text-xl">{isBn ? 'কুইজ মাস্টার্স' : 'Quiz Masters'}</h2>
+                                    <h2 className="text-white font-black text-xl">{qT('quizMasters')}</h2>
                                 </div>
                                 <p className="text-gray-400 text-xs">{quizData?.hijriMonth ? `📅 ${quizData.hijriMonth}` : (isBn ? 'সর্বকালীন র‍্যাংকিং' : 'All-time ranking')}</p>
                             </div>
@@ -312,7 +313,7 @@ export default function LeaderboardClient() {
                                 <div className="flex items-center gap-4">
                                     <div className="text-center">
                                         <p className="text-orange-400 font-black text-lg">🔥 {quizData.userProfile.currentStreak}</p>
-                                        <p className="text-gray-500 text-[10px]">{isBn ? 'স্ট্রিক' : 'streak'}</p>
+                                        <p className="text-gray-500 text-[10px]">{qT('streak')}</p>
                                     </div>
                                     <div className="text-center">
                                         <p className="text-accent-400 font-black text-lg">{quizData.userProfile.seasonQuizPoints.toLocaleString()}</p>
@@ -372,7 +373,7 @@ export default function LeaderboardClient() {
                             <EntriesList
                                 entries={quizData?.entries || []}
                                 myId={quizData?.userRank?.userId}
-                                emptyMsg={isBn ? 'এখনো কেউ কুইজ খেলেনি। প্রথম হন!' : 'No quiz entries yet. Play the daily quiz to appear here!'}
+                                emptyMsg={isBn ? 'এখনো কেউ কুইজ খেলেনি। প্রথম হন!' : 'No quiz entries yet. Play the daily quiz!'}
                             />
                         </>
                     )}

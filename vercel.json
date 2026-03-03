@@ -1,3 +1,21 @@
 {
-    "version": 2
+    "version": 2,
+    "crons": [
+        {
+            "path": "/api/notifications/prayer-reminder",
+            "schedule": "*/30 * * * *"
+        },
+        {
+            "path": "/api/notifications/leaderboard-reminder",
+            "schedule": "*/30 * * * *"
+        },
+        {
+            "path": "/api/notifications/quiz-reminder",
+            "schedule": "*/30 * * * *"
+        },
+        {
+            "path": "/api/cron/quiz-season-reset",
+            "schedule": "0 0 1 * *"
+        }
+    ]
 }

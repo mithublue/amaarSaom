@@ -262,11 +262,14 @@ export async function finalizeQuizAttempt(attemptId: number, userId: number) {
     let profile = await getOrCreateQuizProfile(userId);
     profile = await checkAndResetSeason(profile); // Reset season if Hijri month changed
 
-    // Streak calculation
-    const today = startOfDay(new Date());
-    const lastPlayed = profile.lastPlayedDate ? startOfDay(new Date(profile.lastPlayedDate)) : null;
+    // Streak calculation: normalize today's local date to UTC midnight to match @db.Date storage
+    const nowLocal = new Date();
+    const todayStr = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, '0')}-${String(nowLocal.getDate()).padStart(2, '0')}T00:00:00.000Z`;
+    const today = new Date(todayStr);
+
+    const lastPlayed = profile.lastPlayedDate ? new Date(profile.lastPlayedDate) : null;
     const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
     let newStreak = 1;
     if (lastPlayed) {

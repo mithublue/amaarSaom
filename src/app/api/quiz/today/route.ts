@@ -1,14 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/config';
 import { prisma } from '@/lib/db/prisma';
 import { getOrCreateQuizProfile, checkAndResetSeason, pickDailyQuestions } from '@/lib/services/quizService';
 import { isFriday, getCurrentHijriMonth } from '@/lib/hijriUtils';
-import { startOfDay } from 'date-fns';
 
 /**
  * GET /api/quiz/today
  * Returns today's quiz session for the logged-in user.
  * CRITICAL: correctIndex and explanations are STRIPPED from the response to prevent cheating.
+ *
+ * DATE HANDLING:
+ * We use a strictly formatted UTC midnight string matched to the SERVER'S LOCAL date.
+ * This perfectly maps to MySQL @db.Date which truncates time and stores UTC midnight.
  */
 export async function GET() {
     try {
@@ -18,12 +21,22 @@ export async function GET() {
         }
 
         const userId = parseInt(session.user.id);
-        const today = startOfDay(new Date());
 
-        // Check if attempt already exists for today
-        const existingAttempt = await prisma.quizAttempt.findUnique({
-            where: { userId_date: { userId, date: today } },
+        // ALWAYS format local date to UTC midnight for Prisma @db.Date to work flawlessly.
+        const nowLocal = new Date();
+        const year = nowLocal.getFullYear();
+        const month = String(nowLocal.getMonth() + 1).padStart(2, '0');
+        const day = String(nowLocal.getDate()).padStart(2, '0');
+        const todayUTC = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+
+        // Get existing attempt with exact UTC date match
+        const existingAttempt = await prisma.quizAttempt.findFirst({
+            where: {
+                userId,
+                date: todayUTC,
+            },
             include: { answers: { select: { questionId: true } } },
+            orderBy: { createdAt: 'desc' },
         });
 
         // Get quiz profile (streak, lifelines, etc.)
@@ -48,7 +61,7 @@ export async function GET() {
                     id: existingAttempt.id,
                     totalScore: existingAttempt.totalScore,
                     finalScore: existingAttempt.finalScore,
-                    streakMultiplier: existingAttempt.streakMultiplier,
+                    streakMultiplier: Number(existingAttempt.streakMultiplier),
                     correctCount: existingAttempt.correctCount,
                     questionsCount: existingAttempt.questionsCount,
                     isBossDay: existingAttempt.isBossDay,
@@ -60,11 +73,6 @@ export async function GET() {
         // If attempt exists but not completed (resume)
         if (existingAttempt && !existingAttempt.completedAt) {
             const answeredQuestionIds = existingAttempt.answers.map(a => a.questionId);
-            // Fetch the questions for this attempt from the answers' question IDs
-            // We need to show the remaining unanswered questions
-            // Since we don't store which questions were assigned, we fetch from answers questionIds
-            // If no answers yet, we need to pick questions again - but we can't since we don't store them
-            // Better: fetch all active questions and filter out answered ones for display
             return NextResponse.json({
                 status: 'IN_PROGRESS',
                 attempt: { id: existingAttempt.id, questionsCount: existingAttempt.questionsCount, isBossDay: existingAttempt.isBossDay },
@@ -77,15 +85,51 @@ export async function GET() {
         const bossDay = isFriday();
         const questions = await pickDailyQuestions(bossDay);
 
-        const newAttempt = await prisma.quizAttempt.create({
-            data: {
-                userId,
-                date: today,
-                hijriMonth: getCurrentHijriMonth(),
-                questionsCount: questions.length,
-                isBossDay: bossDay,
-            },
-        });
+        let newAttempt;
+        try {
+            newAttempt = await prisma.quizAttempt.create({
+                data: {
+                    userId,
+                    date: todayUTC,
+                    hijriMonth: getCurrentHijriMonth(),
+                    questionsCount: questions.length,
+                    isBossDay: bossDay,
+                },
+            });
+        } catch (createError: any) {
+            // P2002 = unique constraint − attempt was created by a concurrent request
+            if (createError?.code === 'P2002') {
+                const race = await prisma.quizAttempt.findFirst({
+                    where: { userId, date: todayUTC },
+                    include: { answers: { select: { questionId: true } } },
+                    orderBy: { createdAt: 'desc' },
+                });
+                if (race?.completedAt) {
+                    return NextResponse.json({
+                        status: 'COMPLETED',
+                        attempt: {
+                            id: race.id,
+                            totalScore: race.totalScore,
+                            finalScore: race.finalScore,
+                            streakMultiplier: Number(race.streakMultiplier),
+                            correctCount: race.correctCount,
+                            questionsCount: race.questionsCount,
+                            isBossDay: race.isBossDay,
+                        },
+                        profile: safeProfile,
+                    });
+                }
+                if (race) {
+                    return NextResponse.json({
+                        status: 'IN_PROGRESS',
+                        attempt: { id: race.id, questionsCount: race.questionsCount, isBossDay: race.isBossDay },
+                        answeredQuestionIds: race.answers.map(a => a.questionId),
+                        profile: safeProfile,
+                    });
+                }
+            }
+            throw createError;
+        }
 
         // Strip sensitive data before sending to client
         const safeQuestions = questions.map(q => ({

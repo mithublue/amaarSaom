@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
-import { Brain, Flame, Trophy, Clock, CheckCircle, XCircle, Zap, Shield, ChevronRight, Star, Share2, ArrowRight, Award } from 'lucide-react';
+import { Brain, Flame, Trophy, Clock, CheckCircle, XCircle, Zap, ChevronRight, Star, Share2, ArrowRight, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
 
 // ─── Types ───────────────────────────────────────────
 
-type QuizStatus = 'LOADING' | 'READY' | 'PLAYING' | 'REVIEWING' | 'RESULTS' | 'COMPLETED';
+type QuizStatus = 'LOADING' | 'READY' | 'PLAYING' | 'REVIEWING' | 'RESULTS' | 'COMPLETED' | 'ERROR';
 
 interface QuizQuestion {
     id: number;
@@ -77,9 +78,11 @@ export default function QuizClient({ locale }: { locale: string }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [results, setResults] = useState<FinalResult | null>(null);
     const [totalEarned, setTotalEarned] = useState(0);
+    const [isSharing, setIsSharing] = useState(false);
 
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const startTimeRef = useRef<number>(0);
+    const shareCardRef = useRef<HTMLDivElement>(null);
 
     const isBn = currentLocale === 'bn';
     const isAr = currentLocale === 'ar';
@@ -109,28 +112,82 @@ export default function QuizClient({ locale }: { locale: string }) {
                 if (data.status === 'COMPLETED') {
                     setAttempt(data.attempt);
                     setResults({
-                        finalScore: data.attempt.finalScore,
-                        totalScore: data.attempt.totalScore,
-                        streakMultiplier: data.attempt.streakMultiplier,
-                        correctCount: data.attempt.correctCount,
-                        questionsCount: data.attempt.questionsCount,
-                        currentStreak: data.profile.currentStreak,
-                        maxStreak: data.profile.maxStreak,
-                        seasonQuizPoints: data.profile.seasonQuizPoints,
-                        totalQuizPoints: data.profile.totalQuizPoints,
+                        finalScore: data.attempt.finalScore ?? 0,
+                        totalScore: data.attempt.totalScore ?? 0,
+                        streakMultiplier: Number(data.attempt.streakMultiplier ?? 1),
+                        correctCount: data.attempt.correctCount ?? 0,
+                        questionsCount: data.attempt.questionsCount ?? 3,
+                        currentStreak: data.profile?.currentStreak ?? 0,
+                        maxStreak: data.profile?.maxStreak ?? 0,
+                        seasonQuizPoints: data.profile?.seasonQuizPoints ?? 0,
+                        totalQuizPoints: data.profile?.totalQuizPoints ?? 0,
                     });
                     setStatus('COMPLETED');
+                } else if (data.status === 'IN_PROGRESS' && data.attempt?.id) {
+                    // User left mid-quiz — auto-finalize their partial attempt
+                    try {
+                        const finalizeRes = await fetch('/api/quiz/finalize', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ attemptId: data.attempt.id }),
+                        });
+                        const finalizeData = await finalizeRes.json();
+                        if (finalizeData?.data) {
+                            setResults({
+                                finalScore: finalizeData.data.finalScore ?? 0,
+                                totalScore: finalizeData.data.totalScore ?? 0,
+                                streakMultiplier: Number(finalizeData.data.streakMultiplier ?? 1),
+                                correctCount: finalizeData.data.correctCount ?? 0,
+                                questionsCount: finalizeData.data.questionsCount ?? data.attempt.questionsCount,
+                                currentStreak: finalizeData.data.currentStreak ?? 0,
+                                maxStreak: finalizeData.data.maxStreak ?? 0,
+                                seasonQuizPoints: finalizeData.data.seasonQuizPoints ?? 0,
+                                totalQuizPoints: finalizeData.data.totalQuizPoints ?? 0,
+                            });
+                            setStatus('COMPLETED');
+                        } else {
+                            // Finalize returned no data — show error and let user retry
+                            setStatus('ERROR');
+                        }
+                    } catch {
+                        // Finalize failed — try re-fetching today's quiz to get correct state
+                        try {
+                            const retryRes = await fetch('/api/quiz/today');
+                            const retryData = await retryRes.json();
+                            if (retryData.status === 'COMPLETED') {
+                                setAttempt(retryData.attempt);
+                                setResults({
+                                    finalScore: retryData.attempt.finalScore ?? 0,
+                                    totalScore: retryData.attempt.totalScore ?? 0,
+                                    streakMultiplier: Number(retryData.attempt.streakMultiplier ?? 1),
+                                    correctCount: retryData.attempt.correctCount ?? 0,
+                                    questionsCount: retryData.attempt.questionsCount ?? 3,
+                                    currentStreak: retryData.profile?.currentStreak ?? 0,
+                                    maxStreak: retryData.profile?.maxStreak ?? 0,
+                                    seasonQuizPoints: retryData.profile?.seasonQuizPoints ?? 0,
+                                    totalQuizPoints: retryData.profile?.totalQuizPoints ?? 0,
+                                });
+                                setStatus('COMPLETED');
+                            } else {
+                                setStatus('ERROR');
+                            }
+                        } catch {
+                            setStatus('ERROR');
+                        }
+                    }
                 } else if (data.status === 'READY') {
                     setAttempt(data.attempt);
                     setQuestions(data.questions);
                     setStatus('READY');
                 } else {
-                    setStatus('READY'); // IN_PROGRESS or fallback
+                    // Unexpected state — show loading to retry
+                    setStatus('LOADING');
                 }
+
             } catch (err) {
-                console.error(err);
+                console.error('[quiz/today]', err);
                 toast.error('Failed to load quiz. Please try again.');
-                setStatus('LOADING');
+                setStatus('ERROR');
             }
         })();
     }, []);
@@ -227,7 +284,13 @@ export default function QuizClient({ locale }: { locale: string }) {
             });
             const data = await res.json();
             if (data.success) {
-                setResults(data.data);
+                // Cast streakMultiplier to Number — Prisma Decimal serializes as string in JSON
+                setResults({
+                    ...data.data,
+                    streakMultiplier: Number(data.data.streakMultiplier ?? 1),
+                    finalScore: Number(data.data.finalScore ?? 0),
+                    totalScore: Number(data.data.totalScore ?? 0),
+                });
                 setStatus('RESULTS');
             }
         } catch (err) {
@@ -255,6 +318,56 @@ export default function QuizClient({ locale }: { locale: string }) {
         setProfile(prev => prev ? { ...prev, lifelines5050: prev.lifelines5050 - 1 } : prev);
     };
 
+    // ─── Share Card ───────────────────────────────────────────
+
+    const handleShare = useCallback(async () => {
+        if (!results || !shareCardRef.current) return;
+        setIsSharing(true);
+        try {
+            const canvas = await html2canvas(shareCardRef.current, {
+                backgroundColor: null,
+                scale: 2,
+                useCORS: true,
+                logging: false,
+            });
+            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (!blob) throw new Error('Canvas empty');
+
+            const file = new File([blob], 'brain-battle-result.png', { type: 'image/png' });
+            const shareText = isBn
+                ? `আমি আজকের ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.correctCount}/${results.questionsCount} সঠিক, ${results.currentStreak} দিনের স্ট্রিক!`
+                : `I scored ${results.finalScore} pts in today's Brain Battle! 🧠🔥 ${results.correctCount}/${results.questionsCount} correct, ${results.currentStreak} day streak!`;
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: isBn ? 'ব্রেইন-ব্যাটল ফলাফল' : 'Brain Battle Result',
+                    text: shareText,
+                    files: [file],
+                });
+                toast.success(isBn ? 'শেয়ার করা হয়েছে!' : 'Shared!');
+            } else if (navigator.clipboard && window.ClipboardItem) {
+                // Clipboard image copy (desktop)
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                toast.success(isBn ? 'ছবি ক্লিপবোর্ডে কপি হয়েছে! পেস্ট করুন।' : 'Image copied to clipboard! Paste to share.');
+            } else {
+                // Fallback: download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'brain-battle-result.png';
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success(isBn ? 'ছবি ডাউনলোড হচ্ছে!' : 'Image downloaded!');
+            }
+        } catch (err) {
+            if (err instanceof Error && err.name !== 'AbortError') {
+                toast.error(isBn ? 'শেয়ার করতে ব্যর্থ হয়েছে।' : 'Failed to share.');
+            }
+        } finally {
+            setIsSharing(false);
+        }
+    }, [results, isBn]);
+
     // ─── Timer UI ─────────────────────────────────────────────
 
     const timerPct = (timeLeftMs / TOTAL_TIME_MS) * 100;
@@ -275,11 +388,40 @@ export default function QuizClient({ locale }: { locale: string }) {
         );
     }
 
+    // ─── ERROR ────────────────────────────────────────────────
+
+    if (status === 'ERROR') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-primary-950 px-4">
+                <div className="text-center space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
+                        <span className="text-3xl">⚠️</span>
+                    </div>
+                    <h2 className="text-white font-bold text-lg">
+                        {isBn ? 'কুইজ লোড করতে সমস্যা হয়েছে' : 'Failed to load quiz'}
+                    </h2>
+                    <p className="text-gray-400 text-sm">
+                        {isBn ? 'ইন্টারনেট বা সার্ভার সমস্যা হতে পারে। আবার চেষ্টা করুন।' : 'There may be a network or server issue. Please try again.'}
+                    </p>
+                    <button
+                        onClick={() => { setStatus('LOADING'); window.location.reload(); }}
+                        className="px-6 py-3 rounded-xl bg-accent-500 text-black font-bold hover:opacity-90 transition-all"
+                    >
+                        {isBn ? 'আবার চেষ্টা করুন' : 'Try Again'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     // ─── COMPLETED (already played today) ────────────────────
 
     if (status === 'COMPLETED' && results) {
         return (
             <div className="min-h-screen bg-primary-950 flex flex-col pt-20 pb-24 px-4">
+                {/* Hidden share card - rendered off-screen for capture */}
+                <ShareCardCanvas ref={shareCardRef} results={results} isBn={isBn} />
+
                 <div className="max-w-lg mx-auto w-full space-y-6">
                     <div className="text-center">
                         <div className="w-20 h-20 rounded-full bg-accent-500/20 border border-accent-400/30 flex items-center justify-center mx-auto mb-4">
@@ -290,6 +432,19 @@ export default function QuizClient({ locale }: { locale: string }) {
                     </div>
 
                     <ScoreCard results={results} isBn={isBn} />
+
+                    <button
+                        onClick={handleShare}
+                        disabled={isSharing}
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+                    >
+                        {isSharing ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Share2 className="w-4 h-4" />
+                        )}
+                        {isBn ? 'ফলাফল শেয়ার করুন' : 'Share Result'}
+                    </button>
 
                     <Link href="/" className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all">
                         {isBn ? 'হোমে ফিরুন' : 'Back to Home'}
@@ -553,6 +708,20 @@ export default function QuizClient({ locale }: { locale: string }) {
 
                     {/* Actions */}
                     <div className="space-y-3">
+                        {/* Share button */}
+                        <button
+                            onClick={handleShare}
+                            disabled={isSharing}
+                            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                        >
+                            {isSharing ? (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Share2 className="w-4 h-4" />
+                            )}
+                            {isBn ? '📤 ফলাফল শেয়ার করুন' : '📤 Share Your Result'}
+                        </button>
+
                         <Link
                             href="/leaderboard"
                             className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-accent-600 to-accent-500 text-black font-bold hover:opacity-90 transition-all"
@@ -567,6 +736,9 @@ export default function QuizClient({ locale }: { locale: string }) {
                             {isBn ? 'হোমে ফিরুন' : 'Back to Home'}
                         </Link>
                     </div>
+
+                    {/* Hidden share card */}
+                    <ShareCardCanvas ref={shareCardRef} results={results} isBn={isBn} />
                 </div>
             </div>
         );
@@ -597,7 +769,7 @@ function ScoreCard({ results, isBn }: { results: FinalResult; isBn: boolean }) {
                         <Flame className="w-3.5 h-3.5 text-orange-400" />
                         {isBn ? 'স্ট্রিক মাল্টিপ্লায়ার' : 'Streak Multiplier'}
                     </span>
-                    <span className="text-orange-400 font-semibold">x{results.streakMultiplier.toFixed(1)}</span>
+                    <span className="text-orange-400 font-semibold">x{Number(results.streakMultiplier).toFixed(1)}</span>
                 </div>
                 <div className="h-px bg-white/5" />
                 <div className="flex justify-between items-center text-sm">
@@ -612,3 +784,108 @@ function ScoreCard({ results, isBn }: { results: FinalResult; isBn: boolean }) {
         </div>
     );
 }
+
+// ─── Share Card Canvas (hidden, for html2canvas capture) ───
+import { forwardRef } from 'react';
+
+const ShareCardCanvas = forwardRef<HTMLDivElement, { results: FinalResult; isBn: boolean }>(
+    function ShareCardCanvas({ results, isBn }, ref) {
+        const isPerfect = results.correctCount === results.questionsCount;
+        return (
+            <div
+                ref={ref}
+                style={{
+                    position: 'fixed',
+                    left: '-9999px',
+                    top: '0',
+                    width: '400px',
+                    height: '400px',
+                    background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+                    borderRadius: '24px',
+                    padding: '32px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'system-ui, sans-serif',
+                    color: 'white',
+                    overflow: 'hidden',
+                }}
+            >
+                {/* Glow accent */}
+                <div style={{
+                    position: 'absolute', top: '-60px', right: '-60px',
+                    width: '200px', height: '200px',
+                    background: 'radial-gradient(circle, rgba(234,179,8,0.2) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                }} />
+                <div style={{
+                    position: 'absolute', bottom: '-60px', left: '-60px',
+                    width: '180px', height: '180px',
+                    background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                }} />
+
+                {/* Brand */}
+                <div style={{ fontSize: '13px', color: '#94a3b8', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '20px' }}>
+                    🧠 AmarSaom · Brain Battle
+                </div>
+
+                {/* Score */}
+                <div style={{
+                    background: 'linear-gradient(135deg, rgba(234,179,8,0.15), rgba(234,179,8,0.05))',
+                    border: '1px solid rgba(234,179,8,0.3)',
+                    borderRadius: '20px',
+                    padding: '20px 40px',
+                    textAlign: 'center',
+                    marginBottom: '24px',
+                    width: '100%',
+                }}>
+                    <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>
+                        {isBn ? 'চূড়ান্ত স্কোর' : 'Final Score'}
+                    </div>
+                    <div style={{ fontSize: '64px', fontWeight: 900, color: '#eab308', lineHeight: 1 }}>
+                        {results.finalScore}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                        {isBn ? 'পয়েন্ট' : 'points'}
+                    </div>
+                </div>
+
+                {/* Stats row */}
+                <div style={{ display: 'flex', gap: '12px', width: '100%', marginBottom: '20px' }}>
+                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#f97316' }}>🔥 {results.currentStreak}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{isBn ? 'দিন স্ট্রিক' : 'Day Streak'}</div>
+                    </div>
+                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '24px', fontWeight: 700, color: isPerfect ? '#22c55e' : '#e2e8f0' }}>
+                            {results.correctCount}/{results.questionsCount}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{isBn ? 'সঠিক উত্তর' : 'Correct'}</div>
+                    </div>
+                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#a78bfa' }}>x{Number(results.streakMultiplier).toFixed(1)}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{isBn ? 'মাল্টিপ্লায়ার' : 'Multiplier'}</div>
+                    </div>
+                </div>
+
+                {/* Season pts */}
+                <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    {isBn ? 'সিজন মোট' : 'Season Total'}: <span style={{ color: '#eab308', fontWeight: 700 }}>{results.seasonQuizPoints.toLocaleString()}</span> pts
+                </div>
+
+                {/* CTA */}
+                {isPerfect && (
+                    <div style={{
+                        marginTop: '16px', fontSize: '13px', fontWeight: 700,
+                        background: 'linear-gradient(90deg, #22c55e, #16a34a)',
+                        padding: '6px 16px', borderRadius: '999px', color: 'white'
+                    }}>
+                        🎉 {isBn ? 'পারফেক্ট স্কোর!' : 'Perfect Score!'}
+                    </div>
+                )}
+            </div>
+        );
+    }
+);
