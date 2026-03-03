@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { resolveAladhanUrl } from '@/lib/location';
 import CircularTimer from './CircularTimer';
+import { Brain, Flame, Trophy, CheckCircle } from 'lucide-react';
 
 interface PrayerTimes {
     Fajr: string;
@@ -101,6 +102,8 @@ function getIftarSehriInfo(times: PrayerTimes, nowMin: number): { label: string;
 
 export default function HomeWidgets({ userName, locale }: { userName?: string; locale: string }) {
     const t = useTranslations('HomeWidgets');
+    const currentLocale = useLocale();
+    const isBn = currentLocale === 'bn';
     const patterns = t.raw('patterns') as string[];
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
     const [now, setNow] = useState(new Date());
@@ -108,6 +111,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     const [iftarSehri, setIftarSehri] = useState({ label: '', countdown: '', hPercent: 0, mPercent: 0 });
     const [todayDeeds, setTodayDeeds] = useState(0);
     const [topUsers, setTopUsers] = useState<NearbyUser[]>([]);
+    const [quizStatus, setQuizStatus] = useState<'READY' | 'COMPLETED' | null>(null);
+    const [quizProfile, setQuizProfile] = useState<{ currentStreak: number; seasonQuizPoints: number } | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -138,6 +143,17 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 if (d.success && d.data?.entries?.length > 0) {
                     setTopUsers(d.data.entries);
                 }
+            } catch { }
+        })();
+    }, []);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const r = await fetch('/api/quiz/today');
+                const d = await r.json();
+                if (d.status) setQuizStatus(d.status === 'COMPLETED' ? 'COMPLETED' : 'READY');
+                if (d.profile) setQuizProfile({ currentStreak: d.profile.currentStreak, seasonQuizPoints: d.profile.seasonQuizPoints });
             } catch { }
         })();
     }, []);
@@ -264,7 +280,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                         />
                     </Link>
 
-                    {/* Bottom Row: Square Widgets */}
+                    {/* Bottom Row: Deeds + Quiz */}
                     <div className="relative overflow-hidden bg-primary-900/40 backdrop-blur-xl border border-white/10 rounded-[35px] p-8 shadow-glass flex flex-col items-center justify-between group hover:bg-primary-900/50 transition-all duration-500">
                         <div className="w-full">
                             <div className="flex items-center justify-between mb-6">
@@ -288,28 +304,41 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                         </Link>
                     </div>
 
-                    <Link href="/leaderboard" className="relative overflow-hidden bg-primary-900/40 backdrop-blur-xl border border-white/10 rounded-[35px] p-8 shadow-glass flex flex-col items-center justify-center group hover:bg-primary-900/50 transition-all duration-500 hover:scale-[1.02]">
-                        <span className="text-sm font-bold text-yellow-300 uppercase tracking-widest mb-4 opacity-80 flex items-center gap-2">
-                            <span className="text-xl">🏆</span> লিডারবোর্ড
-                        </span>
-                        {topUsers.length > 0 ? (
-                            <div className="w-full space-y-2 mb-4">
-                                {topUsers.map((u: any, i: number) => (
-                                    <div key={i} className="flex items-center justify-between text-white bg-white/5 rounded-xl px-4 py-2">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`font-black text-lg drop-shadow-md ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>
-                                                {i === 0 ? '🏆' : i === 1 ? '🥈' : '🥉'}
-                                            </span>
-                                            <span className="font-bold text-sm truncate max-w-[100px]">{u.userName}</span>
-                                        </div>
-                                        <span className="text-xs text-primary-300">{u.totalPoints} pts</span>
-                                    </div>
-                                ))}
+                    {/* Quiz Widget */}
+                    <Link href="/quiz" className="relative overflow-hidden bg-gradient-to-br from-blue-950/60 to-purple-950/60 backdrop-blur-xl border border-blue-500/20 rounded-[35px] p-8 shadow-glass flex flex-col items-center justify-between group hover:border-blue-400/40 transition-all duration-500 hover:scale-[1.02]">
+                        <div className="absolute -top-8 -right-8 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none" />
+                        <div className="w-full relative z-10">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-sm font-bold text-blue-300 uppercase tracking-widest flex items-center gap-1.5">
+                                    <Brain className="w-4 h-4" />
+                                    {isBn ? 'ব্রেইন-ব্যাটল' : 'Brain Battle'}
+                                </span>
+                                {quizStatus === 'COMPLETED' ? (
+                                    <CheckCircle className="w-5 h-5 text-green-400" />
+                                ) : (
+                                    <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30">{isBn ? 'নতুন!' : 'New!'}</span>
+                                )}
                             </div>
-                        ) : (
-                            <p className="text-xl font-black text-white">View Rankings</p>
-                        )}
-                        <p className="text-xs text-primary-200 text-center leading-tight mt-2">আপনিও আমল করে লিডারবোর্ডে এগিয়ে যান!</p>
+                            {quizProfile && quizProfile.currentStreak > 0 ? (
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="text-center">
+                                        <p className="text-orange-400 font-black text-2xl">🔥 {quizProfile.currentStreak}</p>
+                                        <p className="text-gray-500 text-xs">{isBn ? 'দিন স্ট্রিক' : 'day streak'}</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-accent-400 font-black text-xl">{quizProfile.seasonQuizPoints.toLocaleString()}</p>
+                                        <p className="text-gray-500 text-xs">{isBn ? 'সিজন পয়েন্ট' : 'season pts'}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-blue-200/70 text-sm font-medium mb-4">
+                                    {isBn ? 'প্রতিদিন ৩টি প্রশ্ন, স্ট্রিক ও পয়েন্ট অর্জন করুন' : 'Answer 3 questions daily, build streaks & earn points'}
+                                </p>
+                            )}
+                        </div>
+                        <div className={`w-full py-4 rounded-2xl text-center font-bold text-sm transition-all relative z-10 ${quizStatus === 'COMPLETED' ? 'bg-green-500/10 border border-green-500/20 text-green-300' : 'bg-blue-600/30 border border-blue-500/30 text-blue-200 group-hover:bg-blue-600/40'}`}>
+                            {quizStatus === 'COMPLETED' ? (isBn ? '✅ আজকের কুইজ সম্পন্ন' : '✅ Today Done! Come back tomorrow') : (isBn ? '🧠 কুইজ শুরু করুন' : '🧠 Start Today\'s Quiz')}
+                        </div>
                     </Link>
                 </div>
             </div>
@@ -359,29 +388,49 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                     </div>
                 </div>
 
-                {/* Row 3: Leaderboard */}
-                <Link href="/leaderboard" className="block p-5 bg-primary-900/40 border border-white/10 rounded-3xl shadow-glass">
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-bold text-yellow-300 uppercase tracking-widest opacity-80">লিডারবোর্ড</span>
-                        <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-sm">🏆</div>
-                    </div>
-                    {topUsers.length > 0 ? (
-                        <div className="w-full space-y-1.5 mb-3">
-                            {topUsers.map((u: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between text-white bg-white/5 rounded-lg px-3 py-1.5">
-                                    <div className="flex items-center gap-2">
-                                        <span className={`font-black text-sm drop-shadow-md ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>
-                                            {i === 0 ? '🏆' : i === 1 ? '🥈' : '🥉'}
-                                        </span>
-                                        <span className="font-bold text-xs truncate max-w-[120px]">{u.userName}</span>
-                                    </div>
-                                    <span className="text-[10px] text-primary-300">{u.totalPoints} pts</span>
-                                </div>
-                            ))}
+                {/* Row 3: Leaderboard + Quiz side-by-side */}
+                <div className="grid grid-cols-2 gap-3">
+                    <Link href="/leaderboard" className="block p-4 bg-primary-900/40 border border-white/10 rounded-3xl shadow-glass">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-bold text-yellow-300 uppercase tracking-widest opacity-80">লিডারবোর্ড</span>
+                            <div className="w-7 h-7 rounded-full bg-yellow-500/20 flex items-center justify-center text-xs">🏆</div>
                         </div>
-                    ) : <p className="text-sm font-bold text-white mb-3">View Ranking</p>}
-                    <p className="text-[10px] text-primary-200 text-center leading-tight">আপনিও আমল করে লিডারবোর্ডে এগিয়ে যান!</p>
-                </Link>
+                        {topUsers.length > 0 ? (
+                            <div className="w-full space-y-1.5 mb-2">
+                                {topUsers.map((u: any, i: number) => (
+                                    <div key={i} className="flex items-center justify-between text-white bg-white/5 rounded-lg px-2.5 py-1">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className={`font-black text-xs ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : 'text-amber-600'}`}>{i === 0 ? '🏆' : i === 1 ? '🥈' : '🥉'}</span>
+                                            <span className="font-bold text-xs truncate max-w-[70px]">{u.userName}</span>
+                                        </div>
+                                        <span className="text-[10px] text-primary-300">{u.totalPoints}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <p className="text-xs font-bold text-white mb-2">View Ranking</p>}
+                        <p className="text-[9px] text-primary-200 text-center leading-tight">আমল করে এগিয়ে যান!</p>
+                    </Link>
+
+                    <Link href="/quiz" className="relative block p-4 bg-gradient-to-br from-blue-950/60 to-purple-950/60 border border-blue-500/20 rounded-3xl shadow-glass overflow-hidden">
+                        <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/10 blur-[30px] rounded-full pointer-events-none" />
+                        <div className="flex items-center justify-between mb-2 relative z-10">
+                            <span className="text-[10px] font-bold text-blue-300 uppercase tracking-widest flex items-center gap-1"><Brain className="w-3 h-3" /> Quiz</span>
+                            {quizStatus === 'COMPLETED' ? <CheckCircle className="w-4 h-4 text-green-400" /> : <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">New</span>}
+                        </div>
+                        {quizProfile && quizProfile.currentStreak > 0 ? (
+                            <div className="relative z-10">
+                                <p className="text-orange-400 font-black text-xl">🔥 {quizProfile.currentStreak}</p>
+                                <p className="text-gray-500 text-[10px] mb-1">{isBn ? 'দিন স্ট্রিক' : 'day streak'}</p>
+                                <p className="text-accent-400 font-bold text-sm">{quizProfile.seasonQuizPoints.toLocaleString()} pts</p>
+                            </div>
+                        ) : (
+                            <p className="text-blue-200/70 text-xs font-medium mb-2 relative z-10">{isBn ? 'প্রতিদিন ৩টি প্রশ্ন খেলুন!' : 'Play 3 questions daily!'}</p>
+                        )}
+                        <div className={`mt-2 py-1.5 rounded-xl text-center text-[10px] font-bold relative z-10 ${quizStatus === 'COMPLETED' ? 'bg-green-500/10 text-green-300 border border-green-500/20' : 'bg-blue-600/30 text-blue-200 border border-blue-500/30'}`}>
+                            {quizStatus === 'COMPLETED' ? '✅ সম্পন্ন' : '🧠 খেলুন'}
+                        </div>
+                    </Link>
+                </div>
 
                 {/* Row 4: Today's Deeds */}
                 <div className="p-5 bg-primary-900/40 border border-white/10 rounded-3xl shadow-glass">

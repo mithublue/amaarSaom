@@ -26,7 +26,30 @@ interface Settings {
     globalLeaderboardNotifications: boolean;
 }
 
-type Tab = 'users' | 'settings';
+type Tab = 'users' | 'settings' | 'quiz';
+
+interface QuizQuestion {
+    id: number;
+    questionBn: string;
+    questionEn: string | null;
+    optionsBn: unknown;
+    optionsEn: unknown | null;
+    correctIndex: number;
+    explanationBn: string | null;
+    explanationEn: string | null;
+    category: string;
+    difficulty: string;
+}
+
+interface QuizStats {
+    questions: QuizQuestion[];
+    total: number;
+    page: number;
+    pageSize: number;
+    stats: { category: string; _count: { id: number } }[];
+    attemptCount: number;
+    profileCount: number;
+}
 
 export default function AdminDashboard() {
     const [tab, setTab] = useState<Tab>('users');
@@ -54,6 +77,24 @@ export default function AdminDashboard() {
     const [notifSaving, setNotifSaving] = useState(false);
     const [notifMsg, setNotifMsg] = useState('');
     const [recentNotifs, setRecentNotifs] = useState<any[]>([]);
+
+    // Quiz state
+    const [quizData, setQuizData] = useState<QuizStats | null>(null);
+    const [quizLoading, setQuizLoading] = useState(false);
+    const [quizSearch, setQuizSearch] = useState('');
+    const [quizCategory, setQuizCategory] = useState('');
+    const [quizPage, setQuizPage] = useState(1);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [editingQ, setEditingQ] = useState<QuizQuestion | null>(null);
+    const [quizMsg, setQuizMsg] = useState('');
+    const [newQ, setNewQ] = useState({
+        questionBn: '', questionEn: '',
+        opt0Bn: '', opt1Bn: '', opt2Bn: '', opt3Bn: '',
+        opt0En: '', opt1En: '', opt2En: '', opt3En: '',
+        correctIndex: '0',
+        explanationBn: '', explanationEn: '',
+        category: 'quran', difficulty: 'medium',
+    });
 
     useEffect(() => {
         loadData();
@@ -192,6 +233,80 @@ export default function AdminDashboard() {
         setSettings({ ...settings, [key]: !settings[key] });
     }
 
+    async function loadQuizData() {
+        setQuizLoading(true);
+        try {
+            const params = new URLSearchParams({ page: String(quizPage) });
+            if (quizSearch) params.set('search', quizSearch);
+            if (quizCategory) params.set('category', quizCategory);
+            const res = await fetch(`/api/admin/quiz/questions?${params}`);
+            const data = await res.json();
+            if (data.success) setQuizData(data.data);
+        } catch (e) { console.error(e); }
+        setQuizLoading(false);
+    }
+
+    async function saveNewQuestion() {
+        const optionsBn = [newQ.opt0Bn, newQ.opt1Bn, newQ.opt2Bn, newQ.opt3Bn].filter(Boolean);
+        const optionsEn = [newQ.opt0En, newQ.opt1En, newQ.opt2En, newQ.opt3En].filter(Boolean);
+        if (!newQ.questionBn || optionsBn.length < 2) {
+            setQuizMsg('❌ বাংলা প্রশ্ন এবং কমপক্ষে ২টি অপশন আবশ্যিক।');
+            return;
+        }
+        try {
+            const res = await fetch('/api/admin/quiz/questions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    questionBn: newQ.questionBn, questionEn: newQ.questionEn || null,
+                    optionsBn, optionsEn: optionsEn.length === optionsBn.length ? optionsEn : null,
+                    correctIndex: parseInt(newQ.correctIndex),
+                    explanationBn: newQ.explanationBn || null, explanationEn: newQ.explanationEn || null,
+                    category: newQ.category, difficulty: newQ.difficulty,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setQuizMsg('✅ প্রশ্ন যোগ সফল!');
+                setShowAddForm(false);
+                setNewQ({ questionBn: '', questionEn: '', opt0Bn: '', opt1Bn: '', opt2Bn: '', opt3Bn: '', opt0En: '', opt1En: '', opt2En: '', opt3En: '', correctIndex: '0', explanationBn: '', explanationEn: '', category: 'quran', difficulty: 'medium' });
+                loadQuizData();
+            } else setQuizMsg('❌ ' + (data.error || 'সমস্যা হয়েছে।'));
+        } catch { setQuizMsg('❌ Network error.'); }
+        setTimeout(() => setQuizMsg(''), 4000);
+    }
+
+    async function saveEditQuestion() {
+        if (!editingQ) return;
+        try {
+            const res = await fetch(`/api/admin/quiz/questions/${editingQ.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    questionBn: editingQ.questionBn, questionEn: editingQ.questionEn,
+                    explanationBn: editingQ.explanationBn, explanationEn: editingQ.explanationEn,
+                    category: editingQ.category, difficulty: editingQ.difficulty,
+                    correctIndex: editingQ.correctIndex,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) { setQuizMsg('✅ আপডেট সফল!'); setEditingQ(null); loadQuizData(); }
+            else setQuizMsg('❌ ' + (data.error || 'সমস্যা।'));
+        } catch { setQuizMsg('❌ Network error.'); }
+        setTimeout(() => setQuizMsg(''), 3000);
+    }
+
+    async function deleteQuestion(id: number) {
+        if (!confirm('এই প্রশ্নটি মুছে দেবেন?')) return;
+        try {
+            const res = await fetch(`/api/admin/quiz/questions/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) { setQuizMsg('✅ মুছে দেওয়া হয়েছে।'); loadQuizData(); }
+            else setQuizMsg('❌ ' + data.error);
+        } catch { setQuizMsg('❌ Network error.'); }
+        setTimeout(() => setQuizMsg(''), 3000);
+    }
+
     const filteredUsers = users.filter(
         (u) =>
             u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -261,6 +376,15 @@ export default function AdminDashboard() {
                             }`}
                     >
                         ⚙️ Settings
+                    </button>
+                    <button
+                        onClick={() => { setTab('quiz'); loadQuizData(); }}
+                        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'quiz'
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        🧠 Quiz Manager
                     </button>
                 </div>
             </div>
@@ -701,6 +825,335 @@ export default function AdminDashboard() {
                                 <span className="text-sm animate-fade-in">{saveMsg}</span>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {/* ── QUIZ MANAGER TAB ── */}
+                {tab === 'quiz' && (
+                    <div className="space-y-6">
+                        {/* Status message */}
+                        {quizMsg && (
+                            <div className="bg-gray-800/60 border border-white/10 rounded-xl px-4 py-3 text-sm animate-fade-in">
+                                {quizMsg}
+                            </div>
+                        )}
+
+                        {/* Stats Row */}
+                        {quizData && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <StatCard label="মোট প্রশ্ন" value={quizData.total} icon="🧠" color="blue" />
+                                <StatCard label="মোট অ্যাটেম্পট" value={quizData.attemptCount} icon="🎯" color="emerald" />
+                                <StatCard label="কুইজ প্লেয়ার" value={quizData.profileCount} icon="👤" color="amber" />
+                                <div className="bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20 rounded-2xl p-5">
+                                    <p className="text-2xl mb-1">📚</p>
+                                    <div className="flex flex-wrap gap-1.5 mt-1">
+                                        {quizData.stats.map(s => (
+                                            <span key={s.category} className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                                                {s.category}: {s._count.id}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1.5">Categories</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Controls */}
+                        <div className="flex flex-wrap gap-3 items-center justify-between">
+                            <div className="flex gap-2 flex-1 flex-wrap">
+                                <input
+                                    type="text"
+                                    placeholder="🔍 প্রশ্ন খুঁজুন..."
+                                    value={quizSearch}
+                                    onChange={e => setQuizSearch(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') { setQuizPage(1); loadQuizData(); } }}
+                                    className="flex-1 min-w-[200px] bg-gray-800 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                                />
+                                <select
+                                    value={quizCategory}
+                                    onChange={e => { setQuizCategory(e.target.value); setQuizPage(1); loadQuizData(); }}
+                                    className="bg-gray-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                                >
+                                    <option value="">সব ক্যাটাগরি</option>
+                                    {['quran', 'seerah', 'fiqh', 'hadith', 'general', 'boss'].map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={() => { setQuizPage(1); loadQuizData(); }}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition"
+                                >
+                                    খুঁজুন
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setShowAddForm(!showAddForm)}
+                                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0"
+                            >
+                                {showAddForm ? '✕ বাদ দিন' : '+ নতুন প্রশ্ন'}
+                            </button>
+                        </div>
+
+                        {/* Add Question Form */}
+                        {showAddForm && (
+                            <div className="bg-gray-900/70 border border-blue-500/20 rounded-2xl p-6 space-y-4">
+                                <h3 className="text-white font-bold text-lg flex items-center gap-2">🧠 নতুন প্রশ্ন যোগ করুন</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs text-gray-400 mb-1 block">প্রশ্ন (বাংলা) *</label>
+                                        <textarea
+                                            value={newQ.questionBn}
+                                            onChange={e => setNewQ({ ...newQ, questionBn: e.target.value })}
+                                            rows={2}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                            placeholder="বাংলায় প্রশ্ন লিখুন..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 mb-1 block">Question (English)</label>
+                                        <textarea
+                                            value={newQ.questionEn}
+                                            onChange={e => setNewQ({ ...newQ, questionEn: e.target.value })}
+                                            rows={2}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                            placeholder="English question (optional)..."
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Options */}
+                                <div>
+                                    <label className="text-xs text-gray-400 mb-2 block">অপশনগুলো (কমপক্ষে ২টি বাংলা) — সঠিক উত্তর নম্বর নিচে সিলেক্ট করুন</label>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        {([0, 1, 2, 3] as const).map(i => (
+                                            <div key={i} className={`border rounded-xl p-2 space-y-1 ${parseInt(newQ.correctIndex) === i ? 'border-green-500/50 bg-green-500/5' : 'border-white/5'}`}>
+                                                <p className="text-[10px] text-gray-500">{['ক', 'খ', 'গ', 'ঘ'][i]} {parseInt(newQ.correctIndex) === i ? '✅' : ''}</p>
+                                                <input
+                                                    placeholder={`অপশন ${i + 1} (বাং)`}
+                                                    value={newQ[`opt${i}Bn` as keyof typeof newQ] as string}
+                                                    onChange={e => setNewQ({ ...newQ, [`opt${i}Bn`]: e.target.value })}
+                                                    className="w-full bg-gray-700 border border-white/5 rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+                                                />
+                                                <input
+                                                    placeholder={`Option ${i + 1} (EN)`}
+                                                    value={newQ[`opt${i}En` as keyof typeof newQ] as string}
+                                                    onChange={e => setNewQ({ ...newQ, [`opt${i}En`]: e.target.value })}
+                                                    className="w-full bg-gray-700 border border-white/5 rounded-lg px-2 py-1 text-xs text-gray-400 focus:outline-none"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <label className="text-xs text-gray-400 mb-1 block">সঠিক উত্তর</label>
+                                        <select
+                                            value={newQ.correctIndex}
+                                            onChange={e => setNewQ({ ...newQ, correctIndex: e.target.value })}
+                                            className="w-full bg-gray-800 border border-green-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
+                                        >
+                                            {[0, 1, 2, 3].map(i => <option key={i} value={i}>{['ক', 'খ', 'গ', 'ঘ'][i]} (অপশন {i + 1})</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 mb-1 block">ক্যাটাগরি</label>
+                                        <select
+                                            value={newQ.category}
+                                            onChange={e => setNewQ({ ...newQ, category: e.target.value })}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
+                                        >
+                                            {['quran', 'seerah', 'fiqh', 'hadith', 'general', 'boss'].map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 mb-1 block">ডিফিকাল্টি</label>
+                                        <select
+                                            value={newQ.difficulty}
+                                            onChange={e => setNewQ({ ...newQ, difficulty: e.target.value })}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
+                                        >
+                                            {['easy', 'medium', 'hard', 'boss'].map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs text-gray-400 mb-1 block">ব্যাখ্যা (বাংলা)</label>
+                                        <textarea
+                                            value={newQ.explanationBn}
+                                            onChange={e => setNewQ({ ...newQ, explanationBn: e.target.value })}
+                                            rows={2}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
+                                            placeholder="সঠিক উত্তরের ব্যাখ্যা..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 mb-1 block">Explanation (EN)</label>
+                                        <textarea
+                                            value={newQ.explanationEn}
+                                            onChange={e => setNewQ({ ...newQ, explanationEn: e.target.value })}
+                                            rows={2}
+                                            className="w-full bg-gray-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
+                                            placeholder="English explanation..."
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={saveNewQuestion}
+                                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition"
+                                >
+                                    ✅ প্রশ্ন সেভ করুন
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Question List */}
+                        {quizLoading ? (
+                            <div className="text-center py-12">
+                                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                            </div>
+                        ) : (
+                            <div className="bg-gray-900/40 border border-white/5 rounded-2xl overflow-hidden">
+                                <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                                    <p className="text-sm text-gray-400">
+                                        মোট <span className="text-white font-bold">{quizData?.total || 0}</span> প্রশ্ন
+                                        {quizData && ` — পেইজ ${quizData.page} / ${Math.ceil(quizData.total / quizData.pageSize)}`}
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => { setQuizPage(Math.max(1, quizPage - 1)); loadQuizData(); }}
+                                            disabled={quizPage <= 1}
+                                            className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white rounded-lg transition"
+                                        >← আগে</button>
+                                        <button
+                                            onClick={() => { setQuizPage(quizPage + 1); loadQuizData(); }}
+                                            disabled={!quizData || quizPage * quizData.pageSize >= quizData.total}
+                                            className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white rounded-lg transition"
+                                        >পরে →</button>
+                                    </div>
+                                </div>
+                                <div className="divide-y divide-white/5">
+                                    {quizData?.questions.map(q => (
+                                        <div key={q.id} className="px-4 py-3 hover:bg-white/[0.02] transition group">
+                                            {editingQ?.id === q.id ? (
+                                                /* Edit mode */
+                                                <div className="space-y-3">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        <textarea
+                                                            value={editingQ.questionBn}
+                                                            onChange={e => setEditingQ({ ...editingQ, questionBn: e.target.value })}
+                                                            rows={2}
+                                                            className="bg-gray-700 border border-blue-500/30 rounded-lg px-3 py-2 text-sm text-white focus:outline-none w-full"
+                                                        />
+                                                        <textarea
+                                                            value={editingQ.questionEn || ''}
+                                                            onChange={e => setEditingQ({ ...editingQ, questionEn: e.target.value })}
+                                                            rows={2}
+                                                            className="bg-gray-700 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none w-full"
+                                                            placeholder="English..."
+                                                        />
+                                                    </div>
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                        <div>
+                                                            <label className="text-[10px] text-gray-500">সঠিক উত্তর</label>
+                                                            <select
+                                                                value={editingQ.correctIndex}
+                                                                onChange={e => setEditingQ({ ...editingQ, correctIndex: parseInt(e.target.value) })}
+                                                                className="w-full bg-gray-700 border border-green-500/30 rounded-lg px-2 py-1 text-xs text-white"
+                                                            >
+                                                                {[0, 1, 2, 3].map(i => <option key={i} value={i}>অপশন {i + 1}</option>)}
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] text-gray-500">ক্যাটাগরি</label>
+                                                            <select
+                                                                value={editingQ.category}
+                                                                onChange={e => setEditingQ({ ...editingQ, category: e.target.value })}
+                                                                className="w-full bg-gray-700 border border-white/10 rounded-lg px-2 py-1 text-xs text-white"
+                                                            >
+                                                                {['quran', 'seerah', 'fiqh', 'hadith', 'general', 'boss'].map(c => <option key={c} value={c}>{c}</option>)}
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] text-gray-500">ডিফিকাল্টি</label>
+                                                            <select
+                                                                value={editingQ.difficulty}
+                                                                onChange={e => setEditingQ({ ...editingQ, difficulty: e.target.value })}
+                                                                className="w-full bg-gray-700 border border-white/10 rounded-lg px-2 py-1 text-xs text-white"
+                                                            >
+                                                                {['easy', 'medium', 'hard', 'boss'].map(d => <option key={d} value={d}>{d}</option>)}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                        <textarea
+                                                            value={editingQ.explanationBn || ''}
+                                                            onChange={e => setEditingQ({ ...editingQ, explanationBn: e.target.value })}
+                                                            rows={2}
+                                                            className="bg-gray-700 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none w-full"
+                                                            placeholder="ব্যাখ্যা (বাংলা)..."
+                                                        />
+                                                        <textarea
+                                                            value={editingQ.explanationEn || ''}
+                                                            onChange={e => setEditingQ({ ...editingQ, explanationEn: e.target.value })}
+                                                            rows={2}
+                                                            className="bg-gray-700 border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none w-full"
+                                                            placeholder="Explanation (EN)..."
+                                                        />
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={saveEditQuestion} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition">✅ সেভ</button>
+                                                        <button onClick={() => setEditingQ(null)} className="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-xs transition">বাদ দিন</button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                /* View mode */
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">{q.category}</span>
+                                                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${q.difficulty === 'easy' ? 'bg-green-500/20 text-green-300' : q.difficulty === 'hard' ? 'bg-red-500/20 text-red-300' : q.difficulty === 'boss' ? 'bg-orange-500/20 text-orange-300' : 'bg-yellow-500/20 text-yellow-300'}`}>{q.difficulty}</span>
+                                                            <span className="text-[10px] text-gray-600">#{q.id}</span>
+                                                        </div>
+                                                        <p className="text-sm text-white font-medium leading-snug">{q.questionBn}</p>
+                                                        {q.questionEn && <p className="text-xs text-gray-500 mt-0.5">{q.questionEn}</p>}
+                                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                                            {(q.optionsBn as string[])?.map((opt, i) => (
+                                                                <span key={i} className={`text-[10px] px-2 py-0.5 rounded-full border ${i === q.correctIndex ? 'bg-green-500/15 text-green-300 border-green-500/30' : 'bg-white/5 text-gray-400 border-white/10'}`}>
+                                                                    {['ক', 'খ', 'গ', 'ঘ'][i]}) {opt}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition">
+                                                        <button
+                                                            onClick={() => setEditingQ(q)}
+                                                            className="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/60 text-blue-300 rounded-lg text-xs transition border border-blue-500/20"
+                                                        >
+                                                            ✏️ এডিট
+                                                        </button>
+                                                        <button
+                                                            onClick={() => deleteQuestion(q.id)}
+                                                            className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg text-xs transition border border-red-500/20"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {quizData?.questions.length === 0 && (
+                                        <div className="text-center py-12 text-gray-500">
+                                            কোনো প্রশ্ন পাওয়া যায়নি।
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

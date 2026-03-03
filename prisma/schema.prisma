@@ -265,6 +265,11 @@ model User {
   district               District?                @relation(fields: [districtId], references: [id])
   division               Division?                @relation(fields: [divisionId], references: [id])
 
+  quizAttempts         QuizAttempt[]
+  quizProfile          UserQuizProfile?
+  quizLeaderboardCache QuizLeaderboardCache[]
+  quizTrophies         QuizTrophy[]
+
   @@index([countryId, divisionId, districtId])
   @@index([districtId], map: "users_district_id_fkey")
   @@index([divisionId], map: "users_division_id_fkey")
@@ -326,4 +331,124 @@ model UserTrophy {
 
   @@index([userId])
   @@map("user_trophies")
+}
+
+// ─────────────────────────────────────────
+// DAILY ISLAMIC QUIZ SYSTEM
+// Fully decoupled from the Good Deeds system
+// ─────────────────────────────────────────
+
+model QuizQuestion {
+  id            Int          @id @default(autoincrement())
+  questionBn    String       @map("question_bn") @db.Text
+  questionEn    String       @map("question_en") @db.Text
+  questionAr    String?      @map("question_ar") @db.Text
+  optionsBn     Json         @map("options_bn")
+  optionsEn     Json         @map("options_en")
+  optionsAr     Json?        @map("options_ar")
+  correctIndex  Int          @map("correct_index")
+  explanationBn String?      @map("explanation_bn") @db.Text
+  explanationEn String?      @map("explanation_en") @db.Text
+  explanationAr String?      @map("explanation_ar") @db.Text
+  category      String       @default("general") @db.VarChar(50)
+  difficulty    String       @default("normal") @db.VarChar(20)
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  quizAnswers   QuizAnswer[]
+
+  @@index([category])
+  @@index([difficulty, isActive])
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id               Int          @id @default(autoincrement())
+  userId           Int          @map("user_id")
+  date             DateTime     @map("date") @db.Date
+  hijriMonth       String?      @map("hijri_month") @db.VarChar(50)
+  totalScore       Int          @default(0) @map("total_score")
+  totalTimeTakenMs Int          @default(0) @map("total_time_taken_ms")
+  streakMultiplier Float        @default(1.0) @map("streak_multiplier")
+  finalScore       Int          @default(0) @map("final_score")
+  questionsCount   Int          @default(3) @map("questions_count")
+  correctCount     Int          @default(0) @map("correct_count")
+  isBossDay        Boolean      @default(false) @map("is_boss_day")
+  completedAt      DateTime?    @map("completed_at")
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers          QuizAnswer[]
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([hijriMonth])
+  @@index([date])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id            Int          @id @default(autoincrement())
+  attemptId     Int          @map("attempt_id")
+  questionId    Int          @map("question_id")
+  selectedIndex Int          @map("selected_index")
+  isCorrect     Boolean      @map("is_correct")
+  timeTakenMs   Int          @map("time_taken_ms")
+  pointsAwarded Int          @default(0) @map("points_awarded")
+  used5050      Boolean      @default(false) @map("used_5050")
+
+  attempt       QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question      QuizQuestion @relation(fields: [questionId], references: [id])
+
+  @@index([attemptId])
+  @@map("quiz_answers")
+}
+
+model UserQuizProfile {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @unique @map("user_id")
+  currentStreak     Int       @default(0) @map("current_streak")
+  maxStreak         Int       @default(0) @map("max_streak")
+  totalQuizPoints   Int       @default(0) @map("total_quiz_points")
+  seasonQuizPoints  Int       @default(0) @map("season_quiz_points")
+  currentHijriMonth String?   @map("current_hijri_month") @db.VarChar(50)
+  lifelines5050     Int       @default(1) @map("lifelines_5050")
+  streakSavers      Int       @default(0) @map("streak_savers")
+  lastPlayedDate    DateTime? @map("last_played_date") @db.Date
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_quiz_profiles")
+}
+
+model QuizLeaderboardCache {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  period      String   @db.VarChar(20)
+  hijriMonth  String?  @map("hijri_month") @db.VarChar(50)
+  scopeType   String   @db.VarChar(20)
+  scopeId     Int      @default(0) @map("scope_id")
+  totalPoints Int      @default(0) @map("total_points")
+  rank        Int      @default(0)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period, hijriMonth, scopeType, scopeId])
+  @@index([period, hijriMonth, scopeType, scopeId, rank])
+  @@map("quiz_leaderboard_cache")
+}
+
+model QuizTrophy {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  hijriMonth   String   @map("hijri_month") @db.VarChar(50)
+  seasonPoints Int      @map("season_points")
+  rank         Int
+  awardedAt    DateTime @default(now()) @map("awarded_at")
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("quiz_trophies")
 }

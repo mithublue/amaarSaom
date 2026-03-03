@@ -46,6 +46,10 @@
             "zakat": {
                 "title": "Zakat Calculator",
                 "desc": "Calculate your Zakat easily"
+            },
+            "quiz": {
+                "title": "Daily Quiz",
+                "desc": "Test your Islamic knowledge daily"
             }
         }
     },
@@ -211,7 +215,8 @@
         "quran": "Quran",
         "leaderboard": "Leaderboard",
         "profile": "Profile",
-        "duas": "Dua"
+        "duas": "Dua",
+        "quiz": "Quiz"
     },
     "LanguageSwitcher": {
         "label": "Language"

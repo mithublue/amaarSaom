@@ -21,7 +21,8 @@ import {
     Moon,
     Scroll,
     Hand,
-    Coins
+    Coins,
+    Brain
 } from 'lucide-react';
 
 const NotificationBell = dynamic(
@@ -50,6 +51,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
         { name: nt('good-deeds'), href: '/good-deeds', icon: Sparkles },
         { name: nt('leaderboard'), href: '/leaderboard', icon: Trophy },
         { name: nt('duas'), href: '/duas', icon: Hand },
+        { name: nt('quiz'), href: '/quiz', icon: Brain },
     ];
 
     // Drawer Items (Mobile Sidebar)
@@ -61,6 +63,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
         { name: t('features.hadith.title'), href: '/hadith', icon: Scroll },
         { name: t('features.duas.title'), href: '/duas', icon: Hand },
         { name: t('features.leaderboard.title'), href: '/leaderboard', icon: Trophy },
+        { name: t('features.quiz.title'), href: '/quiz', icon: Brain },
         { name: t('features.zakat.title'), href: 'https://assunnahfoundation.org/zakat-calculator', icon: Coins },
     ];
 
