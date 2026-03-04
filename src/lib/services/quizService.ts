@@ -74,40 +74,81 @@ export function calculateStreakMultiplier(streak: number): number {
 // ─── Question Management ──────────────────────────────
 
 /**
- * Pick random daily questions.
- * Boss Day (Friday): 5 questions including boss difficulty.
- * Regular Day: 3 questions excluding boss difficulty.
+ * Pick daily questions deterministically.
+ * Every user playing on the same UTC date will receive the exact same questions.
+ * Questions are fetched sequentially from a statically shuffled deck to ensure no repetition 
+ * until the entire question bank is exhausted.
  */
-export async function pickDailyQuestions(isBossDay: boolean): Promise<QuizQuestion[]> {
-    const count = isBossDay ? 5 : 3;
+export async function pickDailyQuestions(isBossDay: boolean, dateUTC: Date): Promise<QuizQuestion[]> {
+    // Number of days since epoch (Jan 1, 1970)
+    const daysSinceEpoch = Math.floor(dateUTC.getTime() / 86400000);
+    const STATIC_SEED = 1337; // Fixed seed to randomize the base pool order
 
     if (isBossDay) {
-        // Mix: at least 1 boss question + others
         const bossQuestions = await prisma.quizQuestion.findMany({
             where: { difficulty: 'boss', isActive: true },
+            orderBy: { id: 'asc' },
             select: { id: true, questionBn: true, questionEn: true, questionAr: true, optionsBn: true, optionsEn: true, optionsAr: true, category: true, difficulty: true },
         });
         const regularQuestions = await prisma.quizQuestion.findMany({
             where: { difficulty: { not: 'boss' }, isActive: true },
+            orderBy: { id: 'asc' },
             select: { id: true, questionBn: true, questionEn: true, questionAr: true, optionsBn: true, optionsEn: true, optionsAr: true, category: true, difficulty: true },
         });
 
-        const shuffledBoss = shuffleArray(bossQuestions as unknown as QuizQuestion[]).slice(0, 2);
-        const shuffledRegular = shuffleArray(regularQuestions as unknown as QuizQuestion[]).slice(0, 3);
-        return shuffleArray([...shuffledBoss, ...shuffledRegular]);
+        const shuffledBoss = deterministicShuffle(bossQuestions as unknown as QuizQuestion[], STATIC_SEED);
+        const shuffledRegular = deterministicShuffle(regularQuestions as unknown as QuizQuestion[], STATIC_SEED);
+
+        const bossCount = 2;
+        const bossStart = (daysSinceEpoch * bossCount) % Math.max(1, shuffledBoss.length);
+        const pickedBoss = sliceWrap(shuffledBoss, bossStart, bossCount);
+
+        const regCount = 3;
+        const regStart = (daysSinceEpoch * regCount) % Math.max(1, shuffledRegular.length);
+        const pickedReg = sliceWrap(shuffledRegular, regStart, regCount);
+
+        return deterministicShuffle([...pickedBoss, ...pickedReg], daysSinceEpoch);
     } else {
-        const questions = await prisma.quizQuestion.findMany({
+        const count = 3;
+        const regularQuestions = await prisma.quizQuestion.findMany({
             where: { difficulty: { not: 'boss' }, isActive: true },
+            orderBy: { id: 'asc' },
             select: { id: true, questionBn: true, questionEn: true, questionAr: true, optionsBn: true, optionsEn: true, optionsAr: true, category: true, difficulty: true },
         });
-        return shuffleArray(questions as unknown as QuizQuestion[]).slice(0, count);
+
+        const shuffledRegular = deterministicShuffle(regularQuestions as unknown as QuizQuestion[], STATIC_SEED);
+
+        const regStart = (daysSinceEpoch * count) % Math.max(1, shuffledRegular.length);
+        const pickedReg = sliceWrap(shuffledRegular, regStart, count);
+
+        return deterministicShuffle(pickedReg, daysSinceEpoch);
     }
 }
 
-function shuffleArray<T>(arr: T[]): T[] {
+// Helper to slice with wrap-around
+function sliceWrap<T>(arr: T[], start: number, count: number): T[] {
+    const res: T[] = [];
+    if (arr.length === 0) return res;
+    for (let i = 0; i < count; i++) {
+        res.push(arr[(start + i) % arr.length]);
+    }
+    return res;
+}
+
+// PRNG for deterministic shuffling (Mulberry32)
+function deterministicShuffle<T>(arr: T[], seed: number): T[] {
+    // Local copy of seed to avoid mutating the outer scope
+    let _seed = seed;
+    const prng = () => {
+        let t = _seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(prng() * (i + 1));
         [a[i], a[j]] = [a[j], a[i]];
     }
     return a;

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
-import { Brain, Flame, Trophy, Clock, CheckCircle, XCircle, Zap, ChevronRight, Star, Share2, ArrowRight, Copy } from 'lucide-react';
+import { Brain, Flame, Trophy, Clock, CheckCircle, XCircle, Zap, ChevronRight, Star, Share2, ArrowRight, Copy, ArrowLeft, Info, X } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 
@@ -79,6 +79,7 @@ export default function QuizClient({ locale }: { locale: string }) {
     const [results, setResults] = useState<FinalResult | null>(null);
     const [totalEarned, setTotalEarned] = useState(0);
     const [isSharing, setIsSharing] = useState(false);
+    const [showRules, setShowRules] = useState(false);
 
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const startTimeRef = useRef<number>(0);
@@ -458,12 +459,19 @@ export default function QuizClient({ locale }: { locale: string }) {
 
     if (status === 'READY' && attempt && profile) {
         return (
-            <div className="min-h-screen bg-primary-950 flex flex-col pt-20 pb-24 px-4">
-                <div className="max-w-lg mx-auto w-full space-y-6">
+            <div className="min-h-screen bg-primary-950 flex flex-col pt-12 pb-24 px-4 relative">
+                {/* Top Actions */}
+                <div className="absolute top-4 left-4 right-4 flex justify-start items-center max-w-lg mx-auto w-full">
+                    <Link href="/" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-300 hover:bg-white/10 transition-all">
+                        <ArrowLeft className="w-5 h-5" />
+                    </Link>
+                </div>
+
+                <div className="max-w-lg mx-auto w-full space-y-6 mt-8">
                     {/* Header */}
                     <div className="text-center">
                         <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-4 ${attempt.isBossDay ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-accent-500/20 text-accent-400 border border-accent-500/30'}`}>
-                            {attempt.isBossDay ? '🔥 জুমাবার বস চ্যালেঞ্জ' : '🧠 Daily Brain Battle'}
+                            {attempt.isBossDay ? '🔥 জুমাবার বস চ্যালেঞ্জ' : '🧠 ' + (isBn ? 'ডেইলি ব্রেইন-ব্যাটল' : 'Daily Brain Battle')}
                         </div>
                         <h1 className="text-3xl font-bold text-white mb-2">
                             {isBn ? 'আজকের ব্রেইন-ব্যাটল' : "Today's Brain Battle"}
@@ -519,12 +527,114 @@ export default function QuizClient({ locale }: { locale: string }) {
                         <ArrowRight className="w-5 h-5" />
                     </button>
 
+                    {/* Rules button */}
+                    <button
+                        onClick={() => setShowRules(true)}
+                        className="w-full py-3.5 rounded-2xl bg-white/5 border border-white/10 text-gray-300 font-semibold hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                        <Info className="w-4 h-4" />
+                        {isBn ? 'কুইজের নিয়মকানুন' : 'Quiz Rules'}
+                    </button>
+
                     {attempt.isBossDay && (
-                        <p className="text-center text-orange-400/70 text-xs">
+                        <p className="text-center text-orange-400/70 text-xs mt-2">
                             {isBn ? '⚡ আজ জুমাবার! কঠিন প্রশ্ন, ৩ গুণ পয়েন্ট!' : '⚡ Friday! Hard questions, 3x multiplier potential!'}
                         </p>
                     )}
                 </div>
+
+                {/* Rules Modal */}
+                {showRules && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-primary-900 border border-white/10 rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col shadow-2xl relative">
+                            {/* Modal Header */}
+                            <div className="p-5 border-b border-white/5 flex justify-between items-center bg-primary-950/50">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <Info className="w-5 h-5 text-accent-400" />
+                                    {isBn ? 'কুইজের নিয়মাবলী' : 'Quiz Rules'}
+                                </h3>
+                                <button
+                                    onClick={() => setShowRules(false)}
+                                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-5 overflow-y-auto space-y-5">
+                                {/* Base Rules */}
+                                <div className="space-y-2">
+                                    <h4 className="text-white font-semibold flex items-center gap-2">
+                                        <Brain className="w-4 h-4 text-accent-500" />
+                                        {isBn ? 'সাধারণ নিয়ম' : 'General Rules'}
+                                    </h4>
+                                    <ul className="text-gray-300 text-sm space-y-2 ml-6 list-disc">
+                                        <li>{isBn ? 'প্রতিদিন রাত ১২টায় নতুন কুইজ আসবে।' : 'New quiz available every day at midnight.'}</li>
+                                        <li>{isBn ? 'সাধারণ দিনে ৩টি প্রশ্ন থাকবে।' : 'Regular days will have 3 questions.'}</li>
+                                        <li>{isBn ? 'প্রতিটি প্রশ্নের জন্য ১৫ সেকেন্ড সময় পাবেন।' : 'You get 15 seconds per question.'}</li>
+                                        <li>{isBn ? 'দ্রুত উত্তর দিলে বেশি পয়েন্ট পাবেন (সর্বোচ্চ ১০০)।' : 'Faster answers earn more points (up to 100).'}</li>
+                                        <li>{isBn ? 'ভুল উত্তর দিলে বা সময় শেষ হলে ০ পয়েন্ট।' : 'Wrong answer or timeout gives 0 points.'}</li>
+                                    </ul>
+                                </div>
+
+                                {/* Boss Day */}
+                                <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 space-y-2">
+                                    <h4 className="text-orange-400 font-semibold flex items-center gap-2">
+                                        <Flame className="w-4 h-4" />
+                                        {isBn ? 'জুমাবার বস চ্যালেঞ্জ (Boss Day)' : 'Friday Boss Challenge'}
+                                    </h4>
+                                    <ul className="text-orange-200/80 text-sm space-y-2 ml-6 list-disc">
+                                        <li>{isBn ? 'প্রতি শুক্রবার বিশেষ বস কুইজ হবে।' : 'Every Friday is a special Boss Quiz.'}</li>
+                                        <li>{isBn ? 'মোট ৫টি প্রশ্ন থাকবে যার মধ্যে ২টি বেশ কঠিন।' : '5 questions total, including 2 difficult ones.'}</li>
+                                        <li>{isBn ? 'বেশি পয়েন্ট এবং বড় মাল্টিপ্লায়ার জেতার সুযোগ!' : 'Chance to win more points with big multipliers!'}</li>
+                                    </ul>
+                                </div>
+
+                                {/* Streaks & Multipliers */}
+                                <div className="space-y-2">
+                                    <h4 className="text-white font-semibold flex items-center gap-2">
+                                        <Star className="w-4 h-4 text-blue-400" />
+                                        {isBn ? 'স্ট্রিক ও পয়েন্ট মাল্টিপ্লায়ার' : 'Streaks & Multipliers'}
+                                    </h4>
+                                    <ul className="text-gray-300 text-sm space-y-2 ml-6 list-disc">
+                                        <li>{isBn ? 'টানা ৩ দিন খেললে: পয়েন্ট ১.৫ গুণ (x1.5)' : '3 day streak: x1.5 points'}</li>
+                                        <li>{isBn ? 'টানা ৭ দিন খেললে: পয়েন্ট ২.০ গুণ (x2.0)' : '7 day streak: x2.0 points'}</li>
+                                        <li>{isBn ? 'টানা ১৪ দিন খেললে: পয়েন্ট ২.৫ গুণ (x2.5)' : '14 day streak: x2.5 points'}</li>
+                                        <li>{isBn ? 'টানা ২১ দিন বা বেশি: পয়েন্ট ৩.০ গুণ (x3.0)' : '21+ day streak: x3.0 points'}</li>
+                                    </ul>
+                                    <p className="text-xs text-blue-300 mt-2 bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+                                        💡 {isBn ? 'একদিন মিস করলেই স্ট্রিক ০ হয়ে যাবে (যদি স্ট্রাইক সেভার না থাকে)।' : 'Missing a day resets your streak to 0 (unless you have a streak saver).'}
+                                    </p>
+                                </div>
+
+                                {/* Leaderboard & Seasons */}
+                                <div className="space-y-2">
+                                    <h4 className="text-white font-semibold flex items-center gap-2">
+                                        <Trophy className="w-4 h-4 text-accent-400" />
+                                        {isBn ? 'লিডারবোর্ড ও সিজন' : 'Leaderboard & Seasons'}
+                                    </h4>
+                                    <ul className="text-gray-300 text-sm space-y-2 ml-6 list-disc">
+                                        <li>{isBn ? 'কুইজের পয়েন্ট গুড ডিড এর পয়েন্ট থেকে সম্পূর্ণ আলাদা।' : 'Quiz points are separate from Good Deeds points.'}</li>
+                                        <li>{isBn ? 'উভয়ের জন্য আলাদা আলাদা লিডারবোর্ড রয়েছে।' : 'There is a dedicated leaderboard for the Quiz.'}</li>
+                                        <li>{isBn ? 'প্রতি হিজরি মাসে একটি সিজন শেষ হয় এবং পয়েন্ট রিসেট হয়ে নতুন সিজন শুরু হয়।' : 'Each Hijri month is a Season. Season points reset monthly.'}</li>
+                                        <li>{isBn ? 'মাস শেষে লিডারবোর্ডের শীর্ষে থাকলে ট্রফি পাবেন!' : 'Top the leaderboard at month-end to win trophies!'}</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="p-4 border-t border-white/5 bg-primary-950/50">
+                                <button
+                                    onClick={() => setShowRules(false)}
+                                    className="w-full py-3 rounded-xl bg-accent-500 text-black font-bold hover:opacity-90 transition-all"
+                                >
+                                    {isBn ? 'বুঝতে পেরেছি' : 'Got It'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }

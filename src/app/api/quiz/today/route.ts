@@ -83,7 +83,7 @@ export async function GET() {
 
         // Create a new attempt
         const bossDay = isFriday();
-        const questions = await pickDailyQuestions(bossDay);
+        const questions = await pickDailyQuestions(bossDay, todayUTC);
 
         let newAttempt;
         try {
