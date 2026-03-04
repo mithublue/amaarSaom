@@ -182,9 +182,36 @@ export async function GET() {
             });
         }
 
-        // If attempt exists but not completed (resume)
+        // If attempt exists but not completed
         if (existingAttempt && !existingAttempt.completedAt) {
             const answeredQuestionIds = existingAttempt.answers.map(a => a.questionId);
+
+            // If they haven't answered a single question yet, treat it as READY
+            if (answeredQuestionIds.length === 0) {
+                const bossDay = isFriday();
+                const questions = await pickDailyQuestions(bossDay, todayUTC);
+
+                const safeQuestions = questions.map(q => ({
+                    id: q.id,
+                    questionBn: q.questionBn,
+                    questionEn: q.questionEn,
+                    questionAr: q.questionAr,
+                    optionsBn: q.optionsBn,
+                    optionsEn: q.optionsEn,
+                    optionsAr: q.optionsAr,
+                    category: q.category,
+                    difficulty: q.difficulty,
+                }));
+
+                return NextResponse.json({
+                    status: 'READY',
+                    attempt: { id: existingAttempt.id, questionsCount: existingAttempt.questionsCount, isBossDay: existingAttempt.isBossDay },
+                    questions: safeQuestions,
+                    profile: safeProfile,
+                });
+            }
+
+            // If they HAVE answered at least one question and left, they abandoned it mid-way.
             return NextResponse.json({
                 status: 'IN_PROGRESS',
                 attempt: { id: existingAttempt.id, questionsCount: existingAttempt.questionsCount, isBossDay: existingAttempt.isBossDay },
@@ -232,10 +259,32 @@ export async function GET() {
                     });
                 }
                 if (race) {
+                    const answeredRaceQuestionIds = race.answers.map(a => a.questionId);
+
+                    if (answeredRaceQuestionIds.length === 0) {
+                        const safeQuestions = questions.map(q => ({
+                            id: q.id,
+                            questionBn: q.questionBn,
+                            questionEn: q.questionEn,
+                            questionAr: q.questionAr,
+                            optionsBn: q.optionsBn,
+                            optionsEn: q.optionsEn,
+                            optionsAr: q.optionsAr,
+                            category: q.category,
+                            difficulty: q.difficulty,
+                        }));
+                        return NextResponse.json({
+                            status: 'READY',
+                            attempt: { id: race.id, questionsCount: race.questionsCount, isBossDay: race.isBossDay },
+                            questions: safeQuestions,
+                            profile: safeProfile,
+                        });
+                    }
+
                     return NextResponse.json({
                         status: 'IN_PROGRESS',
                         attempt: { id: race.id, questionsCount: race.questionsCount, isBossDay: race.isBossDay },
-                        answeredQuestionIds: race.answers.map(a => a.questionId),
+                        answeredQuestionIds: answeredRaceQuestionIds,
                         profile: safeProfile,
                     });
                 }
