@@ -439,18 +439,24 @@ export default function QuizClient({ locale }: { locale: string }) {
         return (
             <div className="min-h-screen bg-primary-950 flex flex-col items-center justify-center px-4 relative">
                 {/* Top action bar */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
                     <Link href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-sm font-medium">
                         <ArrowLeft className="w-4 h-4" />
-                        {isBn ? 'হোম' : 'Home'}
+                        <span className="hidden sm:inline">{isBn ? 'হোম' : 'Home'}</span>
                     </Link>
-                    <button
-                        onClick={() => setShowRules(true)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-400 hover:bg-accent-500/20 transition-all text-sm font-medium"
-                    >
-                        <Info className="w-4 h-4" />
-                        {isBn ? 'কুইজের নিয়ম' : 'Quiz Rules'}
-                    </button>
+                    <div className="flex gap-2">
+                        <Link href="/leaderboard" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all text-xs sm:text-sm font-medium">
+                            <Trophy className="w-4 h-4" />
+                            {isBn ? 'লিডারবোর্ড' : 'Leaderboard'}
+                        </Link>
+                        <button
+                            onClick={() => setShowRules(true)}
+                            className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 py-2 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-400 hover:bg-accent-500/20 transition-all text-xs sm:text-sm font-medium"
+                        >
+                            <Info className="w-4 h-4" />
+                            {isBn ? 'নিয়ম' : 'Rules'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="max-w-sm w-full text-center space-y-6">
@@ -505,6 +511,7 @@ export default function QuizClient({ locale }: { locale: string }) {
                         🔄 {isBn ? 'রিফ্রেশ করুন' : 'Refresh'}
                     </button>
                 </div>
+                <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} isBn={isBn} />
             </div>
         );
     }
@@ -523,18 +530,24 @@ export default function QuizClient({ locale }: { locale: string }) {
         return (
             <div className="min-h-screen bg-primary-950 flex flex-col items-center justify-center px-4 relative">
                 {/* Top action bar */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
                     <Link href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-sm font-medium">
                         <ArrowLeft className="w-4 h-4" />
-                        {isBn ? 'হোম' : 'Home'}
+                        <span className="hidden sm:inline">{isBn ? 'হোম' : 'Home'}</span>
                     </Link>
-                    <button
-                        onClick={() => setShowRules(true)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-400 hover:bg-accent-500/20 transition-all text-sm font-medium"
-                    >
-                        <Info className="w-4 h-4" />
-                        {isBn ? 'কুইজের নিয়ম' : 'Quiz Rules'}
-                    </button>
+                    <div className="flex gap-2">
+                        <Link href="/leaderboard" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all text-xs sm:text-sm font-medium">
+                            <Trophy className="w-4 h-4" />
+                            {isBn ? 'লিডারবোর্ড' : 'Leaderboard'}
+                        </Link>
+                        <button
+                            onClick={() => setShowRules(true)}
+                            className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 py-2 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-400 hover:bg-accent-500/20 transition-all text-xs sm:text-sm font-medium"
+                        >
+                            <Info className="w-4 h-4" />
+                            {isBn ? 'নিয়ম' : 'Rules'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="max-w-sm w-full text-center space-y-6">
@@ -572,6 +585,7 @@ export default function QuizClient({ locale }: { locale: string }) {
                         </p>
                     </div>
                 </div>
+                <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} isBn={isBn} />
             </div>
         );
     }
@@ -648,10 +662,24 @@ export default function QuizClient({ locale }: { locale: string }) {
         return (
             <div className="min-h-screen bg-primary-950 flex flex-col pt-12 pb-24 px-4 relative">
                 {/* Top Actions */}
-                <div className="absolute top-4 left-4 right-4 flex justify-start items-center max-w-lg mx-auto w-full">
-                    <Link href="/" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-300 hover:bg-white/10 transition-all">
-                        <ArrowLeft className="w-5 h-5" />
+                <div className="absolute top-4 left-4 right-4 flex justify-between items-center max-w-lg mx-auto w-full z-10">
+                    <Link href="/" className="w-10 h-10 sm:w-auto sm:px-3 sm:py-2 rounded-full sm:rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-300 hover:bg-white/10 transition-all text-sm font-medium gap-2">
+                        <ArrowLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">{isBn ? 'হোম' : 'Home'}</span>
                     </Link>
+                    <div className="flex gap-2">
+                        <Link href="/leaderboard" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all text-xs sm:text-sm font-medium">
+                            <Trophy className="w-4 h-4" />
+                            {isBn ? 'লিডারবোর্ড' : 'Leaderboard'}
+                        </Link>
+                        <button
+                            onClick={() => setShowRules(true)}
+                            className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 py-2 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-400 hover:bg-accent-500/20 transition-all text-xs sm:text-sm font-medium"
+                        >
+                            <Info className="w-4 h-4" />
+                            {isBn ? 'নিয়ম' : 'Rules'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="max-w-lg mx-auto w-full space-y-6 mt-8">
@@ -731,7 +759,7 @@ export default function QuizClient({ locale }: { locale: string }) {
                 </div>
 
                 {/* Rules Modal */}
-                {showRules && (
+                {false && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
                         <div className="bg-primary-900 border border-white/10 rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col shadow-2xl relative">
                             {/* Modal Header */}
@@ -1186,3 +1214,56 @@ const ShareCardCanvas = forwardRef<HTMLDivElement, { results: FinalResult; isBn:
         );
     }
 );
+
+function RulesModal({ isOpen, onClose, isBn }: { isOpen: boolean, onClose: () => void, isBn: boolean }) {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-primary-900 border border-white/10 rounded-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/20">
+                    <div className="flex items-center gap-2 text-white font-bold text-lg">
+                        <Info className="w-5 h-5 text-accent-400" />
+                        {isBn ? 'কুইজের নিয়মাবলী' : 'Quiz Rules'}
+                    </div>
+                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="p-5 overflow-y-auto space-y-4 text-sm text-gray-300">
+                    <ul className="space-y-3 list-disc pl-5">
+                        <li>
+                            <strong className="text-white">{isBn ? 'সাধারণ নিয়ম:' : 'General Rules:'}</strong> {isBn ? 'প্রতিদিন রাত ১২টায় নতুন কুইজ আসবে। প্রতিটি প্রশ্নের জন্য ১৫ সেকেন্ড সময় পাবেন। দ্রুত উত্তর দিলে বেশি পয়েন্ট পাবেন (সর্বোচ্চ ১০০)।' : 'New quiz at midnight. 15 seconds per question. Faster answers earn more points (up to 100).'}
+                        </li>
+                        <li>
+                            <strong className="text-white">{isBn ? 'স্ট্রিক ও পয়েন্ট মাল্টিপ্লায়ার:' : 'Streaks & Multipliers:'}</strong> {isBn ? 'পরপর প্রতিদিন কুইজে অংশ নিলে স্ট্রিক বাড়বে। ১৪ দিনে ২.৫ গুণ, ২১ দিনে ৩ গুণ পয়েন্ট! একদিন মিস করলেই স্ট্রিক ০ হয়ে যাবে।' : 'Play consecutive days to build your streak. 14 days = 2.5x, 21 days = 3x points! Missing a day resets it to 0.'}
+                        </li>
+                        <li>
+                            <strong className="text-white text-orange-400">{isBn ? 'জুমাবার বস কুইজ:' : 'Friday Boss Quiz:'}</strong> {isBn ? 'প্রতি শুক্রবার বিশেষ বস কুইজ থাকবে, যেখানে ২ টি প্রশ্ন তুলনামূলক কঠিন হবে কিন্তু পয়েন্ট ও মাল্টিপ্লায়ার জেতার বিশাল সুযোগ!' : 'Every Friday features a Boss Quiz with tougher questions but much higher rewards!'}
+                        </li>
+                        <li>
+                            <strong className="text-white text-accent-400">{isBn ? 'লিডারবোর্ড ও সিজন:' : 'Leaderboards:'}</strong> {isBn ? 'মাসিক সিজনে বেশি পয়েন্ট জমিয়ে র‍্যাঙ্কে উপরে উঠুন।' : 'Accumulate points over the monthly season to climb the ranks.'}
+                        </li>
+                        <li>
+                            <strong className="text-white text-blue-400">{isBn ? 'লাইফলাইন:' : 'Lifelines:'}</strong> {isBn ? 'কঠিন প্রশ্নে ৫০-৫০ (50-50) লাইফলাইন ব্যবহার করে দুটি ভুল অপশন সরিয়ে ফেলতে পারবেন।' : 'Use the 50-50 lifeline to remove two wrong answers on tough questions.'}
+                        </li>
+                    </ul>
+
+                    <div className="mt-6 pt-4 border-t border-white/10 text-center text-xs text-gray-500">
+                        {isBn ? 'রমাদানের সাথেই থাকুন, শিখুন এবং জিতুন!' : 'Learn and win with Ramadan Companion!'}
+                    </div>
+                </div>
+
+                <div className="p-4 border-t border-white/10 bg-black/20">
+                    <button
+                        onClick={onClose}
+                        className="w-full py-3 rounded-xl bg-accent-500 text-black font-bold hover:opacity-90 transition-all active:scale-95"
+                    >
+                        {isBn ? 'বুঝতে পেরেছি' : 'Understood'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}

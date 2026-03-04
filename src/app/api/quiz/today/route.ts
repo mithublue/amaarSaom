@@ -37,57 +37,67 @@ type WindowStatus =
  * - CLOSED: quiz window has passed for today
  */
 function getQuizWindowStatus(settings: SystemSettings): WindowStatus {
-    const now = new Date();
+    // 1. Current absolute UTC time
+    const nowUTC = new Date();
+
+    // 2. Pseudo-Date representing Bangladesh Wall Clock Time (UTC + 6)
+    const BD_OFFSET_MS = 6 * 60 * 60 * 1000;
+    const nowBD = new Date(nowUTC.getTime() + BD_OFFSET_MS);
+
     const freq = settings.quizFrequency || 'daily';
 
     // Parse HH:MM times
     const [startHH, startMM] = (settings.quizStartTime || '15:00').split(':').map(Number);
     const [endHH, endMM] = (settings.quizEndTime || '18:00').split(':').map(Number);
 
-    // Build open/close times for today
-    const todayOpen = new Date(now);
-    todayOpen.setHours(startHH, startMM, 0, 0);
-    const todayClose = new Date(now);
-    todayClose.setHours(endHH, endMM, 0, 0);
+    // Build open/close pseudo-dates for today
+    const todayOpenBD = new Date(nowBD);
+    todayOpenBD.setUTCHours(startHH, startMM, 0, 0);
+    const todayCloseBD = new Date(nowBD);
+    todayCloseBD.setUTCHours(endHH, endMM, 0, 0);
+
+    // Absolute UTC Dates for returning to frontend
+    const todayOpenAbsolute = new Date(todayOpenBD.getTime() - BD_OFFSET_MS);
+    const todayCloseAbsolute = new Date(todayCloseBD.getTime() - BD_OFFSET_MS);
 
     if (freq === 'custom') {
         if (!settings.quizCustomDate) return { state: 'WAITING', scheduledAt: undefined };
-        const customDate = new Date(settings.quizCustomDate);
-        if (now >= customDate) return { state: 'OPEN' };
-        return { state: 'WAITING', scheduledAt: customDate };
+        const customDateAbsolute = new Date(settings.quizCustomDate);
+        if (nowUTC >= customDateAbsolute) return { state: 'OPEN' };
+        return { state: 'WAITING', scheduledAt: customDateAbsolute };
     }
 
     if (freq === 'weekly') {
         const targetDay = settings.quizWeeklyDay ?? 5;
-        const dayOfWeek = now.getDay();
+        const dayOfWeek = nowBD.getUTCDay();
         if (dayOfWeek !== targetDay) {
             const daysUntil = (targetDay - dayOfWeek + 7) % 7 || 7;
-            const nextDate = new Date(now);
-            nextDate.setDate(nextDate.getDate() + daysUntil);
-            nextDate.setHours(startHH, startMM, 0, 0);
-            return { state: 'WAITING', scheduledAt: nextDate };
+            const nextDateBD = new Date(nowBD);
+            nextDateBD.setUTCDate(nextDateBD.getUTCDate() + daysUntil);
+            nextDateBD.setUTCHours(startHH, startMM, 0, 0);
+            return { state: 'WAITING', scheduledAt: new Date(nextDateBD.getTime() - BD_OFFSET_MS) };
         }
-        if (now < todayOpen) return { state: 'WAITING', scheduledAt: todayOpen };
-        if (now > todayClose) return { state: 'CLOSED' };
+        if (nowBD < todayOpenBD) return { state: 'WAITING', scheduledAt: todayOpenAbsolute };
+        if (nowBD > todayCloseBD) return { state: 'CLOSED' };
         return { state: 'OPEN' };
     }
 
     if (freq === 'monthly') {
         const targetDay = settings.quizMonthlyDay ?? 1;
-        const dayOfMonth = now.getDate();
+        const dayOfMonth = nowBD.getUTCDate();
         if (dayOfMonth !== targetDay) {
-            const nextDate = new Date(now.getFullYear(), now.getMonth(), targetDay, startHH, startMM, 0, 0);
-            if (nextDate <= now) nextDate.setMonth(nextDate.getMonth() + 1);
-            return { state: 'WAITING', scheduledAt: nextDate };
+            const nextDateBD = new Date(nowBD.getUTCFullYear(), nowBD.getUTCMonth(), targetDay, startHH, startMM, 0, 0);
+            if (nextDateBD <= nowBD) nextDateBD.setUTCMonth(nextDateBD.getUTCMonth() + 1);
+            return { state: 'WAITING', scheduledAt: new Date(nextDateBD.getTime() - BD_OFFSET_MS) };
         }
-        if (now < todayOpen) return { state: 'WAITING', scheduledAt: todayOpen };
-        if (now > todayClose) return { state: 'CLOSED' };
+        if (nowBD < todayOpenBD) return { state: 'WAITING', scheduledAt: todayOpenAbsolute };
+        if (nowBD > todayCloseBD) return { state: 'CLOSED' };
         return { state: 'OPEN' };
     }
 
     // Default: daily
-    if (now < todayOpen) return { state: 'WAITING', scheduledAt: todayOpen };
-    if (now > todayClose) return { state: 'CLOSED' };
+    if (nowBD < todayOpenBD) return { state: 'WAITING', scheduledAt: todayOpenAbsolute };
+    if (nowBD > todayCloseBD) return { state: 'CLOSED' };
     return { state: 'OPEN' };
 }
 
@@ -125,12 +135,15 @@ export async function GET() {
         if (windowStatus.state === 'CLOSED') {
             // Calculate when the next quiz opens
             const [startHH, startMM] = (scheduleSettings.quizStartTime || '15:00').split(':').map(Number);
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setHours(startHH, startMM, 0, 0);
+            const BD_OFFSET_MS = 6 * 60 * 60 * 1000;
+            const tomorrowBD = new Date(Date.now() + BD_OFFSET_MS);
+            tomorrowBD.setUTCDate(tomorrowBD.getUTCDate() + 1);
+            tomorrowBD.setUTCHours(startHH, startMM, 0, 0);
+            const tomorrowAbsolute = new Date(tomorrowBD.getTime() - BD_OFFSET_MS);
+
             return NextResponse.json({
                 status: 'CLOSED',
-                nextOpenAt: tomorrow.toISOString(),
+                nextOpenAt: tomorrowAbsolute.toISOString(),
             });
         }
 
