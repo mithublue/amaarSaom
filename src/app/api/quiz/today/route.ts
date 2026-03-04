@@ -9,10 +9,88 @@ import { isFriday, getCurrentHijriMonth } from '@/lib/hijriUtils';
  * Returns today's quiz session for the logged-in user.
  * CRITICAL: correctIndex and explanations are STRIPPED from the response to prevent cheating.
  *
- * DATE HANDLING:
- * We use a strictly formatted UTC midnight string matched to the SERVER'S LOCAL date.
- * This perfectly maps to MySQL @db.Date which truncates time and stores UTC midnight.
+ * QUIZ SCHEDULING:
+ * This route respects the SystemSettings quiz schedule configuration.
+ * Returns WAITING if before the quiz window, CLOSED if after, or the quiz data if within window.
  */
+
+// ─── Quiz Schedule Helpers ─────────────────────────────────────
+
+type SystemSettings = {
+    quizFrequency: string;
+    quizStartTime: string;
+    quizEndTime: string;
+    quizWeeklyDay: number;
+    quizMonthlyDay: number;
+    quizCustomDate: Date | null;
+};
+
+type WindowStatus =
+    | { state: 'OPEN' }
+    | { state: 'WAITING'; scheduledAt: Date | undefined }
+    | { state: 'CLOSED' };
+
+/**
+ * Returns one of:
+ * - OPEN: quiz is accessible right now
+ * - WAITING: quiz hasn't started yet today (shows countdown to open time)
+ * - CLOSED: quiz window has passed for today
+ */
+function getQuizWindowStatus(settings: SystemSettings): WindowStatus {
+    const now = new Date();
+    const freq = settings.quizFrequency || 'daily';
+
+    // Parse HH:MM times
+    const [startHH, startMM] = (settings.quizStartTime || '15:00').split(':').map(Number);
+    const [endHH, endMM] = (settings.quizEndTime || '18:00').split(':').map(Number);
+
+    // Build open/close times for today
+    const todayOpen = new Date(now);
+    todayOpen.setHours(startHH, startMM, 0, 0);
+    const todayClose = new Date(now);
+    todayClose.setHours(endHH, endMM, 0, 0);
+
+    if (freq === 'custom') {
+        if (!settings.quizCustomDate) return { state: 'WAITING', scheduledAt: undefined };
+        const customDate = new Date(settings.quizCustomDate);
+        if (now >= customDate) return { state: 'OPEN' };
+        return { state: 'WAITING', scheduledAt: customDate };
+    }
+
+    if (freq === 'weekly') {
+        const targetDay = settings.quizWeeklyDay ?? 5;
+        const dayOfWeek = now.getDay();
+        if (dayOfWeek !== targetDay) {
+            const daysUntil = (targetDay - dayOfWeek + 7) % 7 || 7;
+            const nextDate = new Date(now);
+            nextDate.setDate(nextDate.getDate() + daysUntil);
+            nextDate.setHours(startHH, startMM, 0, 0);
+            return { state: 'WAITING', scheduledAt: nextDate };
+        }
+        if (now < todayOpen) return { state: 'WAITING', scheduledAt: todayOpen };
+        if (now > todayClose) return { state: 'CLOSED' };
+        return { state: 'OPEN' };
+    }
+
+    if (freq === 'monthly') {
+        const targetDay = settings.quizMonthlyDay ?? 1;
+        const dayOfMonth = now.getDate();
+        if (dayOfMonth !== targetDay) {
+            const nextDate = new Date(now.getFullYear(), now.getMonth(), targetDay, startHH, startMM, 0, 0);
+            if (nextDate <= now) nextDate.setMonth(nextDate.getMonth() + 1);
+            return { state: 'WAITING', scheduledAt: nextDate };
+        }
+        if (now < todayOpen) return { state: 'WAITING', scheduledAt: todayOpen };
+        if (now > todayClose) return { state: 'CLOSED' };
+        return { state: 'OPEN' };
+    }
+
+    // Default: daily
+    if (now < todayOpen) return { state: 'WAITING', scheduledAt: todayOpen };
+    if (now > todayClose) return { state: 'CLOSED' };
+    return { state: 'OPEN' };
+}
+
 export async function GET() {
     try {
         const session = await auth();
@@ -21,6 +99,40 @@ export async function GET() {
         }
 
         const userId = parseInt(session.user.id);
+
+        // Fetch quiz schedule settings via raw query (Prisma client may be stale)
+        const rows = await prisma.$queryRaw<any[]>`SELECT * FROM system_settings LIMIT 1`;
+        const rawSettings = rows[0];
+        const scheduleSettings: SystemSettings = {
+            quizFrequency: rawSettings?.quiz_frequency ?? 'daily',
+            quizStartTime: rawSettings?.quiz_start_time ?? '15:00',
+            quizEndTime: rawSettings?.quiz_end_time ?? '18:00',
+            quizWeeklyDay: rawSettings?.quiz_weekly_day ?? 5,
+            quizMonthlyDay: rawSettings?.quiz_monthly_day ?? 1,
+            quizCustomDate: rawSettings?.quiz_custom_date ?? null,
+        };
+
+        // Check if quiz window is currently open
+        const windowStatus = getQuizWindowStatus(scheduleSettings);
+
+        if (windowStatus.state === 'WAITING') {
+            return NextResponse.json({
+                status: 'WAITING',
+                scheduledAt: windowStatus.scheduledAt?.toISOString() ?? null,
+            });
+        }
+
+        if (windowStatus.state === 'CLOSED') {
+            // Calculate when the next quiz opens
+            const [startHH, startMM] = (scheduleSettings.quizStartTime || '15:00').split(':').map(Number);
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(startHH, startMM, 0, 0);
+            return NextResponse.json({
+                status: 'CLOSED',
+                nextOpenAt: tomorrow.toISOString(),
+            });
+        }
 
         // ALWAYS format local date to UTC midnight for Prisma @db.Date to work flawlessly.
         const nowLocal = new Date();

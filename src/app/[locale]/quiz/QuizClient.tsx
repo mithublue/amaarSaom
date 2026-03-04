@@ -9,7 +9,7 @@ import html2canvas from 'html2canvas';
 
 // ─── Types ───────────────────────────────────────────
 
-type QuizStatus = 'LOADING' | 'READY' | 'PLAYING' | 'REVIEWING' | 'RESULTS' | 'COMPLETED' | 'ERROR';
+type QuizStatus = 'LOADING' | 'WAITING' | 'CLOSED' | 'READY' | 'PLAYING' | 'REVIEWING' | 'RESULTS' | 'COMPLETED' | 'ERROR';
 
 interface QuizQuestion {
     id: number;
@@ -80,6 +80,9 @@ export default function QuizClient({ locale }: { locale: string }) {
     const [totalEarned, setTotalEarned] = useState(0);
     const [isSharing, setIsSharing] = useState(false);
     const [showRules, setShowRules] = useState(false);
+    const [scheduledAt, setScheduledAt] = useState<string | null>(null);
+    const [nextOpenAt, setNextOpenAt] = useState<string | null>(null);
+    const [countdown, setCountdown] = useState<string | null>(null);
 
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const startTimeRef = useRef<number>(0);
@@ -100,6 +103,33 @@ export default function QuizClient({ locale }: { locale: string }) {
         return q.optionsEn;
     }
 
+    // ─── Countdown Timer ─────────────────────────────────────
+
+    useEffect(() => {
+        if (status !== 'WAITING' || !scheduledAt) return;
+        const target = new Date(scheduledAt).getTime();
+
+        function tick() {
+            const diff = target - Date.now();
+            if (diff <= 0) {
+                setCountdown('00:00:00');
+                // Auto-refresh when countdown hits zero
+                setTimeout(() => window.location.reload(), 1000);
+                return;
+            }
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            setCountdown(
+                `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+            );
+        }
+
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
+    }, [status, scheduledAt]);
+
     // ─── Load today's quiz ───────────────────────────────────
 
     useEffect(() => {
@@ -110,7 +140,13 @@ export default function QuizClient({ locale }: { locale: string }) {
 
                 setProfile(data.profile);
 
-                if (data.status === 'COMPLETED') {
+                if (data.status === 'WAITING') {
+                    setScheduledAt(data.scheduledAt ?? null);
+                    setStatus('WAITING');
+                } else if (data.status === 'CLOSED') {
+                    setNextOpenAt(data.nextOpenAt ?? null);
+                    setStatus('CLOSED');
+                } else if (data.status === 'COMPLETED') {
                     setAttempt(data.attempt);
                     setResults({
                         finalScore: data.attempt.finalScore ?? 0,
@@ -384,6 +420,157 @@ export default function QuizClient({ locale }: { locale: string }) {
                         <Brain className="w-8 h-8 text-accent-400" />
                     </div>
                     <p className="text-gray-400 text-sm">Loading today&apos;s challenge...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // ─── WAITING (quiz not opened yet today) ──────────────────
+
+    if (status === 'WAITING') {
+        const openTime = scheduledAt ? new Date(scheduledAt) : null;
+        const formattedTime = openTime
+            ? openTime.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+            : null;
+        const formattedDate = openTime
+            ? openTime.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+            : null;
+
+        return (
+            <div className="min-h-screen bg-primary-950 flex flex-col items-center justify-center px-4 relative">
+                {/* Top action bar */}
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-sm font-medium">
+                        <ArrowLeft className="w-4 h-4" />
+                        {isBn ? 'হোম' : 'Home'}
+                    </Link>
+                    <button
+                        onClick={() => setShowRules(true)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-400 hover:bg-accent-500/20 transition-all text-sm font-medium"
+                    >
+                        <Info className="w-4 h-4" />
+                        {isBn ? 'কুইজের নিয়ম' : 'Quiz Rules'}
+                    </button>
+                </div>
+
+                <div className="max-w-sm w-full text-center space-y-6">
+                    <div className="w-24 h-24 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto">
+                        <Clock className="w-12 h-12 text-blue-400" />
+                    </div>
+
+                    <div>
+                        <h1 className="text-2xl font-bold text-white mb-2">
+                            {isBn ? 'আজকের কুইজ এখনো শুরু হয়নি' : "Today's Quiz Hasn't Started Yet"}
+                        </h1>
+                        {formattedTime ? (
+                            <>
+                                <p className="text-gray-400 text-sm mt-2">
+                                    {isBn ? 'কুইজ শুরু হবে:' : 'Quiz opens at:'}
+                                </p>
+                                <p className="text-3xl font-black text-blue-400 mt-1">{formattedTime}</p>
+                                {formattedDate && (
+                                    <p className="text-gray-500 text-sm mt-1">{formattedDate}</p>
+                                )}
+                            </>
+                        ) : (
+                            <p className="text-gray-400 text-sm mt-2">
+                                {isBn ? 'কুইজ এই মুহূর্তে পাওয়া যাচ্ছে না।' : 'No quiz is currently scheduled.'}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Live Countdown */}
+                    {countdown && countdown !== '00:00:00' && (
+                        <div className="bg-blue-900/30 border border-blue-500/30 rounded-2xl p-5">
+                            <p className="text-xs text-blue-400 uppercase tracking-widest mb-2 font-semibold">
+                                {isBn ? 'সময় বাকি আছে' : 'Time Remaining'}
+                            </p>
+                            <p className="text-5xl font-black text-white tracking-widest tabular-nums">{countdown}</p>
+                            <p className="text-xs text-blue-400/60 mt-2">{isBn ? 'ঘ : মি : সে' : 'HH : MM : SS'}</p>
+                        </div>
+                    )}
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4">
+                        <p className="text-blue-300 text-sm">
+                            💡 {isBn
+                                ? 'নির্ধারিত সময়ে ফিরে আসুন এবং প্রতিদিনের কুইজে অংশ নিয়ে পয়েন্ট অর্জন করুন!'
+                                : 'Come back at the scheduled time to earn points on today\'s quiz!'}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-sm font-medium"
+                    >
+                        🔄 {isBn ? 'রিফ্রেশ করুন' : 'Refresh'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // ─── CLOSED (quiz window ended for today) ─────────────────
+
+    if (status === 'CLOSED') {
+        const nextTime = nextOpenAt ? new Date(nextOpenAt) : null;
+        const formattedNextTime = nextTime
+            ? nextTime.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+            : null;
+        const formattedNextDate = nextTime
+            ? nextTime.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+            : null;
+
+        return (
+            <div className="min-h-screen bg-primary-950 flex flex-col items-center justify-center px-4 relative">
+                {/* Top action bar */}
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-sm font-medium">
+                        <ArrowLeft className="w-4 h-4" />
+                        {isBn ? 'হোম' : 'Home'}
+                    </Link>
+                    <button
+                        onClick={() => setShowRules(true)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-400 hover:bg-accent-500/20 transition-all text-sm font-medium"
+                    >
+                        <Info className="w-4 h-4" />
+                        {isBn ? 'কুইজের নিয়ম' : 'Quiz Rules'}
+                    </button>
+                </div>
+
+                <div className="max-w-sm w-full text-center space-y-6">
+                    <div className="w-24 h-24 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto">
+                        <Clock className="w-12 h-12 text-orange-400" />
+                    </div>
+
+                    <div>
+                        <h1 className="text-2xl font-bold text-white mb-2">
+                            {isBn ? 'আজকের কুইজ শেষ হয়ে গেছে' : "Today's Quiz Has Ended"}
+                        </h1>
+                        <p className="text-gray-400 text-sm">
+                            {isBn
+                                ? 'আজকের কুইজের সময় পার হয়ে গেছে।'
+                                : "Today's quiz window has closed."}
+                        </p>
+                        {formattedNextTime && (
+                            <>
+                                <p className="text-gray-400 text-sm mt-3">
+                                    {isBn ? 'পরবর্তী কুইজ:' : 'Next quiz opens at:'}
+                                </p>
+                                <p className="text-3xl font-black text-orange-400 mt-1">{formattedNextTime}</p>
+                                {formattedNextDate && (
+                                    <p className="text-gray-500 text-sm mt-1">{formattedNextDate}</p>
+                                )}
+                            </>
+                        )}
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4">
+                        <p className="text-orange-300 text-sm">
+                            🌙 {isBn
+                                ? 'প্রতিদিন নির্ধারিত সময়ে কুইজে অংশ নিয়ে আপনার স্ট্রিক বজায় রাখুন!'
+                                : 'Participate daily at the scheduled time to maintain your streak!'}
+                        </p>
+                    </div>
                 </div>
             </div>
         );

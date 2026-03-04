@@ -199,14 +199,22 @@ model PushSubscription {
 }
 
 model SystemSettings {
-  id                             Int      @id @default(autoincrement())
-  slackWebhookUrl                String?  @map("slack_webhook_url") @db.Text
-  notifyOnRegister               Boolean  @default(true) @map("notify_on_register")
-  notifyOnLogin                  Boolean  @default(true) @map("notify_on_login")
-  notifyOnVisit                  Boolean  @default(false) @map("notify_on_visit")
-  updatedAt                      DateTime @updatedAt @map("updated_at")
-  globalLeaderboardNotifications Boolean  @default(true) @map("global_leaderboard_notifications")
-  globalPrayerNotifications      Boolean  @default(true) @map("global_prayer_notifications")
+  id                             Int       @id @default(autoincrement())
+  slackWebhookUrl                String?   @map("slack_webhook_url") @db.Text
+  notifyOnRegister               Boolean   @default(true) @map("notify_on_register")
+  notifyOnLogin                  Boolean   @default(true) @map("notify_on_login")
+  notifyOnVisit                  Boolean   @default(false) @map("notify_on_visit")
+  updatedAt                      DateTime  @updatedAt @map("updated_at")
+  globalLeaderboardNotifications Boolean   @default(true) @map("global_leaderboard_notifications")
+  globalPrayerNotifications      Boolean   @default(true) @map("global_prayer_notifications")
+
+  // Quiz Scheduling
+  quizFrequency                  String    @default("daily") @map("quiz_frequency") @db.VarChar(20)
+  quizStartTime                  String    @default("15:00") @map("quiz_start_time") @db.VarChar(5)
+  quizEndTime                    String    @default("18:00") @map("quiz_end_time") @db.VarChar(5)
+  quizWeeklyDay                  Int       @default(5) @map("quiz_weekly_day")
+  quizMonthlyDay                 Int       @default(1) @map("quiz_monthly_day")
+  quizCustomDate                 DateTime? @map("quiz_custom_date")
 
   @@map("system_settings")
 }

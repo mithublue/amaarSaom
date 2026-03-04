@@ -24,6 +24,13 @@ interface Settings {
     notifyOnVisit: boolean;
     globalPrayerNotifications: boolean;
     globalLeaderboardNotifications: boolean;
+    // Quiz Scheduling
+    quizFrequency: string;
+    quizStartTime: string;
+    quizEndTime: string;
+    quizWeeklyDay: number;
+    quizMonthlyDay: number;
+    quizCustomDate: string | null;
 }
 
 type Tab = 'users' | 'settings' | 'quiz';
@@ -63,6 +70,14 @@ export default function AdminDashboard() {
     const [goldPrice, setGoldPrice] = useState<any>(null);
     const [goldSaving, setGoldSaving] = useState(false);
     const [goldMsg, setGoldMsg] = useState('');
+    // Quiz schedule state
+    const [quizFrequency, setQuizFrequency] = useState('daily');
+    const [quizStartTime, setQuizStartTime] = useState('15:00');
+    const [quizEndTime, setQuizEndTime] = useState('18:00');
+    const [quizWeeklyDay, setQuizWeeklyDay] = useState(5);
+    const [quizMonthlyDay, setQuizMonthlyDay] = useState(1);
+    const [quizCustomDate, setQuizCustomDate] = useState('');
+    const [quizScheduleMsg, setQuizScheduleMsg] = useState('');
     const [manualGold, setManualGold] = useState({ gold22kGram: '', gold24kGram: '', gold21kGram: '', gold18kGram: '', silverPerGram: '' });
     const [showManualGold, setShowManualGold] = useState(false);
 
@@ -114,6 +129,17 @@ export default function AdminDashboard() {
             if (settingsData.success) {
                 setSettings(settingsData.data);
                 setWebhookInput(settingsData.data.slackWebhookUrl || '');
+                // Hydrate quiz schedule
+                setQuizFrequency(settingsData.data.quizFrequency || 'daily');
+                setQuizStartTime(settingsData.data.quizStartTime || '15:00');
+                setQuizEndTime(settingsData.data.quizEndTime || '18:00');
+                setQuizWeeklyDay(settingsData.data.quizWeeklyDay ?? 5);
+                setQuizMonthlyDay(settingsData.data.quizMonthlyDay ?? 1);
+                setQuizCustomDate(
+                    settingsData.data.quizCustomDate
+                        ? new Date(settingsData.data.quizCustomDate).toISOString().slice(0, 16)
+                        : ''
+                );
             }
             // Load gold price
             const gpRes = await fetch('/api/gold-price');
@@ -159,6 +185,38 @@ export default function AdminDashboard() {
         }
         setSaving(false);
         setTimeout(() => setSaveMsg(''), 3000);
+    }
+
+    async function saveQuizSchedule() {
+        setSaving(true);
+        setQuizScheduleMsg('');
+        try {
+            const payload: Record<string, any> = {
+                quizFrequency,
+                quizStartTime,
+                quizEndTime,
+                quizWeeklyDay,
+                quizMonthlyDay,
+                quizCustomDate: quizFrequency === 'custom' && quizCustomDate
+                    ? new Date(quizCustomDate).toISOString()
+                    : null,
+            };
+            const res = await fetch('/api/system-admin/settings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setQuizScheduleMsg('✅ Quiz schedule saved!');
+            } else {
+                setQuizScheduleMsg('❌ Failed to save schedule.');
+            }
+        } catch {
+            setQuizScheduleMsg('❌ Network error.');
+        }
+        setSaving(false);
+        setTimeout(() => setQuizScheduleMsg(''), 3000);
     }
 
     async function deleteUser(id: number, name: string) {
@@ -705,6 +763,118 @@ export default function AdminDashboard() {
                                 </div>
                             )}
                             {goldMsg && <p className="text-sm">{goldMsg}</p>}
+                        </div>
+
+                        {/* Quiz Schedule */}
+                        <div className="bg-gray-900/40 border border-white/5 rounded-2xl p-6 space-y-5">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="text-2xl">🧠</span>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">Quiz Schedule</h2>
+                                    <p className="text-sm text-gray-500">Control when daily Islamic quiz becomes available</p>
+                                </div>
+                            </div>
+
+                            {/* Frequency */}
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-2">Quiz Frequency</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {(['daily', 'weekly', 'monthly', 'custom'] as const).map(f => (
+                                        <button
+                                            key={f}
+                                            onClick={() => setQuizFrequency(f)}
+                                            className={`py-2.5 rounded-xl text-sm font-medium capitalize transition-all border ${quizFrequency === f ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800/60 border-white/10 text-gray-400 hover:text-white'}`}
+                                        >
+                                            {f === 'daily' ? '📅 Daily' : f === 'weekly' ? '📆 Weekly' : f === 'monthly' ? '🗓️ Monthly' : '⚙️ Custom'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Time pickers (for daily/weekly/monthly) */}
+                            {quizFrequency !== 'custom' && (
+                                <div className="space-y-3">
+                                    <label className="block text-xs text-gray-400">Quiz Window</label>
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Start Time</p>
+                                            <input
+                                                type="time"
+                                                value={quizStartTime}
+                                                onChange={e => setQuizStartTime(e.target.value)}
+                                                className="bg-gray-800 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/50 w-36"
+                                            />
+                                        </div>
+                                        <span className="text-gray-500 text-lg mt-4">→</span>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">End Time</p>
+                                            <input
+                                                type="time"
+                                                value={quizEndTime}
+                                                onChange={e => setQuizEndTime(e.target.value)}
+                                                className="bg-gray-800 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/50 w-36"
+                                            />
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-gray-500">Quiz is only accessible during this time window each day. Default: 3:00 PM – 6:00 PM.</p>
+                                </div>
+                            )}
+
+                            {/* Weekly day picker */}
+                            {quizFrequency === 'weekly' && (
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-2">Day of Week</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setQuizWeeklyDay(i)}
+                                                className={`px-3 py-1.5 rounded-lg text-sm transition-all border ${quizWeeklyDay === i ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800 border-white/10 text-gray-400 hover:text-white'}`}
+                                            >
+                                                {d}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Monthly day picker */}
+                            {quizFrequency === 'monthly' && (
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-2">Day of Month</label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={28}
+                                        value={quizMonthlyDay}
+                                        onChange={e => setQuizMonthlyDay(Number(e.target.value))}
+                                        className="bg-gray-800 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/50 w-28"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Custom date-time picker */}
+                            {quizFrequency === 'custom' && (
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-2">Custom Quiz Open Date & Time</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={quizCustomDate}
+                                        onChange={e => setQuizCustomDate(e.target.value)}
+                                        className="bg-gray-800 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/50"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">The quiz will be accessible from this exact date/time onwards.</p>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={saveQuizSchedule}
+                                disabled={saving}
+                                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition disabled:opacity-50"
+                            >
+                                {saving ? '⏳ Saving...' : '💾 Save Quiz Schedule'}
+                            </button>
+                            {quizScheduleMsg && <p className="text-sm font-medium">{quizScheduleMsg}</p>}
                         </div>
 
                         {/* Send Custom Notification Toggle & Form */}

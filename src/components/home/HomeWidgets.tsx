@@ -111,7 +111,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     const [iftarSehri, setIftarSehri] = useState({ label: '', countdown: '', hPercent: 0, mPercent: 0 });
     const [todayDeeds, setTodayDeeds] = useState(0);
     const [topUsers, setTopUsers] = useState<NearbyUser[]>([]);
-    const [quizStatus, setQuizStatus] = useState<'READY' | 'COMPLETED' | null>(null);
+    const [quizStatus, setQuizStatus] = useState<'READY' | 'COMPLETED' | 'WAITING' | 'CLOSED' | null>(null);
     const [quizProfile, setQuizProfile] = useState<{ currentStreak: number; seasonQuizPoints: number } | null>(null);
 
     useEffect(() => {
@@ -152,7 +152,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
             try {
                 const r = await fetch('/api/quiz/today');
                 const d = await r.json();
-                if (d.status) setQuizStatus(d.status === 'COMPLETED' ? 'COMPLETED' : 'READY');
+                if (d.status) setQuizStatus(d.status);
                 if (d.profile) setQuizProfile({ currentStreak: d.profile.currentStreak, seasonQuizPoints: d.profile.seasonQuizPoints });
             } catch { }
         })();
@@ -315,6 +315,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                                 </span>
                                 {quizStatus === 'COMPLETED' ? (
                                     <CheckCircle className="w-5 h-5 text-green-400" />
+                                ) : quizStatus === 'CLOSED' ? (
+                                    <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30">{isBn ? 'বন্ধ' : 'Closed'}</span>
                                 ) : (
                                     <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30">{isBn ? 'নতুন!' : 'New!'}</span>
                                 )}
@@ -336,8 +338,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                                 </p>
                             )}
                         </div>
-                        <div className={`w-full py-4 rounded-2xl text-center font-bold text-sm transition-all relative z-10 ${quizStatus === 'COMPLETED' ? 'bg-green-500/10 border border-green-500/20 text-green-300' : 'bg-blue-600/30 border border-blue-500/30 text-blue-200 group-hover:bg-blue-600/40'}`}>
-                            {quizStatus === 'COMPLETED' ? (isBn ? '✅ আজকের কুইজ সম্পন্ন' : '✅ Today Done! Come back tomorrow') : (isBn ? '🧠 কুইজ শুরু করুন' : '🧠 Start Today\'s Quiz')}
+                        <div className={`w-full py-4 rounded-2xl text-center font-bold text-sm transition-all relative z-10 ${quizStatus === 'COMPLETED' ? 'bg-green-500/10 border border-green-500/20 text-green-300' : quizStatus === 'WAITING' ? 'bg-blue-900/50 border border-blue-500/30 text-blue-300 group-hover:bg-blue-800/50' : quizStatus === 'CLOSED' ? 'bg-orange-500/10 border border-orange-500/20 text-orange-300 group-hover:bg-orange-500/20' : 'bg-blue-600/30 border border-blue-500/30 text-blue-200 group-hover:bg-blue-600/40'}`}>
+                            {quizStatus === 'COMPLETED' ? (isBn ? '✅ আজকের কুইজ সম্পন্ন' : '✅ Today Done! Come back tomorrow') : quizStatus === 'WAITING' ? (isBn ? '⏳ অপেক্ষমাণ...' : '⏳ Waiting to open...') : quizStatus === 'CLOSED' ? (isBn ? '🔒 আজকের কুইজ শেষ' : '🔒 Today\'s quiz ended') : (isBn ? '🧠 কুইজ শুরু করুন' : '🧠 Start Today\'s Quiz')}
                         </div>
                     </Link>
                 </div>
@@ -415,7 +417,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                         <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/10 blur-[30px] rounded-full pointer-events-none" />
                         <div className="flex items-center justify-between mb-2 relative z-10">
                             <span className="text-[10px] font-bold text-blue-300 uppercase tracking-widest flex items-center gap-1"><Brain className="w-3 h-3" /> Quiz</span>
-                            {quizStatus === 'COMPLETED' ? <CheckCircle className="w-4 h-4 text-green-400" /> : <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">New</span>}
+                            {quizStatus === 'COMPLETED' ? <CheckCircle className="w-4 h-4 text-green-400" /> : quizStatus === 'CLOSED' ? <span className="text-[10px] bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded-full">Closed</span> : <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">New</span>}
                         </div>
                         {quizProfile && quizProfile.currentStreak > 0 ? (
                             <div className="relative z-10">
@@ -426,8 +428,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                         ) : (
                             <p className="text-blue-200/70 text-xs font-medium mb-2 relative z-10">{isBn ? 'প্রতিদিন ৩টি প্রশ্ন খেলুন!' : 'Play 3 questions daily!'}</p>
                         )}
-                        <div className={`mt-2 py-1.5 rounded-xl text-center text-[10px] font-bold relative z-10 ${quizStatus === 'COMPLETED' ? 'bg-green-500/10 text-green-300 border border-green-500/20' : 'bg-blue-600/30 text-blue-200 border border-blue-500/30'}`}>
-                            {quizStatus === 'COMPLETED' ? '✅ সম্পন্ন' : '🧠 খেলুন'}
+                        <div className={`mt-2 py-1.5 rounded-xl text-center text-[10px] font-bold relative z-10 ${quizStatus === 'COMPLETED' ? 'bg-green-500/10 text-green-300 border border-green-500/20' : quizStatus === 'WAITING' ? 'bg-blue-900/50 text-blue-300 border border-blue-500/30' : quizStatus === 'CLOSED' ? 'bg-orange-500/10 text-orange-300 border border-orange-500/20' : 'bg-blue-600/30 text-blue-200 border border-blue-500/30'}`}>
+                            {quizStatus === 'COMPLETED' ? '✅ সম্পন্ন' : quizStatus === 'WAITING' ? '⏳ অপেক্ষমাণ' : quizStatus === 'CLOSED' ? '🔒 শেষ' : '🧠 খেলুন'}
                         </div>
                     </Link>
                 </div>
