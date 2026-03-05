@@ -424,7 +424,7 @@ export default function QuizClient({ locale }: { locale: string }) {
         const shareText = isBn
             ? `আমি আজকের নুযুল ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.currentStreak} দিনের স্ট্রিক!`
             : `I scored ${results.finalScore} pts in today's Nuzul Brain Battle! 🧠🔥 ${results.currentStreak} day streak!`;
-        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://nuzul.com/quiz')}&quote=${encodeURIComponent(shareText)}`;
+        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://nuzul.xyz/bn/quiz')}&quote=${encodeURIComponent(shareText)}`;
         window.open(url, '_blank', 'width=600,height=450');
     }, [results, isBn]);
 
