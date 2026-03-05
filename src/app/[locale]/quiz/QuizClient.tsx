@@ -639,7 +639,7 @@ export default function QuizClient({ locale }: { locale: string }) {
         );
     }
 
-    // ─── COMPLETED (already played today) ────────────────────
+    // ─── COMPLETED (already played today)  ────────────────────
 
     if (status === 'COMPLETED' && results) {
         return (
