@@ -759,7 +759,7 @@ export default function QuizClient({ locale }: { locale: string }) {
                 </div>
 
                 {/* Rules Modal */}
-                {false && (
+                {showRules && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
                         <div className="bg-primary-900 border border-white/10 rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col shadow-2xl relative">
                             {/* Modal Header */}
