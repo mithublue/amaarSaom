@@ -73,7 +73,7 @@ export default function Navbar({ session, locale }: NavbarProps) {
         { name: nt('quran'), href: '/quran', icon: BookOpen },
         { name: nt('good-deeds'), href: '/good-deeds', icon: Sparkles },
         { name: nt('leaderboard'), href: '/leaderboard', icon: Trophy },
-        { name: nt('profile'), href: '/profile', icon: User },
+        ...(session ? [{ name: nt('profile'), href: '/profile', icon: User }] : []),
     ];
 
     const isActive = (path: string) => {
@@ -222,15 +222,17 @@ export default function Navbar({ session, locale }: NavbarProps) {
                         })}
                     </div>
 
-                    <div className="p-4 border-t border-white/10 bg-primary-900/30">
-                        <Link
-                            href="/profile"
-                            className="flex items-center gap-4 px-4 py-3 rounded-2xl text-gray-400 hover:text-white transition-all"
-                        >
-                            <User className="w-5 h-5" />
-                            <span className="font-medium text-sm">{nt('profile')}</span>
-                        </Link>
-                    </div>
+                    {session && (
+                        <div className="p-4 border-t border-white/10 bg-primary-900/30">
+                            <Link
+                                href="/profile"
+                                className="flex items-center gap-4 px-4 py-3 rounded-2xl text-gray-400 hover:text-white transition-all"
+                            >
+                                <User className="w-5 h-5" />
+                                <span className="font-medium text-sm">{nt('profile')}</span>
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </div>
 

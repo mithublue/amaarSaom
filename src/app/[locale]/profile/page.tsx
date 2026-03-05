@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import ProfileClient from './ProfileClient';
 import { auth } from '@/lib/auth/config';
-import { redirect } from '@/i18n/routing';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
     title: 'My Profile | Nuzul',
@@ -13,7 +13,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
     const session = await auth();
 
     if (!session?.user) {
-        redirect({ href: '/api/auth/signin', locale });
+        redirect(`/${locale}/auth/signin?callbackUrl=/${locale}/profile`);
     }
 
     return (
