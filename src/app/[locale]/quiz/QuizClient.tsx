@@ -362,8 +362,8 @@ export default function QuizClient({ locale }: { locale: string }) {
         setIsSharing(true);
 
         const shareText = isBn
-            ? `আমি আজকের ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.currentStreak} দিনের স্ট্রিক! nuzul.com`
-            : `I scored ${results.finalScore} pts in today's Brain Battle! 🧠🔥 ${results.currentStreak} day streak! nuzul.com`;
+            ? `আমি আজকের ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.currentStreak} দিনের স্ট্রিক! nuzul.xyz`
+            : `I scored ${results.finalScore} pts in today's Brain Battle! 🧠🔥 ${results.currentStreak} day streak! nuzul.xyz`;
 
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
