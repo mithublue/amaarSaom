@@ -358,74 +358,74 @@ export default function QuizClient({ locale }: { locale: string }) {
     // ─── Share Card ───────────────────────────────────────────
 
     const handleShare = useCallback(async () => {
-        if (!results || !shareCardRef.current) return;
+        if (!results) return;
         setIsSharing(true);
+
+        const shareText = isBn
+            ? `আমি আজকের ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.currentStreak} দিনের স্ট্রিক! nuzul.com`
+            : `I scored ${results.finalScore} pts in today's Brain Battle! 🧠🔥 ${results.currentStreak} day streak! nuzul.com`;
+
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
         try {
-            const canvas = await html2canvas(shareCardRef.current, {
-                backgroundColor: null,
-                scale: 2,
-                useCORS: true,
-                logging: false,
-            });
-            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
-            if (!blob) throw new Error('Canvas empty');
-
-            const shareText = isBn
-                ? `আমি আজকের ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.correctCount}/${results.questionsCount} সঠিক, ${results.currentStreak} দিনের স্ট্রিক! nuzul.com`
-                : `I scored ${results.finalScore} pts in today's Brain Battle! 🧠🔥 ${results.correctCount}/${results.questionsCount} correct, ${results.currentStreak} day streak! nuzul.com`;
-
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
             if (isMobile && navigator.share) {
-                // Mobile: always share text only (100% reliable), then download the image
-                // so user can attach it manually if they want
-                const blobUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = 'nuzul-brain-battle.png';
-                a.click();
-                URL.revokeObjectURL(blobUrl);
-
-                // Small delay so download triggers before share dialog opens
-                await new Promise(r => setTimeout(r, 300));
-
-                await navigator.share({
-                    title: isBn ? 'নুযুল ব্রেইন-ব্যাটল ফলাফল' : 'Nuzul Brain Battle Result',
-                    text: shareText,
-                });
-                toast.success(isBn ? '✅ শেয়ার করা হয়েছে! ছবিটিও ডাউনলোড হয়েছে।' : '✅ Shared! Image also downloaded.');
-            } else if (navigator.clipboard && window.ClipboardItem) {
-                // Desktop: copy image to clipboard
-                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                toast.success(isBn ? '✅ ছবি ক্লিপবোর্ডে কপি হয়েছে! যেকোনো জায়গায় পেস্ট করুন।' : '✅ Image copied to clipboard! Paste anywhere to share.');
+                // ⚠️ MUST call navigator.share() FIRST before any async work —
+                // browser requires direct user gesture context (no async gap allowed)
+                try {
+                    await navigator.share({
+                        title: isBn ? 'নুযুল ব্রেইন-ব্যাটল ফলাফল' : 'Nuzul Brain Battle Result',
+                        text: shareText,
+                    });
+                    toast.success(isBn ? '✅ শেয়ার করা হয়েছে!' : '✅ Shared!');
+                } catch (shareErr) {
+                    if (shareErr instanceof Error && shareErr.name === 'AbortError') {
+                        // User cancelled — do nothing
+                    } else {
+                        // Share failed (e.g. no targets available) — copy text to clipboard
+                        try {
+                            await navigator.clipboard.writeText(shareText);
+                            toast.success(isBn ? '✅ টেক্সট কপি হয়েছে! যেকোনো জায়গায় পেস্ট করুন।' : '✅ Text copied! Paste anywhere to share.');
+                        } catch {
+                            toast.error(isBn ? 'শেয়ার করতে ব্যর্থ হয়েছে।' : 'Could not share.');
+                        }
+                    }
+                }
             } else {
-                // Fallback: download the image
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'nuzul-brain-battle.png';
-                a.click();
-                URL.revokeObjectURL(url);
-                toast.success(isBn ? '✅ ছবি ডাউনলোড হচ্ছে!' : '✅ Image downloaded!');
+                // Desktop: generate canvas then copy image to clipboard
+                if (!shareCardRef.current) { setIsSharing(false); return; }
+                const canvas = await html2canvas(shareCardRef.current, {
+                    backgroundColor: null, scale: 2, useCORS: true, logging: false,
+                });
+                const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+                if (!blob) throw new Error('Canvas empty');
+
+                if (navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                    toast.success(isBn ? '✅ ছবি ক্লিপবোর্ডে কপি হয়েছে! যেকোনো জায়গায় পেস্ট করুন।' : '✅ Image copied to clipboard! Paste anywhere to share.');
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = 'nuzul-brain-battle.png'; a.click();
+                    URL.revokeObjectURL(url);
+                    toast.success(isBn ? '✅ ছবি ডাউনলোড হচ্ছে!' : '✅ Image downloaded!');
+                }
             }
         } catch (err) {
             if (err instanceof Error && err.name !== 'AbortError') {
-                // Last resort: just download
-                try {
-                    const canvas2 = await html2canvas(shareCardRef.current!, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
-                    const url = canvas2.toDataURL('image/png');
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'nuzul-brain-battle.png';
-                    a.click();
-                    toast.success(isBn ? '✅ ছবি ডাউনলোড হচ্ছে!' : '✅ Image downloaded!');
-                } catch {
-                    toast.error(isBn ? 'শেয়ার করতে ব্যর্থ হয়েছে।' : 'Failed to share.');
-                }
+                toast.error(isBn ? 'শেয়ার করতে ব্যর্থ হয়েছে।' : 'Failed to share.');
             }
         } finally {
             setIsSharing(false);
         }
+    }, [results, isBn]);
+
+    const handleShareFacebook = useCallback(() => {
+        if (!results) return;
+        const shareText = isBn
+            ? `আমি আজকের নুযুল ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.currentStreak} দিনের স্ট্রিক!`
+            : `I scored ${results.finalScore} pts in today's Nuzul Brain Battle! 🧠🔥 ${results.currentStreak} day streak!`;
+        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://nuzul.com/quiz')}&quote=${encodeURIComponent(shareText)}`;
+        window.open(url, '_blank', 'width=600,height=450');
     }, [results, isBn]);
 
     // ─── Timer UI ─────────────────────────────────────────────
@@ -671,6 +671,20 @@ export default function QuizClient({ locale }: { locale: string }) {
                         {isBn ? 'ফলাফল শেয়ার করুন' : 'Share Result'}
                     </button>
 
+                    <button
+                        onClick={handleShareFacebook}
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold active:scale-95 transition-all"
+                    >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.025 4.392 11.017 10.125 11.927v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.668 4.533-4.668 1.312 0 2.686.234 2.686.234v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796v8.437C19.608 23.09 24 18.097 24 12.073z" /></svg>
+                        {isBn ? 'ফেসবুকে শেয়ার করুন' : 'Share on Facebook'}
+                    </button>
+                    <Link
+                        href="/leaderboard"
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-accent-600 to-accent-500 text-black font-bold hover:opacity-90 transition-all"
+                    >
+                        <Trophy className="w-4 h-4" />
+                        {isBn ? 'লিডারবোর্ড দেখুন' : 'View Leaderboard'}
+                    </Link>
                     <Link href="/" className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all">
                         {isBn ? 'হোমে ফিরুন' : 'Back to Home'}
                     </Link>
@@ -1070,6 +1084,14 @@ export default function QuizClient({ locale }: { locale: string }) {
                             {isBn ? '📤 ফলাফল শেয়ার করুন' : '📤 Share Your Result'}
                         </button>
 
+                        <button
+                            onClick={handleShareFacebook}
+                            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold active:scale-95 transition-all shadow-lg shadow-blue-900/30"
+                        >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.025 4.392 11.017 10.125 11.927v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.668 4.533-4.668 1.312 0 2.686.234 2.686.234v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796v8.437C19.608 23.09 24 18.097 24 12.073z" /></svg>
+                            {isBn ? 'ফেসবুকে শেয়ার করুন' : 'Share on Facebook'}
+                        </button>
+
                         <Link
                             href="/leaderboard"
                             className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-accent-600 to-accent-500 text-black font-bold hover:opacity-90 transition-all"
@@ -1205,12 +1227,6 @@ const ShareCardCanvas = forwardRef<HTMLDivElement, { results: FinalResult; isBn:
                     <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '12px', textAlign: 'center' }}>
                         <div style={{ fontSize: '24px', fontWeight: 700, color: '#f97316' }}>🔥 {results.currentStreak}</div>
                         <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{isBn ? 'দিন স্ট্রিক' : 'Day Streak'}</div>
-                    </div>
-                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '12px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '24px', fontWeight: 700, color: isPerfect ? '#22c55e' : '#e2e8f0' }}>
-                            {results.correctCount}/{results.questionsCount}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{isBn ? 'সঠিক উত্তর' : 'Correct'}</div>
                     </div>
                     <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '12px', textAlign: 'center' }}>
                         <div style={{ fontSize: '24px', fontWeight: 700, color: '#a78bfa' }}>x{Number(results.streakMultiplier).toFixed(1)}</div>
