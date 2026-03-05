@@ -370,35 +370,58 @@ export default function QuizClient({ locale }: { locale: string }) {
             const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
             if (!blob) throw new Error('Canvas empty');
 
-            const file = new File([blob], 'brain-battle-result.png', { type: 'image/png' });
             const shareText = isBn
-                ? `আমি আজকের ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.correctCount}/${results.questionsCount} সঠিক, ${results.currentStreak} দিনের স্ট্রিক!`
-                : `I scored ${results.finalScore} pts in today's Brain Battle! 🧠🔥 ${results.correctCount}/${results.questionsCount} correct, ${results.currentStreak} day streak!`;
+                ? `আমি আজকের ব্রেইন-ব্যাটলে ${results.finalScore} পয়েন্ট পেলাম! 🧠🔥 ${results.correctCount}/${results.questionsCount} সঠিক, ${results.currentStreak} দিনের স্ট্রিক! nuzul.com`
+                : `I scored ${results.finalScore} pts in today's Brain Battle! 🧠🔥 ${results.correctCount}/${results.questionsCount} correct, ${results.currentStreak} day streak! nuzul.com`;
 
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            if (isMobile && navigator.share) {
+                // Mobile: always share text only (100% reliable), then download the image
+                // so user can attach it manually if they want
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = 'nuzul-brain-battle.png';
+                a.click();
+                URL.revokeObjectURL(blobUrl);
+
+                // Small delay so download triggers before share dialog opens
+                await new Promise(r => setTimeout(r, 300));
+
                 await navigator.share({
-                    title: isBn ? 'ব্রেইন-ব্যাটল ফলাফল' : 'Brain Battle Result',
+                    title: isBn ? 'নুযুল ব্রেইন-ব্যাটল ফলাফল' : 'Nuzul Brain Battle Result',
                     text: shareText,
-                    files: [file],
                 });
-                toast.success(isBn ? 'শেয়ার করা হয়েছে!' : 'Shared!');
+                toast.success(isBn ? '✅ শেয়ার করা হয়েছে! ছবিটিও ডাউনলোড হয়েছে।' : '✅ Shared! Image also downloaded.');
             } else if (navigator.clipboard && window.ClipboardItem) {
-                // Clipboard image copy (desktop)
+                // Desktop: copy image to clipboard
                 await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                toast.success(isBn ? 'ছবি ক্লিপবোর্ডে কপি হয়েছে! পেস্ট করুন।' : 'Image copied to clipboard! Paste to share.');
+                toast.success(isBn ? '✅ ছবি ক্লিপবোর্ডে কপি হয়েছে! যেকোনো জায়গায় পেস্ট করুন।' : '✅ Image copied to clipboard! Paste anywhere to share.');
             } else {
-                // Fallback: download
+                // Fallback: download the image
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'brain-battle-result.png';
+                a.download = 'nuzul-brain-battle.png';
                 a.click();
                 URL.revokeObjectURL(url);
-                toast.success(isBn ? 'ছবি ডাউনলোড হচ্ছে!' : 'Image downloaded!');
+                toast.success(isBn ? '✅ ছবি ডাউনলোড হচ্ছে!' : '✅ Image downloaded!');
             }
         } catch (err) {
             if (err instanceof Error && err.name !== 'AbortError') {
-                toast.error(isBn ? 'শেয়ার করতে ব্যর্থ হয়েছে।' : 'Failed to share.');
+                // Last resort: just download
+                try {
+                    const canvas2 = await html2canvas(shareCardRef.current!, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+                    const url = canvas2.toDataURL('image/png');
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'nuzul-brain-battle.png';
+                    a.click();
+                    toast.success(isBn ? '✅ ছবি ডাউনলোড হচ্ছে!' : '✅ Image downloaded!');
+                } catch {
+                    toast.error(isBn ? 'শেয়ার করতে ব্যর্থ হয়েছে।' : 'Failed to share.');
+                }
             }
         } finally {
             setIsSharing(false);
@@ -1153,7 +1176,7 @@ const ShareCardCanvas = forwardRef<HTMLDivElement, { results: FinalResult; isBn:
 
                 {/* Brand */}
                 <div style={{ fontSize: '13px', color: '#94a3b8', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '20px' }}>
-                    🧠 AmarSaom · Brain Battle
+                    🧠 Nuzul · Brain Battle
                 </div>
 
                 {/* Score */}
