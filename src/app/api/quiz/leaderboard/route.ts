@@ -58,14 +58,21 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        const mapped = entries.map((e, i) => ({
-            rank: i + 1,
-            userId: e.userId,
-            userName: e.user.name || 'Anonymous',
-            userImage: e.user.image,
-            totalPoints: e.totalPoints,
-            location: '',  // location is stored separately; keep simple for now
-        }));
+        const mapped = entries.map((e, i) => {
+            const isMe = userId !== null && e.userId === userId;
+            return {
+                rank: i + 1,
+                userId: e.userId,
+                // Show real name only to the user themselves; mask everyone else
+                userName: isMe
+                    ? (e.user.name || 'You')
+                    : `Quiz Player #${i + 1}`,
+                userImage: isMe ? e.user.image : null,
+                totalPoints: e.totalPoints,
+                location: '',
+                isMe,
+            };
+        });
 
         // User's own rank
         let myRank = null;
