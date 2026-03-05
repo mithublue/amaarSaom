@@ -60,13 +60,11 @@ export async function GET(request: NextRequest) {
 
         const mapped = entries.map((e, i) => {
             const isMe = userId !== null && e.userId === userId;
+            const anonymousName = `Servant of Allah ${e.userId.toString().slice(-4)}`;
             return {
                 rank: i + 1,
                 userId: e.userId,
-                // Show real name only to the user themselves; mask everyone else
-                userName: isMe
-                    ? (e.user.name || 'You')
-                    : `Quiz Player #${i + 1}`,
+                userName: isMe ? (e.user.name || 'You') : anonymousName,
                 userImage: isMe ? e.user.image : null,
                 totalPoints: e.totalPoints,
                 location: '',
