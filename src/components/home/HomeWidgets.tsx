@@ -100,7 +100,7 @@ function getIftarSehriInfo(times: PrayerTimes, nowMin: number): { label: string;
     return { label: 'সেহরী শুরু', targetMin: sehriStart };
 }
 
-export default function HomeWidgets({ userName, locale }: { userName?: string; locale: string }) {
+export default function HomeWidgets({ userName, locale, isGuest = false }: { userName?: string; locale: string; isGuest?: boolean }) {
     const t = useTranslations('HomeWidgets');
     const currentLocale = useLocale();
     const isBn = currentLocale === 'bn';
@@ -126,6 +126,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     }, [locale]);
 
     useEffect(() => {
+        if (isGuest) return;
         (async () => {
             try {
                 const r = await fetch('/api/deeds?period=today');
@@ -133,7 +134,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 if (d.success) setTodayDeeds(d.data?.deeds?.length ?? 0);
             } catch { }
         })();
-    }, []);
+    }, [isGuest]);
 
     useEffect(() => {
         (async () => {
@@ -148,6 +149,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
     }, []);
 
     useEffect(() => {
+        if (isGuest) return;
         (async () => {
             try {
                 const r = await fetch('/api/quiz/today');
@@ -156,7 +158,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                 if (d.profile) setQuizProfile({ currentStreak: d.profile.currentStreak, seasonQuizPoints: d.profile.seasonQuizPoints });
             } catch { }
         })();
-    }, []);
+    }, [isGuest]);
 
     useEffect(() => {
         const id = setInterval(() => setNow(new Date()), 1000);
@@ -242,7 +244,7 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
         <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Greeting */}
             <h1 className="text-3xl md:text-5xl font-bold text-white text-center mb-8">
-                {t('greeting')}{userName ? <>, <span className="text-accent-400">{userName}!</span></> : ''} 👋
+                {t('greeting')}{!isGuest && userName ? <>, <span className="text-accent-400">{userName}!</span></> : ''} 👋
             </h1>
 
             {/* Desktop: 1:3 layout (reduced left column slightly for wider grid) */}
@@ -285,9 +287,13 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                         <div className="w-full">
                             <div className="flex items-center justify-between mb-6">
                                 <span className="text-lg font-bold text-primary-100">{t('todaysDeeds')}</span>
-                                <span className="text-2xl font-black text-accent-400">{todayDeeds}/10</span>
+                                {!isGuest && <span className="text-2xl font-black text-accent-400">{todayDeeds}/10</span>}
                             </div>
-                            {todayDeeds > 0 ? (
+                            {isGuest ? (
+                                <p className="text-sm text-primary-300 font-medium text-center mb-8 px-2">
+                                    {isBn ? 'আমল ট্র্যাক করতে লগইন করুন' : 'Login to track your deeds'}
+                                </p>
+                            ) : todayDeeds > 0 ? (
                                 <div className="grid grid-cols-5 gap-3 mb-8">
                                     {Array.from({ length: 10 }).map((_, i) => (
                                         <div key={i} className={`h-3 rounded-full transition-all duration-700 ${i < todayDeeds ? 'bg-accent-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'bg-primary-800/40'}`} />
@@ -299,13 +305,16 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                                 </p>
                             )}
                         </div>
-                        <Link href="/good-deeds" className="w-full py-4 bg-accent-600/20 hover:bg-accent-600/30 border border-accent-500/30 rounded-2xl text-accent-300 font-bold text-center transition-all hover:scale-[1.02] active:scale-95">
-                            + {t('addDeed')}
+                        <Link
+                            href={isGuest ? `/auth/signin?callbackUrl=/${locale}/good-deeds` : '/good-deeds'}
+                            className="w-full py-4 bg-accent-600/20 hover:bg-accent-600/30 border border-accent-500/30 rounded-2xl text-accent-300 font-bold text-center transition-all hover:scale-[1.02] active:scale-95"
+                        >
+                            {isGuest ? (isBn ? '🔒 লগইন করুন' : '🔒 Login to Start') : `+ ${t('addDeed')}`}
                         </Link>
                     </div>
 
                     {/* Quiz Widget */}
-                    <Link href="/quiz" className="relative overflow-hidden bg-gradient-to-br from-blue-950/60 to-purple-950/60 backdrop-blur-xl border border-blue-500/20 rounded-[35px] p-8 shadow-glass flex flex-col items-center justify-between group hover:border-blue-400/40 transition-all duration-500 hover:scale-[1.02]">
+                    <Link href={isGuest ? `/auth/signin?callbackUrl=/${locale}/quiz` : '/quiz'} className="relative overflow-hidden bg-gradient-to-br from-blue-950/60 to-purple-950/60 backdrop-blur-xl border border-blue-500/20 rounded-[35px] p-8 shadow-glass flex flex-col items-center justify-between group hover:border-blue-400/40 transition-all duration-500 hover:scale-[1.02]">
                         <div className="absolute -top-8 -right-8 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none" />
                         <div className="w-full relative z-10">
                             <div className="flex items-center justify-between mb-4">
@@ -321,7 +330,11 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                                     <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30">{isBn ? 'নতুন!' : 'New!'}</span>
                                 )}
                             </div>
-                            {quizProfile && quizProfile.currentStreak > 0 ? (
+                            {isGuest ? (
+                                <p className="text-blue-200/70 text-sm font-medium mb-4">
+                                    {isBn ? 'প্রতিদিন ৩টি প্রশ্ন, স্ট্রিক ও পয়েন্ট অর্জন করুন' : 'Answer 3 questions daily, build streaks & earn points'}
+                                </p>
+                            ) : quizProfile && quizProfile.currentStreak > 0 ? (
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="text-center">
                                         <p className="text-orange-400 font-black text-2xl">🔥 {quizProfile.currentStreak}</p>
@@ -338,8 +351,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                                 </p>
                             )}
                         </div>
-                        <div className={`w-full py-4 rounded-2xl text-center font-bold text-sm transition-all relative z-10 ${quizStatus === 'COMPLETED' ? 'bg-green-500/10 border border-green-500/20 text-green-300' : quizStatus === 'WAITING' ? 'bg-blue-900/50 border border-blue-500/30 text-blue-300 group-hover:bg-blue-800/50' : quizStatus === 'CLOSED' ? 'bg-orange-500/10 border border-orange-500/20 text-orange-300 group-hover:bg-orange-500/20' : 'bg-blue-600/30 border border-blue-500/30 text-blue-200 group-hover:bg-blue-600/40'}`}>
-                            {quizStatus === 'COMPLETED' ? (isBn ? '✅ আজকের কুইজ সম্পন্ন' : '✅ Today Done! Come back tomorrow') : quizStatus === 'WAITING' ? (isBn ? '⏳ অপেক্ষমাণ...' : '⏳ Waiting to open...') : quizStatus === 'CLOSED' ? (isBn ? '🔒 আজকের কুইজ শেষ' : '🔒 Today\'s quiz ended') : (isBn ? '🧠 কুইজ শুরু করুন' : '🧠 Start Today\'s Quiz')}
+                        <div className={`w-full py-4 rounded-2xl text-center font-bold text-sm transition-all relative z-10 ${isGuest ? 'bg-blue-600/30 border border-blue-500/30 text-blue-200 group-hover:bg-blue-600/40' : quizStatus === 'COMPLETED' ? 'bg-green-500/10 border border-green-500/20 text-green-300' : quizStatus === 'WAITING' ? 'bg-blue-900/50 border border-blue-500/30 text-blue-300 group-hover:bg-blue-800/50' : quizStatus === 'CLOSED' ? 'bg-orange-500/10 border border-orange-500/20 text-orange-300 group-hover:bg-orange-500/20' : 'bg-blue-600/30 border border-blue-500/30 text-blue-200 group-hover:bg-blue-600/40'}`}>
+                            {isGuest ? (isBn ? '🔒 লগইন করে খেলুন' : '🔒 Login to Play') : quizStatus === 'COMPLETED' ? (isBn ? '✅ আজকের কুইজ সম্পন্ন' : '✅ Today Done! Come back tomorrow') : quizStatus === 'WAITING' ? (isBn ? '⏳ অপেক্ষমাণ...' : '⏳ Waiting to open...') : quizStatus === 'CLOSED' ? (isBn ? '🔒 আজকের কুইজ শেষ' : '🔒 Today\'s quiz ended') : (isBn ? '🧠 কুইজ শুরু করুন' : '🧠 Start Today\'s Quiz')}
                         </div>
                     </Link>
                 </div>
@@ -413,13 +426,13 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                         <p className="text-[9px] text-primary-200 text-center leading-tight">আমল করে এগিয়ে যান!</p>
                     </Link>
 
-                    <Link href="/quiz" className="relative block p-4 bg-gradient-to-br from-blue-950/60 to-purple-950/60 border border-blue-500/20 rounded-3xl shadow-glass overflow-hidden">
+                    <Link href={isGuest ? `/auth/signin?callbackUrl=/${locale}/quiz` : '/quiz'} className="relative block p-4 bg-gradient-to-br from-blue-950/60 to-purple-950/60 border border-blue-500/20 rounded-3xl shadow-glass overflow-hidden">
                         <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/10 blur-[30px] rounded-full pointer-events-none" />
                         <div className="flex items-center justify-between mb-2 relative z-10">
                             <span className="text-[10px] font-bold text-blue-300 uppercase tracking-widest flex items-center gap-1"><Brain className="w-3 h-3" /> Quiz</span>
                             {quizStatus === 'COMPLETED' ? <CheckCircle className="w-4 h-4 text-green-400" /> : quizStatus === 'CLOSED' ? <span className="text-[10px] bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded-full">Closed</span> : <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">New</span>}
                         </div>
-                        {quizProfile && quizProfile.currentStreak > 0 ? (
+                        {!isGuest && quizProfile && quizProfile.currentStreak > 0 ? (
                             <div className="relative z-10">
                                 <p className="text-orange-400 font-black text-xl">🔥 {quizProfile.currentStreak}</p>
                                 <p className="text-gray-500 text-[10px] mb-1">{isBn ? 'দিন স্ট্রিক' : 'day streak'}</p>
@@ -428,8 +441,8 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                         ) : (
                             <p className="text-blue-200/70 text-xs font-medium mb-2 relative z-10">{isBn ? 'প্রতিদিন ৩টি প্রশ্ন খেলুন!' : 'Play 3 questions daily!'}</p>
                         )}
-                        <div className={`mt-2 py-1.5 rounded-xl text-center text-[10px] font-bold relative z-10 ${quizStatus === 'COMPLETED' ? 'bg-green-500/10 text-green-300 border border-green-500/20' : quizStatus === 'WAITING' ? 'bg-blue-900/50 text-blue-300 border border-blue-500/30' : quizStatus === 'CLOSED' ? 'bg-orange-500/10 text-orange-300 border border-orange-500/20' : 'bg-blue-600/30 text-blue-200 border border-blue-500/30'}`}>
-                            {quizStatus === 'COMPLETED' ? '✅ সম্পন্ন' : quizStatus === 'WAITING' ? '⏳ অপেক্ষমাণ' : quizStatus === 'CLOSED' ? '🔒 শেষ' : '🧠 খেলুন'}
+                        <div className={`mt-2 py-1.5 rounded-xl text-center text-[10px] font-bold relative z-10 ${isGuest ? 'bg-blue-600/30 text-blue-200 border border-blue-500/30' : quizStatus === 'COMPLETED' ? 'bg-green-500/10 text-green-300 border border-green-500/20' : quizStatus === 'WAITING' ? 'bg-blue-900/50 text-blue-300 border border-blue-500/30' : quizStatus === 'CLOSED' ? 'bg-orange-500/10 text-orange-300 border border-orange-500/20' : 'bg-blue-600/30 text-blue-200 border border-blue-500/30'}`}>
+                            {isGuest ? (isBn ? '🔒 লগইন করুন' : '🔒 Login to Play') : quizStatus === 'COMPLETED' ? '✅ সম্পন্ন' : quizStatus === 'WAITING' ? '⏳ অপেক্ষমাণ' : quizStatus === 'CLOSED' ? '🔒 শেষ' : '🧠 খেলুন'}
                         </div>
                     </Link>
                 </div>
@@ -451,8 +464,11 @@ export default function HomeWidgets({ userName, locale }: { userName?: string; l
                             আজ কোনো আমল যোগ করেননি, এখনই আমল শুরু করুন
                         </p>
                     )}
-                    <Link href="/good-deeds" className="block w-full py-3 bg-accent-600/20 rounded-xl text-accent-300 font-bold text-center text-sm">
-                        + {t('addDeed')}
+                    <Link
+                        href={isGuest ? `/auth/signin?callbackUrl=/${locale}/good-deeds` : '/good-deeds'}
+                        className="block w-full py-3 bg-accent-600/20 rounded-xl text-accent-300 font-bold text-center text-sm"
+                    >
+                        {isGuest ? (isBn ? '🔒 লগইন করুন' : '🔒 Login to Start') : `+ ${t('addDeed')}`}
                     </Link>
                 </div>
             </div>

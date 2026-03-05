@@ -4,7 +4,6 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { auth } from '@/lib/auth/config';
 import HomeWidgets from '@/components/home/HomeWidgets';
-import TopCards from '@/components/home/TopCards';
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
@@ -35,34 +34,11 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-accent-500/20 rounded-full blur-[120px] pointer-events-none"></div>
 
                 <div className="max-w-7xl mx-auto relative z-10">
-                    {session ? (
-                        /* Logged-in: Quick Action Widgets */
-                        <HomeWidgets userName={firstName} locale={locale} />
-                    ) : (
-                        /* Guest: Welcome Hero + Top Cards */
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            {/* Welcome Hero */}
-                            <div className="text-center">
-                                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-tight text-white">
-                                    {t('greeting')} 👋
-                                </h1>
-                                <p className="text-lg md:text-2xl text-primary-200 mb-10 max-w-2xl mx-auto leading-relaxed">
-                                    {t('welcomeMessage')}
-                                </p>
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                    <Link href="/auth/signin" className="px-8 py-4 bg-accent-600 hover:bg-accent-500 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-accent-500/25 flex items-center justify-center gap-2 transform hover:scale-105">
-                                        {t('signInButton')}
-                                    </Link>
-                                    <Link href="/iftar-sehri" className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-full font-semibold transition-all backdrop-blur-sm border border-white/10 flex items-center justify-center gap-2 hover:border-white/20">
-                                        <span>🌙</span> {t('features.iftarSehri.title')}
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {/* Live timer cards — below the CTAs */}
-                            <TopCards locale={locale} />
-                        </div>
-                    )}
+                    <HomeWidgets
+                        userName={firstName}
+                        locale={locale}
+                        isGuest={!session}
+                    />
                 </div>
             </section>
 
