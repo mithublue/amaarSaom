@@ -64,7 +64,7 @@ interface FinalResult {
 
 const TOTAL_TIME_MS = 15000;
 
-export default function QuizClient({ locale }: { locale: string }) {
+export default function QuizClient({ locale, isLoggedIn = true }: { locale: string; isLoggedIn?: boolean }) {
     const currentLocale = useLocale();
     const [status, setStatus] = useState<QuizStatus>('LOADING');
     const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -434,6 +434,73 @@ export default function QuizClient({ locale }: { locale: string }) {
     const timerColor = timerPct > 60 ? '#22c55e' : timerPct > 30 ? '#eab308' : '#ef4444';
 
     // ─── RENDER ───────────────────────────────────────────────
+
+    // ─── GUEST NOTICE (not logged in) ────────────────────────
+
+    if (!isLoggedIn) {
+        const quizPath = `/${currentLocale}/quiz`;
+        const encodedQuizPath = encodeURIComponent(quizPath);
+        const signinUrl = `/${currentLocale}/auth/signin?callbackUrl=${encodedQuizPath}`;
+        const registerUrl = `/${currentLocale}/auth/register?callbackUrl=${encodedQuizPath}`;
+
+        return (
+            <div className="min-h-screen bg-primary-950 flex items-center justify-center px-4">
+                <div className="max-w-sm w-full text-center space-y-6">
+                    {/* Icon */}
+                    <div className="w-24 h-24 rounded-full bg-accent-500/10 border border-accent-500/20 flex items-center justify-center mx-auto">
+                        <Brain className="w-12 h-12 text-accent-400" />
+                    </div>
+
+                    {/* Text */}
+                    <div>
+                        <h1 className="text-2xl font-bold text-white mb-2">
+                            {isBn ? 'ব্রেইন ব্যাটলে স্বাগতম! 🧠' : 'Welcome to Brain Battle! 🧠'}
+                        </h1>
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                            {isBn
+                                ? 'কুইজে অংশ নিতে হলে আপনাকে লগিন বা সাইনআপ করতে হবে।'
+                                : 'You need to log in or sign up to participate in the quiz.'}
+                        </p>
+                    </div>
+
+                    {/* Notice box */}
+                    <div className="bg-accent-500/10 border border-accent-500/20 rounded-2xl p-4 text-left">
+                        <p className="text-accent-300 text-sm">
+                            💡 {isBn
+                                ? 'লগিন/সাইনআপ করুন এবং ডেইলি কুইজে অংশ নিন, পয়েন্ট অর্জন করুন ও লিডারবোর্ডে উঠুন!'
+                                : 'Sign in or create an account to join daily quizzes, earn points, and climb the leaderboard!'}
+                        </p>
+                    </div>
+
+                    {/* CTA buttons */}
+                    <div className="space-y-3">
+                        <a
+                            href={signinUrl}
+                            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-gradient-to-r from-accent-600 to-accent-500 text-black font-bold text-sm hover:opacity-90 active:scale-95 transition-all"
+                        >
+                            🔑 {isBn ? 'লগিন করুন এখান থেকে' : 'Log In Here'}
+                        </a>
+                        <a
+                            href={registerUrl}
+                            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white font-semibold text-sm hover:bg-white/10 active:scale-95 transition-all"
+                        >
+                            ✨ {isBn ? 'নতুন অ্যাকাউন্ট তৈরি করুন' : 'Create an Account'}
+                        </a>
+                    </div>
+
+                    {/* Back to home */}
+                    <a
+                        href={`/${currentLocale}`}
+                        className="inline-block text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                        ← {isBn ? 'হোমে ফিরুন' : 'Back to Home'}
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
+    // ─── LOADING ──────────────────────────────────────────────
 
     if (status === 'LOADING') {
         return (

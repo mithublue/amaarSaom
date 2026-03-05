@@ -1,5 +1,4 @@
 import { auth } from '@/lib/auth/config';
-import { redirect } from 'next/navigation';
 import QuizClient from './QuizClient';
 
 export const metadata = {
@@ -11,9 +10,5 @@ export default async function QuizPage({ params }: { params: Promise<{ locale: s
     const { locale } = await params;
     const session = await auth();
 
-    if (!session?.user) {
-        redirect(`/${locale}/auth/signin`);
-    }
-
-    return <QuizClient locale={locale} />;
+    return <QuizClient locale={locale} isLoggedIn={!!session?.user} />;
 }

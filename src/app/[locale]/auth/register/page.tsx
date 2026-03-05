@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { signIn } from 'next-auth/react';
 
 export default function RegisterPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const callbackUrl = searchParams.get('callbackUrl') || '/';
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -192,10 +194,7 @@ export default function RegisterPage() {
 
                     {/* Google */}
                     <button
-                        onClick={() => {
-                            const { signIn } = require('next-auth/react');
-                            signIn('google', { callbackUrl: '/' });
-                        }}
+                        onClick={() => signIn('google', { callbackUrl })}
                         className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -210,7 +209,7 @@ export default function RegisterPage() {
                     {/* Link to sign-in */}
                     <p className="text-center text-sm text-primary-400 mt-6">
                         Already have an account?{' '}
-                        <a href="/en/auth/signin" className="text-emerald-400 hover:underline font-medium">
+                        <a href={`/en/auth/signin${callbackUrl !== '/' ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`} className="text-emerald-400 hover:underline font-medium">
                             Sign In
                         </a>
                     </p>

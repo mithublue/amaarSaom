@@ -10,6 +10,7 @@ function SignInForm() {
     const searchParams = useSearchParams();
     const verified = searchParams.get('verified');
     const errorParam = searchParams.get('error');
+    const callbackUrl = searchParams.get('callbackUrl') || '/';
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -43,7 +44,7 @@ function SignInForm() {
                     setError(res.error);
                 }
             } else {
-                window.location.href = '/';
+                window.location.href = callbackUrl;
             }
         } catch {
             setError('Network error. Please try again.');
@@ -123,7 +124,7 @@ function SignInForm() {
 
                     {/* Google */}
                     <button
-                        onClick={() => signIn('google', { callbackUrl: '/' })}
+                        onClick={() => signIn('google', { callbackUrl })}
                         className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -138,7 +139,7 @@ function SignInForm() {
                     {/* Link to register */}
                     <p className="text-center text-sm text-primary-400 mt-6">
                         Don&apos;t have an account?{' '}
-                        <a href="/en/auth/register" className="text-emerald-400 hover:underline font-medium">
+                        <a href={`/en/auth/register${callbackUrl !== '/' ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`} className="text-emerald-400 hover:underline font-medium">
                             Create Account
                         </a>
                     </p>
