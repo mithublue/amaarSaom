@@ -21,8 +21,10 @@ import {
 // ── In-memory dedup (per-instance, good enough for single Vercel function) ──
 const prayerSentCache = new Map<string, number>();   // key: `${userId}-${prayer}`
 const leaderboardSentCache = new Map<number, number>(); // key: userId
+const quizSentCache = new Map<number, number>(); // key: userId  (dedup for quiz reminder)
 const PRAYER_DEDUP_MS = 30 * 60 * 1000;    // 30 min — prevents double-sends
 const LEADERBOARD_DEDUP_MS = 23 * 60 * 60 * 1000; // 23 hrs — once per day
+const QUIZ_DEDUP_MS = 23 * 60 * 60 * 1000; // 23 hrs — once per day
 
 function prayerWasSent(userId: number, prayer: PrayerName): boolean {
     const key = `${userId}-${prayer}`;
@@ -38,6 +40,12 @@ function leaderboardWasSent(userId: number): boolean {
     const t = leaderboardSentCache.get(userId);
     if (!t) return false;
     if (Date.now() - t > LEADERBOARD_DEDUP_MS) { leaderboardSentCache.delete(userId); return false; }
+    return true;
+}
+function quizWasSent(userId: number, dedupMs: number = QUIZ_DEDUP_MS): boolean {
+    const t = quizSentCache.get(userId);
+    if (!t) return false;
+    if (Date.now() - t > dedupMs) { quizSentCache.delete(userId); return false; }
     return true;
 }
 
@@ -60,6 +68,52 @@ const PRAYER_PREF_KEY: Record<PrayerName, string> = {
     Maghrib: 'maghribReminder',
     Isha: 'ishaReminder',
 };
+
+/** Build FOMO quiz reminder notification (multilingual, randomized) */
+function buildQuizMsg(lang: string, frequency: string): { title: string; body: string } {
+    const isWeekly = frequency === 'weekly';
+    const isMonthly = frequency === 'monthly';
+
+    const bnVariants = isMonthly ? [
+        { title: '🏆 মাসের সুযোগ এসেছে!', body: 'এই মাসের বিশেষ কুইজ এখন লাইভ! একবারই সুযোগ — এখনই না খেললে পুরো মাস আফসোস করবেন।' },
+        { title: '🏆 এই মাসের চ্যালেঞ্জ LIVE!', body: 'শুধু একবারের সুযোগ। আপনার বন্ধুরা ইতিমধ্যে খেলছে — আপনি কি পিছিয়ে পড়বেন?' },
+    ] : isWeekly ? [
+        { title: '🏆 এই সপ্তাহের কুইজ শুরু!', body: 'সাপ্তাহিক ব্রেইন-ব্যাটল এখন লাইভ! মাত্র ৩টি প্রশ্ন — শীর্ষে থাকতে এখনই খেলুন। আর সুযোগ নেই এ সপ্তাহে!' },
+        { title: '🏆 সপ্তাহের একটাই কুইজ!', body: '৭ দিনের মধ্যে এটাই একমাত্র সুযোগ। টপ র‌্যাংকে যাদের নাম আছে — তারা ইতিমধ্যে খেলে ফেলেছে!' },
+    ] : [
+        { title: '🏆 আজকের কুইজ এখন লাইভ!', body: 'মাত্র ৩টি প্রশ্ন — ১৫ সেকেন্ড করে। এখনই না খেললে আজকের পয়েন্ট মিস! লিডারবোর্ডে আপনার জায়গা ধরে রাখুন।' },
+        { title: '🏆 আজ কুইজ মিস করলেই স্ট্রিক শেষ!', body: 'আপনার স্ট্রিক এখন রিস্কে! ৩টি প্রশ্নে উত্তর দিন, আজকের পয়েন্ট বাগান — এবং লিডারবোর্ডে এগিয়ে যান।' },
+        { title: '🏆 আজকের ব্রেইন-ব্যাটল চলছে!', body: 'আপনার প্রতিযোগীরা এখন খেলছে। পিছিয়ে পড়বেন না — ৩টি প্রশ্ন, মাত্র ১ মিনিট।' },
+        { title: '🏆 লিডারবোর্ড আপডেট হচ্ছে!', body: 'এই মুহূর্তে অন্যরা পয়েন্ট বাড়াচ্ছে। আপনি কি বসে থাকবেন? আজকের কুইজে যোগ দিন!' },
+    ];
+
+    const arVariants = isMonthly ? [
+        { title: '🏆 مسابقة الشهر الآن!', body: 'فرصة الشهر الوحيدة لمسابقة قرآنية. أدرك الفرصة قبل فوات الأوان!' },
+    ] : isWeekly ? [
+        { title: '🏆 مسابقة الأسبوع بدأت!', body: 'مرة واحدة فقط في الأسبوع — الآن أو لا. أجب على ٣ أسئلة وتصدر الترتيب!' },
+    ] : [
+        { title: '🏆 مسابقة اليوم الآن مباشرة!', body: 'فرصتك اليوم — ٣ أسئلة، ١٥ ثانية لكل منها. لا تفوّت نقاطك اليومية!' },
+        { title: '🏆 منافسوك يلعبون الآن!', body: 'حارب بعقلك الآن! القرآن + الذكاء = نقاط. هل ستتأخر وتخسر مرتبتك؟' },
+    ];
+
+    const enVariants = isMonthly ? [
+        { title: '🏆 Monthly Quiz is LIVE!', body: "One chance this month. Your streak, your rank, your legacy — don't blow it. Play NOW!" },
+    ] : isWeekly ? [
+        { title: '🏆 This Week\'s Quiz is OPEN!', body: "Only ONE quiz this week. Top players are already in — are you going to let them win?" },
+        { title: '🏆 Weekly Brain Battle is LIVE!', body: "3 questions. 45 seconds. One shot at the leaderboard this week. Don't miss it!" },
+    ] : [
+        { title: '🏆 Quiz is LIVE — Don\'t miss today!', body: "Your daily brain battle is open! 3 Qs, earn points, protect your streak. Others are scoring RIGHT NOW." },
+        { title: '🏆 Streak at risk! Quiz is now open.', body: "Don't break your winning streak. Jump in, answer 3 questions in under a minute & stay on top!" },
+        { title: '🏆 Others are scoring — you\'re not!', body: "The daily Islamic quiz is LIVE. Every second you wait, someone else moves ahead of you on the leaderboard." },
+        { title: '🏆 Leaderboard shifting NOW!', body: "Points are being earned as you read this. Answer today's quiz before the window closes!" },
+    ];
+
+    const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+    if (lang === 'bn') return pick(bnVariants);
+    if (lang === 'ar') return pick(arVariants);
+    return pick(enVariants);
+}
 
 /** Build leaderboard motivation message */
 function buildLeaderboardMsg(
@@ -95,11 +149,31 @@ export async function POST(req: NextRequest) {
         const sysSettings = await prisma.systemSettings.findFirst();
         const globalPrayerEnabled = sysSettings?.globalPrayerNotifications !== false;
         const globalLeaderboardEnabled = sysSettings?.globalLeaderboardNotifications !== false;
+        const quizStartTime = sysSettings?.quizStartTime ?? '15:00';
+        const quizFrequency = sysSettings?.quizFrequency ?? 'daily'; // 'daily' | 'weekly' | 'monthly'
+        const [quizStartH, quizStartM] = quizStartTime.split(':').map(Number);
+        const quizStartMin = quizStartH * 60 + quizStartM;
+        const QUIZ_WINDOW_MIN = 7; // ±7 minutes match window
+        // Dedup window: send once per frequency period
+        const QUIZ_DEDUP_MS_EFFECTIVE =
+            quizFrequency === 'monthly' ? 29 * 24 * 60 * 60 * 1000 :
+                quizFrequency === 'weekly' ? 6 * 24 * 60 * 60 * 1000 :
+                    QUIZ_DEDUP_MS; // daily = 23hr
 
         const dryRun = req.nextUrl.searchParams.get('dryRun') === 'true';
         const isTest = req.nextUrl.searchParams.get('test') === 'true';
-        const stats = { prayerCount: 0, leaderboardCount: 0, prayerSent: 0, leaderboardSent: 0 };
+        const stats = { prayerCount: 0, leaderboardCount: 0, quizCount: 0, prayerSent: 0, leaderboardSent: 0, quizSent: 0 };
         const debugLogs: string[] = [];
+
+        // Prefetch today's quiz attempt user IDs to avoid per-user DB calls
+        const todayUtc = new Date();
+        todayUtc.setUTCHours(0, 0, 0, 0);
+        const quizAttemptedUserIds = new Set<number>(
+            (await prisma.quizAttempt.findMany({
+                where: { date: { gte: todayUtc } },
+                select: { userId: true },
+            })).map(a => a.userId)
+        );
 
         // ── Load all subscribed users (Logged In) ──
         let loggedInUsers = (await prisma.user.findMany({
@@ -212,6 +286,25 @@ export async function POST(req: NextRequest) {
                             }
                         }
                     }
+                }
+            }
+
+            // ── 3. Quiz Reminder ──────────────────────────────────
+            const quizReminderEnabled = !prefs || prefs.quizReminder !== false;
+            if (quizReminderEnabled && (isTest || !quizWasSent(user.id, QUIZ_DEDUP_MS_EFFECTIVE))) {
+                const { h, m } = localTime(tz);
+                const nowMin = h * 60 + m;
+                const inWindow = Math.abs(nowMin - quizStartMin) <= QUIZ_WINDOW_MIN;
+                const notYetPlayed = !quizAttemptedUserIds.has(user.id);
+
+                if ((isTest || inWindow) && notYetPlayed) {
+                    const { title, body } = buildQuizMsg(lang, quizFrequency);
+                    if (!dryRun) {
+                        await sendPushToUser(user.id, title, body, { type: 'quiz_reminder', url: '/quiz' });
+                        if (!isTest) quizSentCache.set(user.id, Date.now());
+                    }
+                    stats.quizSent++;
+                    debugLogs.push(`Sent quiz reminder to user ${user.email} (localTime=${h}:${String(m).padStart(2, '0')})`);
                 }
             }
         }
