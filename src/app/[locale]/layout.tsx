@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Scheherazade_New } from "next/font/google";
 import "../globals.css"; // Moved up one level
 import { Toaster } from "sonner";
 import { NextIntlClientProvider } from 'next-intl';
@@ -17,6 +17,14 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Full Quranic Unicode support (special marks, verse separators etc.)
+const scheherazade = Scheherazade_New({
+  variable: "--font-arabic",
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -88,7 +96,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${scheherazade.variable} antialiased`}
         suppressHydrationWarning={true}
       >
         <NextIntlClientProvider messages={messages}>

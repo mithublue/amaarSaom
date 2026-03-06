@@ -53,7 +53,9 @@ export default {
       fontFamily: {
         sans: ['Inter', 'Roboto', 'sans-serif'],
         heading: ['Poppins', 'Montserrat', 'sans-serif'],
-        arabic: ['"Noto Naskh Arabic"', 'Amiri', 'serif'],
+        arabic: ['KFGQPCUthmani', 'var(--font-arabic)', 'AlQalamQuranMajeed', '"Noto Naskh Arabic"', 'serif'],
+        indopak: ['AlQalamQuranMajeed', '"Noto Naskh Arabic"', 'var(--font-arabic)', 'serif'],
+        uthmani: ['KFGQPCUthmani', 'var(--font-arabic)', 'serif'],
         bangla: ['"Hind Siliguri"', '"Noto Sans Bengali"', 'sans-serif'],
       },
       borderRadius: {

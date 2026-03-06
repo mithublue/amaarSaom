@@ -339,7 +339,7 @@ export default function SurahReader({ surah, verses }: SurahReaderProps) {
 
                         {/* Arabic Text & Transliteration */}
                         <div className={`${locale === 'ar' ? 'text-right' : 'text-right'} mb-8`}>
-                            <p className="font-arabic text-3xl md:text-4xl text-white leading-[2.2] md:leading-[2.5] drop-shadow-sm mb-4">
+                            <p className={`${scriptType === 'indopak' ? 'font-indopak' : 'font-uthmani'} text-3xl md:text-4xl text-white leading-[2.2] md:leading-[2.5] drop-shadow-sm mb-4`}>
                                 {scriptType === 'indopak' && verse.text_indopak ? verse.text_indopak : verse.text_uthmani}
                             </p>
                             {/* Transliteration - English phonetics */}
