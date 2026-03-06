@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/routing';
 import { ChangeEvent, useTransition, useState, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 export default function LanguageSwitcher() {
     const t = useTranslations('LanguageSwitcher');
@@ -20,6 +21,8 @@ export default function LanguageSwitcher() {
         { code: 'ar', label: 'Arabic', flag: 'sa' },
     ];
 
+    const { data: session } = useSession();
+
     const currentLang = languages.find((lang) => lang.code === locale);
     const currentFlag = currentLang?.flag || 'us'; // Default to US flag if not found
     const currentLangLabel = currentLang?.label || 'English'; // Default to English if not found
@@ -28,6 +31,15 @@ export default function LanguageSwitcher() {
         startTransition(() => {
             router.replace(pathname, { locale: nextLocale });
             setIsOpen(false); // Close dropdown after selection
+
+            // Save preference to database if user is logged in
+            if (session?.user) {
+                fetch('/api/user/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ language: nextLocale })
+                }).catch(console.error);
+            }
         });
     };
 
